@@ -1,3 +1,14 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## Table of contents
+
+- [Fix broken Markdown formatting in responses](#fix-broken-markdown-formatting-in-responses)
+  - [1. Problem Overview](#1-problem-overview)
+  - [2. Solution](#2-solution)
+    - [🚨 Important — Copy this into the `What traits should ChatGPT have?` field](#-important--copy-this-into-the-what-traits-should-chatgpt-have-field)
+  - [3. Result](#3-result)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Fix broken Markdown formatting in responses
 
