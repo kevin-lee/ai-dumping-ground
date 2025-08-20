@@ -1,0 +1,39 @@
+name: Docs – Update TOC
+
+on:
+  push:
+    paths:
+      - 'chatgpt/FixBrokenMarkdown.md'
+  pull_request:
+    paths:
+      - 'chatgpt/FixBrokenMarkdown.md'
+  workflow_dispatch:
+
+concurrency:
+  group: update-toc-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  toc:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate TOC
+        run: npx --yes doctoc --github --title '## Table of contents' chatgpt/FixBrokenMarkdown.md
+      - name: Commit changes (push only)
+        if: github.event_name == 'push'
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add chatgpt/FixBrokenMarkdown.md
+            git commit -m "docs: update TOC in FixBrokenMarkdown.md [ci skip]"
+            git push
+          fi
