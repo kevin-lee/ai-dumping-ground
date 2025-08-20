@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ## Table of contents
 
-- [Fix broken Markdown formatting in responses](#fix-broken-Markdown-formatting-in-responses)
+- [Fix broken Markdown formatting in responses](#fix-broken-markdown-formatting-in-responses)
   - [1. Problem Overview](#1-problem-overview)
   - [2. Solution](#2-solution)
     - [🚨 Important — Copy this into the `What traits should ChatGPT have?` field](#-important--copy-this-into-the-what-traits-should-chatgpt-have-field)
