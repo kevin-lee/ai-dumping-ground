@@ -24,16 +24,16 @@ Put ADT case classes/objects inside the sealed trait's companion object to avoid
 Define constructor methods in the companion object that return the sealed trait type — not the case class type. This fixes type inference issues (e.g. `List[Product with MyTrait with Serializable]` instead of `List[MyTrait]`).
 
 ### 3. Type-safe Equality
-Use `===` / `!==` (from Cats `Eq` or Scalaz `Equal`, or a custom extension) instead of `==` / `!=`. Scala's universal equality is not type-safe — `"a" == 1` compiles but is always `false`.
+Use `===` / `!==` (from Cats `Eq` or a custom extension) instead of `==` / `!=`. Scala's universal equality is not type-safe — `"a" == 1` compiles but is always `false`.
 
 ### 4. Option: Use `.some` / `none[A]`
-Use `1.some` and `none[Int]` (from Cats or Scalaz) instead of `Some(1)` and `None`. Direct `Some()` produces `Some[Int]` not `Option[Int]`, causing type inference issues in collections and generic contexts (invariant type parameters).
+Use `1.some` and `none[Int]` (from Cats) instead of `Some(1)` and `None`. Direct `Some()` produces `Some[Int]` not `Option[Int]`, causing type inference issues in collections and generic contexts (invariant type parameters).
 
 ### 5. Option: Never Use `.get`
 `Option.get` throws `NoSuchElementException` on `None`. Use pattern matching, `fold`, `getOrElse`, `map`, or `flatMap` instead.
 
 ### 6. Either: Use `.asRight` / `.asLeft`
-Use `1.asRight[String]` and `"error".asLeft[Int]` (Cats) or `.right` / `.left` (Scalaz) instead of `Right()` / `Left()`. Direct constructors produce `Right[Nothing, Int]` / `Left[String, Nothing]`, causing type inference problems.
+Use `1.asRight[String]` and `"error".asLeft[Int]` (Cats) instead of `Right()` / `Left()`. Direct constructors produce `Right[Nothing, Int]` / `Left[String, Nothing]`, causing type inference problems.
 
 ### 7. More Types: Avoid Stringly-Typed Code
 Wrap primitive types in value classes (`extends AnyVal`), newtypes (`@newtype` / `@newsubtype`), opaque types (Scala 3), or refined4s. This catches argument-ordering bugs at compile time and makes code self-documenting.
@@ -50,6 +50,21 @@ Always declare case classes as `final`. Non-final case classes can be extended b
 ### 11. For-Comprehension
 Use for-comprehension instead of nested `flatMap`/`map` chains for readability. But avoid for-comprehension with a single generator — just use `map` or `flatMap` directly, as the for-comprehension adds no readability benefit.
 
+### 12. Formatting: Follow `.scalafmt.conf`
+If a `.scalafmt.conf` file exists in the project, follow its formatting rules when writing or modifying code.
+
+### 13. Follow `.scalafix.conf` Rules
+If a `.scalafix.conf` file exists in the project, follow its rules when writing or modifying code.
+
+### 14. Scala 3: Use Brace Syntax, Not Significant Indentation
+For Scala 3 code, always use brace syntax instead of significant indentation (braceless) syntax. Exception: single-line `if (then)`/`else` expressions may omit braces. If either branch of an `if`/`else` has more than one line, use braces for both branches.
+
+### 15. `if` Should Always Have `else`
+Every `if` expression should have a corresponding `else` branch. This makes the logic explicit and avoids subtle bugs from missing cases.
+
+### 16. Don't Use `var`
+Avoid `var` unless it is absolutely required (e.g. for Java interop or performance-critical mutable state with no functional alternative). Prefer `val`, immutable data structures, and functional patterns.
+
 ## How to Apply
 
 When **writing new Scala code**: follow all rules above from the start.
@@ -65,3 +80,8 @@ When **refactoring existing Scala code**: scan for violations of the rules above
 - Boolean fields that would be clearer as ADTs
 - Exception throwing instead of returning `Option` / `Either`
 - Nested `flatMap`/`map` that could be a for-comprehension (or single-generator for-comprehension that should just be `map`/`flatMap`)
+- Code formatting inconsistent with `.scalafmt.conf`
+- Code violating `.scalafix.conf` rules
+- Scala 3 code using significant indentation (braceless) syntax instead of braces
+- `if` expressions missing an `else` branch
+- Use of `var` where `val` or immutable patterns would suffice
