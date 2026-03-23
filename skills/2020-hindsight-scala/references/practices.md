@@ -14,6 +14,11 @@ Reference: https://2020-hindsight-scala.kevinly.dev/docs/
 9. [Error Handling: Total over Partial Functions](#9-error-handling-total-over-partial-functions)
 10. [Always final case class](#10-always-final-case-class)
 11. [For-Comprehension](#11-for-comprehension)
+12. [Formatting: Follow .scalafmt.conf](#12-formatting-follow-scalafmtconf)
+13. [Follow .scalafix.conf Rules](#13-follow-scalafixconf-rules)
+14. [Scala 3: Use Brace Syntax](#14-scala-3-use-brace-syntax-not-significant-indentation)
+15. [if Should Always Have else](#15-if-should-always-have-else)
+16. [Don't Use var](#16-dont-use-var)
 
 ---
 
@@ -102,20 +107,7 @@ object Person {
 Person(1L, "Kevin") === Person(1L, "Kevin") // true
 ```
 
-**Solution — Scalaz `Equal`:**
-```scala
-import scalaz._, Scalaz._
-
-1 === 1        // true
-"a" === 1      // compile-time error
-
-final case class Person(id: Long, name: String)
-object Person {
-  implicit val equal: Equal[Person] = Equal.equalA
-}
-```
-
-**Solution — Custom extension (if not using Cats/Scalaz):**
+**Solution — Custom extension (if not using Cats):**
 ```scala
 implicit final class AnyEquals[A](val self: A) extends AnyVal {
   def ===(other: A): Boolean = self == other
@@ -144,14 +136,6 @@ import cats.syntax.option._
 none[Int]         // Option[Int] = None
 
 List(1.some, 2.some)  // List[Option[Int]]
-```
-
-**Good — Scalaz:**
-```scala
-import scalaz._, Scalaz._
-
-1.some            // Option[Int]
-none[Int]         // Option[Int]
 ```
 
 This is important in generic/invariant contexts where `F[Some[Int]]` won't match `F[Option[Int]]`.
@@ -206,14 +190,6 @@ import cats.syntax.either._
 "error".asLeft[Int]         // Either[String, Int] = Left("error")
 
 List(1.asRight[String], 2.asRight[String])  // List[Either[String, Int]]
-```
-
-**Good — Scalaz:**
-```scala
-import scalaz._, Scalaz._
-
-1.right[String]             // String \/ Int = \/-(1)
-"error".left[Int]           // String \/ Int = -\/("error")
 ```
 
 **Conditional construction:**
@@ -406,3 +382,130 @@ for { b <- foo(a) } yield bar(b)     // just use foo(a).map(bar) or foo(a).flatM
 foo(a)
 foo(a).map(bar)
 ```
+
+---
+
+## 12. Formatting: Follow `.scalafmt.conf`
+
+If a `.scalafmt.conf` file exists in the project, follow its formatting rules when writing or modifying code. Read the config to understand the project's formatting conventions (e.g. max line length, alignment, indent style) and apply them consistently.
+
+---
+
+## 13. Follow `.scalafix.conf` Rules
+
+If a `.scalafix.conf` file exists in the project, follow its rules when writing or modifying code. This includes any enabled linting rules, rewrites, or code organization rules defined in the config.
+
+---
+
+## 14. Scala 3: Use Brace Syntax, Not Significant Indentation
+
+For Scala 3 code, always use brace syntax instead of significant indentation (braceless) syntax.
+
+**Bad — significant indentation:**
+```scala
+object MyApp:
+  def foo(x: Int): String =
+    val y = x + 1
+    y.toString
+
+  enum Color:
+    case Red, Green, Blue
+```
+
+**Good — brace syntax:**
+```scala
+object MyApp {
+  def foo(x: Int): String = {
+    val y = x + 1
+    y.toString
+  }
+
+  enum Color {
+    case Red, Green, Blue
+  }
+}
+```
+
+**Exception — single-line `if (then)`/`else`** (braces may be omitted):
+```scala
+// OK — single line per branch:
+if a then
+  doSomething
+else
+  doSomethingElse
+
+// Multi-line branches MUST use braces:
+if a then {
+  doSomething
+  doSomethingMore
+} else {
+  doSomethingElse
+  doSomethingElseMore
+}
+```
+
+---
+
+## 15. `if` Should Always Have `else`
+
+Every `if` expression should have a corresponding `else` branch. This makes the logic explicit and avoids subtle bugs from missing cases.
+
+**Bad:**
+```scala
+if (x > 0)
+  doSomething(x)
+```
+
+**Good:**
+```scala
+if (x > 0)
+  doSomething(x)
+else
+  doDefault()
+```
+
+**Good — Scala 3:**
+```scala
+if x > 0 then
+  doSomething(x)
+else
+  doDefault()
+```
+
+---
+
+## 16. Don't Use `var`
+
+Avoid `var` unless it is absolutely required. Prefer `val`, immutable data structures, and functional patterns.
+
+**Bad:**
+```scala
+var total = 0
+for (x <- xs) {
+  total += x
+}
+```
+
+**Good:**
+```scala
+val total = xs.sum
+// or
+val total = xs.foldLeft(0)(_ + _)
+```
+
+**Bad:**
+```scala
+var result: Option[Int] = None
+if (condition) {
+  result = Some(42)
+}
+```
+
+**Good:**
+```scala
+val result: Option[Int] =
+  if condition then 42.some
+  else none[Int]
+```
+
+**Exception:** `var` may be acceptable for Java interop or performance-critical mutable state where no functional alternative exists.
