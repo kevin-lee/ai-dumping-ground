@@ -19,6 +19,7 @@ Reference: https://2020-hindsight-scala.kevinly.dev/docs/
 14. [Scala 3: Use Brace Syntax](#14-scala-3-use-brace-syntax-not-significant-indentation)
 15. [if Should Always Have else](#15-if-should-always-have-else)
 16. [Don't Use var](#16-dont-use-var)
+17. [Naming: No ALL-CAPITAL Acronyms](#17-naming-no-all-capital-acronyms)
 
 ---
 
@@ -509,3 +510,40 @@ val result: Option[Int] =
 ```
 
 **Exception:** `var` may be acceptable for Java interop or performance-critical mutable state where no functional alternative exists.
+
+---
+
+## 17. Naming: No ALL-CAPITAL Acronyms
+
+Never use all-capital letters for acronyms or short words in identifiers. They are hard to read, especially when multiple acronyms appear together.
+
+**Bad:**
+```scala
+// Hard to read — where do the word boundaries fall?
+val VPNIDHTTPPINUUID = ???
+class HTTPSURLConnection
+trait JSONAPIResponse
+def getHTTPURLConnection(): HTTPURLConnection
+```
+
+**Good:**
+```scala
+// PascalCase for acronyms — clear word boundaries
+val vpnIdHttpPinUuid = ???
+class HttpsUrlConnection
+trait JsonApiResponse
+def getHttpUrlConnection(): HttpUrlConnection
+```
+
+**More examples:**
+
+| Bad | Good |
+|-----|------|
+| `HTTPClient` | `HttpClient` |
+| `JSONParser` | `JsonParser` |
+| `XMLHTTPRequest` | `XmlHttpRequest` |
+| `getUserByID` | `getUserById` |
+| `parseJSON` | `parseJson` |
+| `AWSS3URL` | `AwsS3Url` |
+
+This applies to all identifier types: classes, traits, objects, methods, variables, and type aliases.
