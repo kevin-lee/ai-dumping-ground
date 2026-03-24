@@ -20,6 +20,7 @@ Reference: https://2020-hindsight-scala.kevinly.dev/docs/
 15. [if Should Always Have else](#15-if-should-always-have-else)
 16. [Don't Use var](#16-dont-use-var)
 17. [Naming: No ALL-CAPITAL Acronyms](#17-naming-no-all-capital-acronyms)
+18. [Separate Operations from Data in Case Classes](#18-separate-operations-from-data-in-case-classes)
 
 ---
 
@@ -547,3 +548,66 @@ def getHttpUrlConnection(): HttpUrlConnection
 | `AWSS3URL` | `AwsS3Url` |
 
 This applies to all identifier types: classes, traits, objects, methods, variables, and type aliases.
+
+---
+
+## 18. Separate Operations from Data in Case Classes
+
+Do not put methods in a case class body. Define them as extension methods in the companion object instead. Case classes should be pure data carriers (product types).
+
+**Why?**
+- **Separation of concerns (data vs. behavior)**: In FP, data types and functions over them are defined independently. This is the standard approach in Haskell, ML, and idiomatic Scala FP. Mixing methods into case classes conflates data definition with behavior.
+- **Composability**: When operations are separate from data, they can be composed, overridden, and tested independently. Data types remain simple and reusable across different contexts.
+- **Serialization friendliness**: Case classes used purely as data map cleanly to/from JSON, Protobuf, Avro, etc. Methods on case classes don't participate in serialization but can mislead readers into thinking the class has richer behavior than what survives a round-trip.
+- **Extensibility (Expression Problem)**: New operations can be added in new companion objects or in separate files without modifying the data type. This avoids reopening the data definition every time a new behavior is needed.
+- **Typeclass coherence**: When behavior is defined via extension methods (or typeclasses), it's clear that the behavior is attached externally, making it easier to swap implementations or provide different behaviors in different contexts.
+
+**Bad — methods inside the case class:**
+```scala
+final case class Order(items: List[Item], discount: Discount) {
+  def totalPrice: BigDecimal =
+    items.map(_.price).sum
+
+  def discountedPrice: BigDecimal =
+    Discount.applyDiscount(discount, totalPrice)
+
+  def isEmpty: Boolean =
+    items.isEmpty
+}
+```
+
+**Good — Scala 2 (extension via implicit value class):**
+```scala
+final case class Order(items: List[Item], discount: Discount)
+object Order {
+  implicit final class OrderOps(private val order: Order) extends AnyVal {
+    def totalPrice: BigDecimal =
+      order.items.map(_.price).sum
+
+    def discountedPrice: BigDecimal =
+      Discount.applyDiscount(order.discount, totalPrice)
+
+    def isEmpty: Boolean =
+      order.items.isEmpty
+  }
+}
+```
+
+**Good — Scala 3 (extension methods):**
+```scala
+final case class Order(items: List[Item], discount: Discount)
+object Order {
+  extension (order: Order) {
+    def totalPrice: BigDecimal =
+      order.items.map(_.price).sum
+
+    def discountedPrice: BigDecimal =
+      Discount.applyDiscount(order.discount, totalPrice)
+
+    def isEmpty: Boolean =
+      order.items.isEmpty
+  }
+}
+```
+
+**Note:** This rule applies to *operations* (computed values, transformations, business logic). It does **not** apply to overriding standard methods like `toString` when there is a specific reason to do so — though in practice, prefer typeclass instances (e.g. Cats `Show`) over `toString` overrides.

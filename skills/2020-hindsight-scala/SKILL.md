@@ -68,6 +68,9 @@ Avoid `var` unless it is absolutely required (e.g. for Java interop or performan
 ### 17. Naming: No ALL-CAPITAL Acronyms
 Never use all-capital letters for acronyms or short words in identifiers — they are hard to read. Use PascalCase for acronyms/abbreviations. For example: `VpnIdHttpPinUuid` not `VPNIDHTTPPINUUID`, `HttpClient` not `HTTPClient`, `JsonParser` not `JSONParser`.
 
+### 18. Separate Operations from Data in Case Classes
+Do not put methods in a case class body. Instead, define them as extension methods in the companion object. Case classes should be pure data carriers — separating operations from data follows the core FP principle of defining data types and functions over them independently. This improves composability, makes serialization cleaner, and avoids conflating data definition with behavior.
+
 ## How to Apply
 
 When **writing new Scala code**: follow all rules above from the start.
@@ -89,3 +92,4 @@ When **refactoring existing Scala code**: scan for violations of the rules above
 - `if` expressions missing an `else` branch
 - Use of `var` where `val` or immutable patterns would suffice
 - ALL-CAPITAL acronyms in identifiers (e.g. `HTTPClient` instead of `HttpClient`)
+- Methods defined directly in case class bodies instead of as extension methods in companion objects
