@@ -65,6 +65,9 @@ Every `if` expression should have a corresponding `else` branch. This makes the 
 ### 16. Don't Use `var`
 Avoid `var` unless it is absolutely required (e.g. for Java interop or performance-critical mutable state with no functional alternative). Prefer `val`, immutable data structures, and functional patterns.
 
+### 17. Naming: No ALL-CAPITAL Acronyms
+Never use all-capital letters for acronyms or short words in identifiers — they are hard to read. Use PascalCase for acronyms/abbreviations. For example: `VpnIdHttpPinUuid` not `VPNIDHTTPPINUUID`, `HttpClient` not `HTTPClient`, `JsonParser` not `JSONParser`.
+
 ## How to Apply
 
 When **writing new Scala code**: follow all rules above from the start.
@@ -85,3 +88,4 @@ When **refactoring existing Scala code**: scan for violations of the rules above
 - Scala 3 code using significant indentation (braceless) syntax instead of braces
 - `if` expressions missing an `else` branch
 - Use of `var` where `val` or immutable patterns would suffice
+- ALL-CAPITAL acronyms in identifiers (e.g. `HTTPClient` instead of `HttpClient`)
