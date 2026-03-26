@@ -21,6 +21,7 @@ Reference: https://2020-hindsight-scala.kevinly.dev/docs/
 16. [Don't Use var](#16-dont-use-var)
 17. [Naming: No ALL-CAPITAL Acronyms](#17-naming-no-all-capital-acronyms)
 18. [Separate Operations from Data in Case Classes](#18-separate-operations-from-data-in-case-classes)
+19. [Do Not Use Default Parameters](#19-do-not-use-default-parameters)
 
 ---
 
@@ -611,3 +612,140 @@ object Order {
 ```
 
 **Note:** This rule applies to *operations* (computed values, transformations, business logic). It does **not** apply to overriding standard methods like `toString` when there is a specific reason to do so — though in practice, prefer typeclass instances (e.g. Cats `Show`) over `toString` overrides.
+
+---
+
+## 19. Do Not Use Default Parameters
+
+Avoid default parameter values in Scala. Prefer explicit parameters, configuration types, or distinct method names.
+
+### Why?
+
+**1. They hide semantics at the call site.**
+A call like `save(user)` looks simple, but the real behavior may depend on several invisible defaults such as validation mode, retry policy, overwrite policy, or timeout. That makes code harder to read and review.
+
+```scala
+// BAD: What does this actually do?
+save(user)
+// Actual signature: def save(user: User, validate: Boolean = true, retries: Int = 3, overwrite: Boolean = false, timeoutMs: Int = 5000)
+// The reader has no idea about the 4 hidden policy decisions.
+```
+
+**2. They smuggle policy into an API.**
+A default is not just a convenience — it is a design decision. If you write `timeoutMs = 5000`, `retry = true`, or `cache = false`, you are encoding operational policy into the function signature. That policy may be wrong for many callers.
+
+```scala
+// BAD: The "3 retries with 5-second timeout" policy is baked in
+def fetchData(url: String, retries: Int = 3, timeoutMs: Int = 5000): IO[Data]
+
+// GOOD: Policy is explicit and owned by the caller
+final case class FetchConfig(retries: Int, timeoutMs: Int)
+def fetchData(url: String, config: FetchConfig): IO[Data]
+```
+
+**3. They make changes risky.**
+Once a default is published, changing it can silently change behavior in many call sites without any compile-time signal. That is one of the worst kinds of change because the code still "looks correct".
+
+```scala
+// v1: def connect(timeoutMs: Int = 5000)
+// v2: def connect(timeoutMs: Int = 30000)  — all callers silently get 6x longer timeout
+// No compiler warning. No diff at call sites. Bugs appear at runtime.
+```
+
+**4. They create ambiguous or misleading APIs.**
+This gets worse when multiple parameters are optional or when booleans are involved.
+
+```scala
+// BAD: What does this mean?
+fetch(force = true, localOnly = false)
+
+// GOOD: Distinct methods with clear names
+def fetchFromNetwork(): IO[Data]
+def fetchFromCache(): IO[Data]
+def fetchPreferringCache(): IO[Data]
+```
+
+**5. They encourage oversized functions.**
+Many defaults are a symptom that one function is doing too much. When a method accumulates many optional knobs, the real issue is often poor separation of concerns.
+
+```scala
+// BAD: One method doing too many things
+def processOrder(
+  order: Order,
+  validate: Boolean = true,
+  applyDiscount: Boolean = false,
+  sendEmail: Boolean = true,
+  async: Boolean = false
+): IO[Result]
+
+// GOOD: Separate concerns
+def validateOrder(order: Order): Either[ValidationError, ValidOrder]
+def applyDiscount(order: ValidOrder, discount: Discount): ValidOrder
+def submitOrder(order: ValidOrder): IO[OrderResult]
+def notifyCustomer(result: OrderResult): IO[Unit]
+```
+
+**6. They interact badly with overloading, named arguments, and versioning.**
+Adding or changing default parameters can cause surprising source-compatibility or binary-compatibility issues. This is especially relevant in public libraries.
+
+In **Scala 2**:
+- If there are multiple overloaded alternatives, at most one is allowed to specify default arguments (per the Named and Default Arguments SIP).
+- In overload resolution, when several alternatives are applicable, the one that uses default arguments is never selected. This means adding a default could change which overload is chosen, or make an overload effectively unreachable from some call sites.
+
+In **Scala 3**:
+- Default arguments are no longer relevant for prioritization during overload resolution, which partly improves the situation.
+- However, binary/source compatibility issues when changing defaults remain.
+
+```scala
+// Scala 2: Adding a default to one overload can shadow another
+def send(msg: String): Unit
+def send(msg: String, priority: Int = 0): Unit  // Now send("hello") is ambiguous
+```
+
+**7. They complicate higher-order usage.**
+When you eta-expand a method with defaults into a function value, the defaults are lost. This creates inconsistency between calling the method directly and calling the function value.
+
+```scala
+def format(value: Int, width: Int = 10, fill: Char = ' '): String = ???
+
+// Direct call — defaults available:
+format(42)  // uses width=10, fill=' '
+
+// Eta-expanded — defaults lost:
+val f: (Int, Int, Char) => String = format
+// f(42) won't compile — must supply all 3 arguments
+// The function type has no concept of defaults
+```
+
+### Alternatives
+
+**Require all parameters explicitly:**
+```scala
+// Instead of defaults, make every parameter required
+def save(user: User, validate: Boolean, retries: Int, overwrite: Boolean, timeoutMs: Int): IO[Unit]
+```
+
+**Use a configuration case class:**
+```scala
+final case class SaveConfig(
+  validate: Boolean,
+  retries: Int,
+  overwrite: Boolean,
+  timeoutMs: Int
+)
+
+def save(user: User, config: SaveConfig): IO[Unit]
+```
+
+**Use distinct method names for distinct behaviors:**
+```scala
+def saveWithValidation(user: User): IO[Unit]
+def saveSkippingValidation(user: User): IO[Unit]
+def forceSave(user: User): IO[Unit]
+```
+
+### Exceptions
+
+- **`copy` on case classes** — the defaults are inherent to the pattern and removing them would make `copy` unusable.
+- **Test helpers in test code** — test builders/fixtures where convenience outweighs the risks (since test code is not a published API).
+- **Framework conventions** — when a framework or library you extend requires default parameters (e.g. overriding a method that already has defaults).

@@ -71,6 +71,9 @@ Never use all-capital letters for acronyms or short words in identifiers — the
 ### 18. Separate Operations from Data in Case Classes
 Do not put methods in a case class body. Instead, define them as extension methods in the companion object. Case classes should be pure data carriers — separating operations from data follows the core FP principle of defining data types and functions over them independently. This improves composability, makes serialization cleaner, and avoids conflating data definition with behavior.
 
+### 19. Do Not Use Default Parameters
+Avoid default parameter values. They hide semantics at the call site, smuggle policy into APIs, make changes risky (changing a default silently changes behavior in all callers with no compile-time signal), create ambiguous APIs (especially with multiple optional or boolean parameters), encourage oversized functions, and interact badly with overloading, named arguments, and versioning (especially in Scala 2). They also complicate higher-order usage since defaults are lost during eta-expansion. Instead, require all parameters explicitly, use a configuration case class, or provide distinct method names for distinct behaviors.
+
 ## How to Apply
 
 When **writing new Scala code**: follow all rules above from the start.
@@ -93,3 +96,4 @@ When **refactoring existing Scala code**: scan for violations of the rules above
 - Use of `var` where `val` or immutable patterns would suffice
 - ALL-CAPITAL acronyms in identifiers (e.g. `HTTPClient` instead of `HttpClient`)
 - Methods defined directly in case class bodies instead of as extension methods in companion objects
+- Default parameter values hiding semantics, smuggling policy, or encouraging oversized function signatures
