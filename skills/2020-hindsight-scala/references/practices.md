@@ -97,7 +97,7 @@ Scala's `==` is not type-safe: `"a" == 1` compiles but is always `false`.
 
 **Solution — Cats `Eq`:**
 ```scala
-import cats.syntax.eq._
+import cats.syntax.all._
 
 1 === 1        // true
 "a" === 1      // compile-time error: type mismatch
@@ -133,7 +133,7 @@ List(Some(1), Some(2))  // List[Some[Int]], not List[Option[Int]]
 
 **Good — Cats:**
 ```scala
-import cats.syntax.option._
+import cats.syntax.all._
 
 1.some            // Option[Int] = Some(1)
 none[Int]         // Option[Int] = None
@@ -187,7 +187,7 @@ Left("error")       // Left[String, Nothing], not Either[String, Int]
 
 **Good — Cats:**
 ```scala
-import cats.syntax.either._
+import cats.syntax.all._
 
 1.asRight[String]           // Either[String, Int] = Right(1)
 "error".asLeft[Int]         // Either[String, Int] = Left("error")
