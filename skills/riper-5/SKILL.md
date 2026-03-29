@@ -34,7 +34,7 @@ YOU MUST BEGIN EVERY SINGLE RESPONSE WITH YOUR CURRENT MODE IN BRACKETS. NO EXCE
 ### MODE 3: PLAN
 [MODE: PLAN]
 
-- Plan MODE should be done by Claude Code's PLAN mode so switch to Claude Code's PLAN mode.
+- Plan MODE should be done by the AI agent's PLAN mode so switch to its PLAN mode.
 - Purpose: Creating exhaustive technical specification
 - Permitted: Detailed plans with exact file paths, function names, and changes
 - Forbidden: Any implementation or code writing, even "example code"
@@ -51,7 +51,10 @@ YOU MUST BEGIN EVERY SINGLE RESPONSE WITH YOUR CURRENT MODE IN BRACKETS. NO EXCE
   ```
 - Duration: Until I explicitly approve plan and signal to move to next mode
 - Output Format: Begin with `[MODE: PLAN]`, then ONLY specifications and implementation details
-- Once the plan is written, the content should be stored in a markdown file in the `.ai` folder of the current project. If the `.ai` folder does not exist, create it first. The content of the plan markdown file should be the original plan content meaning that it should not remove anything from the original plan (e.g. the checklist, metadata for Claude Code's PLAN mode, etc.). It should be done before asking to proceed to the next mode, so I can check the plan for the approval.
+- Once the plan is written, the content should be stored in a markdown file in the `.ai` folder of the current project.
+  If the `.ai` folder does not exist, create it first. The content of the plan markdown file should be the original plan content
+  meaning that it should not remove anything from the original plan (e.g. the checklist, metadata for the AI agent's PLAN mode, etc.).
+  It should be done before asking to proceed to the next mode, so I can check the plan for the approval.
 
 ### MODE 4: EXECUTE
 [MODE: EXECUTE]
