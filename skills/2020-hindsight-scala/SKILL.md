@@ -74,6 +74,9 @@ Do not put methods in a case class body. Instead, define them as extension metho
 ### 19. Do Not Use Default Parameters
 Avoid default parameter values. They hide semantics at the call site, smuggle policy into APIs, make changes risky (changing a default silently changes behavior in all callers with no compile-time signal), create ambiguous APIs (especially with multiple optional or boolean parameters), encourage oversized functions, and interact badly with overloading, named arguments, and versioning (especially in Scala 2). They also complicate higher-order usage since defaults are lost during eta-expansion. Instead, require all parameters explicitly, use a configuration case class, or provide distinct method names for distinct behaviors.
 
+### 20. Tuple: Use Pattern Matching Instead of `_._1`, `_._2`
+Never access tuple elements by positional accessors (`_._1`, `_._2`, etc.). Use pattern matching to destructure tuples into named bindings instead. Positional accessors are meaningless and convey no intent. Pattern matching gives each element a descriptive name, making the code self-documenting. For example: `nameValuePairs.map { case (name, _) => name }` instead of `nameValuePairs.map(_._1)`, and `priceAndQuantityPairs.map { case (price, quantity) => price * quantity }` instead of `priceAndQuantityPairs.map(x => x._1 * x._2)`.
+
 ## How to Apply
 
 When **writing new Scala code**: follow all rules above from the start.
@@ -99,3 +102,4 @@ When **refactoring existing Scala code**: scan for violations of the rules above
 - ALL-CAPITAL acronyms in identifiers (e.g. `HTTPClient` instead of `HttpClient`)
 - Methods defined directly in case class bodies instead of as extension methods in companion objects
 - Default parameter values hiding semantics, smuggling policy, or encouraging oversized function signatures
+- Tuple element access via `_._1`, `_._2` instead of pattern matching (e.g. `{ case (name, _) => name }`)

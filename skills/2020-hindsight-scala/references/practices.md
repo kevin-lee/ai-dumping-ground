@@ -22,6 +22,7 @@ Reference: https://2020-hindsight-scala.kevinly.dev/docs/
 17. [Naming: No ALL-CAPITAL Acronyms](#17-naming-no-all-capital-acronyms)
 18. [Separate Operations from Data in Case Classes](#18-separate-operations-from-data-in-case-classes)
 19. [Do Not Use Default Parameters](#19-do-not-use-default-parameters)
+20. [Tuple: Use Pattern Matching Instead of `_._1`, `_._2`](#20-tuple-use-pattern-matching-instead-of-__1-__2)
 
 ---
 
@@ -780,3 +781,59 @@ def forceSave(user: User): IO[Unit]
 - **`copy` on case classes** — the defaults are inherent to the pattern and removing them would make `copy` unusable.
 - **Test helpers in test code** — test builders/fixtures where convenience outweighs the risks (since test code is not a published API).
 - **Framework conventions** — when a framework or library you extend requires default parameters (e.g. overriding a method that already has defaults).
+
+---
+
+## 20. Tuple: Use Pattern Matching Instead of `_._1`, `_._2`
+
+Never access tuple elements by positional accessors (`_._1`, `_._2`, etc.). Use pattern matching to destructure tuples into named bindings instead.
+
+**Why?**
+- `_._1` and `_._2` are meaningless — they convey no intent about what the tuple elements represent.
+- Pattern matching gives each element a descriptive name, making the code self-documenting.
+- This is especially important in `map`, `flatMap`, `filter`, and other higher-order functions over collections of tuples.
+
+**Bad — positional accessors:**
+```scala
+nameValuePairs.map(_._1)
+```
+
+**Good — pattern matching:**
+```scala
+nameValuePairs.map { case (name, _) => name }
+```
+
+**Bad — positional accessors in expressions:**
+```scala
+priceAndQuantityPairs.map(x => x._1 * x._2)
+```
+
+**Good — pattern matching:**
+```scala
+priceAndQuantityPairs.map { case (price, quantity) => price * quantity }
+```
+
+**More examples:**
+
+```scala
+// Bad:
+users.filter(_._2 > 18)
+
+// Good:
+users.filter { case (_, age) => age > 18 }
+
+// Bad:
+entries.map(e => s"${e._1}: ${e._2}")
+
+// Good:
+entries.map { case (key, value) => s"$key: $value" }
+```
+
+This applies to all tuple arities, not just pairs:
+```scala
+// Bad:
+triples.map(t => t._1 + t._2 + t._3)
+
+// Good:
+triples.map { case (a, b, c) => a + b + c }
+```
