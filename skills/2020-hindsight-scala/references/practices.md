@@ -55,6 +55,25 @@ object ValidationError {
 // Usage: ValidationError.MissingField("email") — no need for "MissingFieldError"
 ```
 
+**Scala 3 — use `enum` instead:**
+
+For Scala 3, use `enum` instead of `sealed trait` with `case class` / `case object` in a companion object. The `enum` keyword provides a concise syntax that automatically places variants in the enum's namespace.
+
+```scala
+enum MyNumber {
+  case SomeNumber(n: Int)
+  case NoNumber
+}
+```
+
+```scala
+enum ValidationError {
+  case MissingField(name: String)
+  case InvalidId(id: Long)
+}
+// Usage: ValidationError.MissingField("email")
+```
+
 ---
 
 ## 2. ADT: Use Constructor Methods

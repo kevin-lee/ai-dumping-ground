@@ -18,7 +18,7 @@ For detailed rules and examples for each practice, read `references/practices.md
 ## Quick Reference — The Rules
 
 ### 1. ADT: Place Data in Companion Objects
-Put ADT case classes/objects inside the sealed trait's companion object to avoid naming conflicts and provide a clear namespace.
+Put ADT case classes/objects inside the sealed trait's companion object to avoid naming conflicts and provide a clear namespace. For Scala 3, use `enum` instead of `sealed trait` with `case class` / `case object` in a companion object.
 
 ### 2. ADT: Use Constructor Methods
 Define constructor methods in the companion object that return the sealed trait type — not the case class type. This fixes type inference issues (e.g. `List[Product with MyTrait with Serializable]` instead of `List[MyTrait]`).
