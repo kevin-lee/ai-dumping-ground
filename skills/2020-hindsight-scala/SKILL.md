@@ -27,13 +27,13 @@ Define constructor methods in the companion object that return the sealed trait 
 Use `===` / `!==` (from Cats `Eq` or a custom extension) instead of `==` / `!=`. Scala's universal equality is not type-safe — `"a" == 1` compiles but is always `false`.
 
 ### 4. Option: Use `.some` / `none[A]`
-Use `1.some` and `none[Int]` (from Cats) instead of `Some(1)` and `None`. Direct `Some()` produces `Some[Int]` not `Option[Int]`, causing type inference issues in collections and generic contexts (invariant type parameters). For conditional `Option` creation (Scala 2.13+), use `Option.when(condition)(value)` instead of `if (condition) value.some else none`.
+Use `1.some` and `none[Int]` (from Cats) instead of `Some(1)` and `None`. Direct `Some()` produces `Some[Int]` not `Option[Int]`, causing type inference issues in collections and generic contexts (invariant type parameters). For conditional `Option` creation (Scala 2.13+), use `Option.when(condition)(value)` instead of `if (condition) value.some else none`. **Testing exception:** In test code, `Some(value)` and `None` are allowed on the expected side of assertions (e.g. `actual ==== Some(expectedValue)`, `actual ==== None`) because these express exactly what is expected.
 
 ### 5. Option: Never Use `.get`
 `Option.get` throws `NoSuchElementException` on `None`. Use pattern matching, `fold`, `getOrElse`, `map`, or `flatMap` instead.
 
 ### 6. Either: Use `.asRight` / `.asLeft`
-Use `1.asRight[String]` and `"error".asLeft[Int]` (Cats) instead of `Right()` / `Left()`. Direct constructors produce `Right[Nothing, Int]` / `Left[String, Nothing]`, causing type inference problems. For conditional `Either` creation, use `Either.cond(condition, rightValue, leftValue)` instead of `if (condition) rightValue.asRight else leftValue.asLeft`.
+Use `1.asRight[String]` and `"error".asLeft[Int]` (Cats) instead of `Right()` / `Left()`. Direct constructors produce `Right[Nothing, Int]` / `Left[String, Nothing]`, causing type inference problems. For conditional `Either` creation, use `Either.cond(condition, rightValue, leftValue)` instead of `if (condition) rightValue.asRight else leftValue.asLeft`. **Testing exception:** In test code, `Right(value)` and `Left(value)` are allowed on the expected side of assertions (e.g. `actual ==== Right(expectedValue)`, `actual ==== Left(expectedError)`) because these express exactly what is expected.
 
 ### 7. More Types: Avoid Stringly-Typed Code
 Wrap primitive types in value classes (`extends AnyVal`), newtypes (`@newtype` / `@newsubtype`), opaque types (Scala 3), or refined4s. This catches argument-ordering bugs at compile time and makes code self-documenting.
@@ -85,7 +85,7 @@ When **refactoring existing Scala code**: scan for violations of the rules above
 - Non-final case classes
 - ADT variants defined outside companion objects
 - ADT variants without constructor methods
-- `Some()` / `None` / `Right()` / `Left()` used directly
+- `Some()` / `None` / `Right()` / `Left()` used directly (except in test assertions on the expected side)
 - `if (cond) value.some else none` instead of `Option.when(cond)(value)` (Scala 2.13+)
 - `if (cond) b.asRight else a.asLeft` instead of `Either.cond(cond, b, a)`
 - `Option.get` calls
