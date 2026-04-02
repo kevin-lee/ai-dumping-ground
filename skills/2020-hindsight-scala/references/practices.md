@@ -163,6 +163,12 @@ List(1.some, 2.some)  // List[Option[Int]]
 
 This is important in generic/invariant contexts where `F[Some[Int]]` won't match `F[Option[Int]]`.
 
+**Testing exception:** In test code, `Some(value)` and `None` are allowed on the expected side of assertions because these express exactly what is expected:
+```scala
+actual ==== Some(expectedValue)
+actual ==== None
+```
+
 **Conditional construction (Scala 2.13+):**
 
 Use `Option.when` instead of `if`/`else` with `.some`/`none`:
@@ -230,6 +236,12 @@ if (num > 0) num.asRight[String] else "must be positive".asLeft[Int]
 
 // Good:
 Either.cond(num > 0, num, "must be positive")
+```
+
+**Testing exception:** In test code, `Right(value)` and `Left(value)` are allowed on the expected side of assertions because these express exactly what is expected:
+```scala
+actual ==== Right(expectedValue)
+actual ==== Left(expectedError)
 ```
 
 **Safe extraction** — use pattern matching, `fold`, or `getOrElse`:
