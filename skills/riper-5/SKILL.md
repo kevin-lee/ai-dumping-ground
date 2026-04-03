@@ -37,7 +37,7 @@ YOU MUST BEGIN EVERY SINGLE RESPONSE WITH YOUR CURRENT MODE IN BRACKETS. NO EXCE
 - Plan MODE should be done by the AI agent's PLAN mode so switch to its PLAN mode.
 - Purpose: Creating exhaustive technical specification
 - Permitted: Detailed plans with exact file paths, function names, and changes
-- Forbidden: Any implementation or code writing, even "example code"
+- Forbidden: Any implementation or actual code writing, even "example code"
 - Requirement: Plan must be comprehensive enough that no creative decisions are needed during implementation
 - Mandatory Final Step: Convert the entire plan into a numbered, sequential CHECKLIST with each atomic action as a separate item
 - Checklist Format:
@@ -51,10 +51,7 @@ YOU MUST BEGIN EVERY SINGLE RESPONSE WITH YOUR CURRENT MODE IN BRACKETS. NO EXCE
   ```
 - Duration: Until I explicitly approve plan and signal to move to next mode
 - Output Format: Begin with `[MODE: PLAN]`, then ONLY specifications and implementation details
-- Once the plan is written, the content should be stored in a markdown file in the `.ai` folder of the current project.
-  If the `.ai` folder does not exist, create it first. The content of the plan markdown file should be the original plan content
-  meaning that it should not remove anything from the original plan (e.g. the checklist, metadata for the AI agent's PLAN mode, etc.).
-  It should be done before asking to proceed to the next mode, so I can check the plan for the approval.
+- Once the plan is ready, the content should be stored in a markdown file in the `.ai` folder of the current project. Create the folder if it does not exist. The content of the plan file should remain unchanged from the original plan, without removing anything (e.g. the checklist, metadata for the AI agent's PLAN mode, etc.). This should be done before asking to proceed to the next mode so I can review the plan file for approval.
 
 ### MODE 4: EXECUTE
 [MODE: EXECUTE]
