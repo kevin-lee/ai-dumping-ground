@@ -23,6 +23,7 @@ Reference: https://2020-hindsight-scala.kevinly.dev/docs/
 18. [Separate Operations from Data in Case Classes](#18-separate-operations-from-data-in-case-classes)
 19. [Do Not Use Default Parameters](#19-do-not-use-default-parameters)
 20. [Tuple: Use Pattern Matching Instead of `_._1`, `_._2`](#20-tuple-use-pattern-matching-instead-of-__1-__2)
+21. [Pattern Matching on ADTs: Prefer Explicit Constructors over Wildcard](#21-pattern-matching-on-adts-prefer-explicit-constructors-over-wildcard)
 
 ---
 
@@ -849,3 +850,57 @@ triples.map(t => t._1 + t._2 + t._3)
 // Good:
 triples.map { case (a, b, c) => a + b + c }
 ```
+
+---
+
+## 21. Pattern Matching on ADTs: Prefer Explicit Constructors over Wildcard
+
+When pattern matching on an ADT (sealed trait hierarchy in Scala 2, `enum` in Scala 3), prefer explicit data constructor matches to the wildcard pattern (`_`) — even when the remaining variants are handled identically. Combine them with `|` (alternative patterns) instead.
+
+**Why?**
+- The wildcard silently swallows future variants. If someone adds a new case to the ADT, the compiler has no way to warn you — the new variant simply falls into the wildcard branch, which is almost never what you want.
+- Explicit constructor matches give you the compiler's exhaustiveness check for free: adding a new variant produces a non-exhaustive match warning at every call site, forcing an intentional decision at each one.
+- Explicit names at the match site document *which* variants share behavior, instead of leaving the reader to infer it.
+
+**Example ADT — Scala 2:**
+```scala
+sealed trait Foobar
+object Foobar {
+  case object Foo extends Foobar
+  final case class Bar(n: Int) extends Foobar
+  case object Baz extends Foobar
+  final case class Qux(s: String) extends Foobar
+}
+```
+
+**Example ADT — Scala 3:**
+```scala
+enum Foobar {
+  case Foo
+  case Bar(n: Int)
+  case Baz
+  case Qux(s: String)
+}
+```
+
+**Good — explicit constructors combined with `|`:**
+```scala
+foobar match {
+  case Foo          => println("It's Foo!")
+  case Bar(n)       => println(s"The bar value is $n")
+  case Baz | Qux(_) => println("Neither Foo nor Bar")
+}
+```
+
+**Bad — wildcard pattern:**
+```scala
+foobar match {
+  case Foo    => println("It's Foo!")
+  case Bar(n) => println(s"The bar value is $n")
+  case _      => println("Neither Foo nor Bar")
+}
+```
+
+If a new variant `case Quux` is later added to `Foobar`, the wildcard version compiles with no warning and silently routes `Quux` through the "Neither Foo nor Bar" branch. The explicit version triggers a non-exhaustive match warning and forces the author to decide what `Quux` should do.
+
+**Exception:** The wildcard is still appropriate when matching on an open (non-sealed) type where exhaustiveness checking does not apply — e.g. matching on `Any`, `String`, `Int`, or a non-sealed class hierarchy.
