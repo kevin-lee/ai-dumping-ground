@@ -1,9 +1,9 @@
 ---
-name: init-metals-mcp
-description: Creates or updates .mcp.json in the current Scala project directory to configure metals-mcp. Use this skill when the user wants to add metals-mcp to a project, says "init metals-mcp", "add metals-mcp config", "set up metals-mcp for this project", "configure metals-mcp here", or is in a Scala project and asks to wire up any metals MCP integration.
+name: setup-metals-mcp
+description: Creates or updates .mcp.json in the current Scala project directory to configure metals-mcp. Use this skill when the user wants to add metals-mcp to a project, says "setup metals-mcp", "add metals-mcp config", "set up metals-mcp for this project", "configure metals-mcp here", or is in a Scala project and asks to wire up any metals MCP integration.
 ---
 
-# init-metals-mcp
+# setup-metals-mcp
 
 Configures metals-mcp for the current Scala project by writing (or updating) `.mcp.json`
 in the current working directory.
