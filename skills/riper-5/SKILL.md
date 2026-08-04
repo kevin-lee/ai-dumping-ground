@@ -53,7 +53,7 @@ YOU MUST BEGIN EVERY SINGLE RESPONSE WITH YOUR CURRENT MODE IN BRACKETS. NO EXCE
 - Output Format: Begin with `[MODE: PLAN]`, then ONLY specifications and implementation details
 - Once the plan is ready, the content should be stored in a markdown file in the `.ai` folder of the current project. Create the folder if it does not exist. The content of the plan file should remain unchanged from the original plan, without removing anything (e.g. the checklist, metadata for the AI agent's PLAN mode, etc.). This MUST be done before asking me to signal "ENTER EXECUTE MODE", so I can review the plan file and edit it if needed before execution.
 - Plan File Naming: Store the plan file under a `{yyyy-MM}` subfolder, named as follows:
-  - With an issue ID: `.ai/{yyyy-MM}/{yyyy-MM-dd}-issue-{id}-{short-summary}.md` (e.g. `.ai/2026-07/2026-07-13-issue-123-improve-ux.md`)
+  - With an issue ID: `.ai/{yyyy-MM}/{yyyy-MM-dd}-{HHmm}-issue-{id}-{short-summary}.md`, where `{HHmm}` is the current local time in 24-hour format (e.g. `.ai/2026-07/2026-07-13-1405-issue-123-improve-ux.md`)
   - Without an issue ID: `.ai/{yyyy-MM}/{yyyy-MM-dd}-{HHmm}-{short-summary}.md`, where `{HHmm}` is the current local time in 24-hour format (e.g. `.ai/2026-07/2026-07-13-1432-improve-ux.md`)
   - `{short-summary}` is a brief kebab-case summary of the plan (e.g. `improve-ux`)
   - Use the issue ID provided by me. If none was provided, use the time-based format — do not guess an issue ID.
