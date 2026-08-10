@@ -36,7 +36,6 @@ YOU MUST BEGIN EVERY SINGLE RESPONSE WITH YOUR CURRENT MODE IN BRACKETS. NO EXCE
 - Requirement: Plan must be comprehensive enough that no creative decisions are needed during implementation
 - Mandatory Final Step: Convert the entire plan into a numbered, sequential CHECKLIST with each atomic action as a separate item
 - Checklist Format:
-  Copy
   ```
   IMPLEMENTATION CHECKLIST:
   1. [Specific action 1]
