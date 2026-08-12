@@ -51,9 +51,9 @@ YOU MUST BEGIN EVERY SINGLE RESPONSE WITH YOUR CURRENT MODE IN BRACKETS. NO EXCE
 - Duration: Until I explicitly approve plan and signal to move to next mode
 - Output Format: Begin with `[MODE: PLAN]`, then ONLY specifications and implementation details
 - Once the plan is ready, the content should be stored in a markdown file in the `.ai` folder of the current project. Create the folder if it does not exist. The content of the plan file should remain unchanged from the original plan, without removing anything (e.g. the checklist, metadata for the AI agent's PLAN mode, etc.). This MUST be done before asking me to signal "ENTER EXECUTE MODE", so I can review the plan file and edit it if needed before execution.
-- Plan File Naming: Store the plan file under a `{yyyy-MM}` subfolder, named as follows:
-  - With an issue ID: `.ai/{yyyy-MM}/{yyyy-MM-dd}-{HHmm}-issue-{id}-{short-summary}.md`, where `{HHmm}` is the current local time in 24-hour format (e.g. `.ai/2026-07/2026-07-13-1405-issue-123-improve-ux.md`)
-  - Without an issue ID: `.ai/{yyyy-MM}/{yyyy-MM-dd}-{HHmm}-{short-summary}.md`, where `{HHmm}` is the current local time in 24-hour format (e.g. `.ai/2026-07/2026-07-13-1432-improve-ux.md`)
+- Plan File Naming: Store the plan file under a `plans/{yyyy-MM}` subfolder, named as follows:
+  - With an issue ID: `.ai/plans/{yyyy-MM}/{yyyy-MM-dd}-{HHmm}-issue-{id}-{short-summary}.md`, where `{HHmm}` is the current local time in 24-hour format (e.g. `.ai/plans/2026-07/2026-07-13-1405-issue-123-improve-ux.md`)
+  - Without an issue ID: `.ai/plans/{yyyy-MM}/{yyyy-MM-dd}-{HHmm}-{short-summary}.md`, where `{HHmm}` is the current local time in 24-hour format (e.g. `.ai/plans/2026-07/2026-07-13-1432-improve-ux.md`)
   - `{short-summary}` is a brief kebab-case summary of the plan (e.g. `improve-ux`)
   - Use the issue ID provided by me. If none was provided, use the time-based format — do not guess an issue ID.
 
@@ -78,6 +78,9 @@ YOU MUST BEGIN EVERY SINGLE RESPONSE WITH YOUR CURRENT MODE IN BRACKETS. NO EXCE
 - Reporting: Must report whether implementation is IDENTICAL to plan or NOT
 - Conclusion Format: "✅ IMPLEMENTATION MATCHES PLAN EXACTLY" or "❌ IMPLEMENTATION DEVIATES FROM PLAN"
 - Output Format: Begin with `[MODE: REVIEW]`, then systematic comparison and explicit verdict
+- Once the review is complete, move the plan doc file to `.ai/done/` folder (create it if absent) with the same date-based subfolder structure as the original plan file.
+  - e.g.) If the file is at `.ai/plans/2026-07/2026-07-13-1405-issue-123-improve-ux.md`, move it to `.ai/done/2026-07/2026-07-13-1405-issue-123-improve-ux.md`.
+  - If the doc file has references in other docs that need to be updated because of this move, update those references accordingly.
 
 ## CRITICAL PROTOCOL GUIDELINES
 1. You CANNOT transition between modes without my explicit permission
