@@ -1,0 +1,1590 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-lang-mode="{{langMode}}" data-lang2="{{lang2}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{title}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="{{fontsHref}}">
+<style>
+  /*@define darkTokens
+      color-scheme: dark;
+      --paper: var(--paper-dark);
+      --accent: var(--accent-dark);
+      --accent-ink: #111318;
+      --ink: #E8E9EF;
+      --ink-2: #C2C6D6;
+      --muted: #9297AB;
+      --mix-surface: 8%;
+      --ok: #7FD19A;
+      --ok-soft: #173E27;
+      --warn: #E3B341;
+      --warn-soft: #3E3213;
+      --alert: #F08A90;
+      --alert-soft: #4A1C20;
+      --nodata: #9297AB;
+      --nodata-soft: #2B2E3A;
+      --add-bg: #16321F;
+      --add-ink: #B6E6C3;
+      --add-mark: #245C36;
+      --del-bg: #3B1A1D;
+      --del-ink: #F3B9BC;
+      --del-mark: #6B2A30;
+      --hit-ink: #16171C;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+  @end*/
+  /*@define cvdLightTokens
+      --ok: #0072B2;
+      --ok-soft: #DCEBF7;
+      --warn: #E69F00;
+      --warn-soft: #FBEBC8;
+      --alert: #CC79A7;
+      --alert-soft: #F6E1EE;
+      --add-bg: #DCEBF7;
+      --add-ink: #083D66;
+      --add-mark: #A9CDEB;
+      --del-bg: #FBE3D3;
+      --del-ink: #7A3300;
+      --del-mark: #F2B98F;
+  @end*/
+  /*@define cvdDarkTokens
+      --ok: #56B4E9;
+      --ok-soft: #12344A;
+      --warn: #F0E442;
+      --warn-soft: #3C3810;
+      --alert: #F4A6D7;
+      --alert-soft: #4A2038;
+      --add-bg: #12344A;
+      --add-ink: #BFE1F7;
+      --add-mark: #1F5A80;
+      --del-bg: #4A2A12;
+      --del-ink: #F8C9A8;
+      --del-mark: #7A4A22;
+  @end*/
+
+  :root {
+    color-scheme: light;
+    /* Four palette inputs. Everything else is derived from them. */
+    --accent-light: {{accentLight}};
+    --accent-dark: {{accentDark}};
+    --paper-light: {{paperLight}};
+    --paper-dark: {{paperDark}};
+    --font-display: {{fontDisplay}};
+    --font-body: {{fontBody}};
+    --font-mono: {{fontMono}};
+
+    --paper: var(--paper-light);
+    --accent: var(--accent-light);
+    --accent-ink: #FFFFFF;
+    --ink: #22242C;
+    --ink-2: #474B5A;
+    --muted: #6C7084;
+    --mix-surface: 55%;
+    --ok: #2F7D4F;
+    --ok-soft: #DFF1E5;
+    --warn: #9A6700;
+    --warn-soft: #FBEFC7;
+    --alert: #B4232C;
+    --alert-soft: #FBE3E4;
+    --nodata: #6C7084;
+    --nodata-soft: #E7E9EF;
+    --add-bg: #E3F3E7;
+    --add-ink: #1C5A33;
+    --add-mark: #B7E1C1;
+    --del-bg: #FBE5E6;
+    --del-ink: #7A1F26;
+    --del-mark: #F3BFC2;
+    --hit-ink: #22242C;
+    --shadow: 0 1px 2px rgba(22,24,30,.06), 0 8px 24px -12px rgba(22,24,30,.18);
+    --radius: 6px;
+
+    /* Derived */
+    --ground: color-mix(in oklch, var(--accent) 6%, var(--paper));
+    --surface: color-mix(in oklch, white var(--mix-surface), var(--ground));
+    --surface-2: color-mix(in oklch, var(--accent) 12%, var(--ground));
+    --line: color-mix(in oklch, var(--ink) 22%, var(--ground));
+    --line-strong: color-mix(in oklch, var(--ink) 38%, var(--ground));
+    --accent-soft: color-mix(in oklch, var(--accent) 16%, var(--surface));
+    --code-bg: var(--surface-2);
+    --hit: var(--warn-soft);
+    --hit-cur: var(--warn);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+{{darkTokens}}
+    }
+  }
+  :root[data-theme="dark"] {
+{{darkTokens}}
+  }
+  :root[data-cvd="on"] {
+{{cvdLightTokens}}
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-cvd="on"]:not([data-theme="light"]) {
+{{cvdDarkTokens}}
+    }
+  }
+  :root[data-theme="dark"][data-cvd="on"] {
+{{cvdDarkTokens}}
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:hover { text-decoration-thickness: 2px; }
+  code, pre, .mono { font-family: var(--font-mono); font-size: 0.84em; }
+  p code, li code, td code, dd code, dt code, h3 code, .t code {
+    background: var(--surface-2);
+    padding: 0.08em 0.36em;
+    border-radius: 4px;
+    color: var(--ink);
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.012em;
+    text-wrap: balance;
+    margin: 0;
+    color: var(--ink);
+  }
+  h1 { font-size: clamp(1.9rem, 1.4rem + 1.6vw, 2.6rem); font-weight: 800; line-height: 1.12; }
+  h2 { font-size: 1.45rem; font-weight: 700; line-height: 1.25; }
+  h3 { font-size: 1.12rem; font-weight: 700; line-height: 1.3; }
+  h4 { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  p { margin: 0; max-width: 68ch; }
+  p + p { margin-top: 0.75em; }
+  ul, ol { margin: 0; padding-left: 1.3em; max-width: 68ch; }
+  li + li { margin-top: 0.35em; }
+  strong { font-weight: 600; }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+  /* Screen reader utilities */
+  .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .skip-link {
+    position: absolute; left: 12px; top: -48px; z-index: 100;
+    background: var(--accent); color: var(--accent-ink);
+    padding: 8px 14px; border-radius: 6px; font-weight: 600; text-decoration: none;
+  }
+  .skip-link:focus { top: 12px; }
+
+  /* Languages: .en and .l2 are both in the DOM.
+     single mode shows one of them (URL ?lang=<code> picks the second),
+     both mode stacks them with the second language set slightly quieter. */
+  html[data-lang-mode="single"][data-lang="en"] .l2 { display: none !important; }
+  html[data-lang-mode="single"][data-lang="l2"] .en { display: none !important; }
+  html[data-lang-mode="both"] .l2 { color: var(--ink-2); }
+  html[data-lang-mode="both"] span.l2 { display: block; font-size: 0.92em; font-weight: inherit; }
+  html[data-lang-mode="both"] :is(.kind, .tip, .seg button, .check, .btn-quiet, .copy, .ident, .status, .diff-head, .counts, .eyebrow, .topbar-hint, .l-inline) span.l2 { display: inline; font-size: inherit; }
+  html[data-lang-mode="both"] :is(.kind, .tip, .seg button, .check, .btn-quiet, .copy, .ident, .status, .diff-head, .eyebrow, .topbar-hint, .l-inline) span.l2::before { content: " · "; color: var(--muted); }
+  html[data-lang-mode="both"] :is(p, ul, ol, div, h3).l2 { border-left: 2px solid var(--line-strong); padding-left: 10px; }
+  html[data-lang-mode="both"] :is(p, ul, ol, div, h3).l2:not(:first-child) { margin-top: 0.5em; }
+  html[data-lang-mode="both"] :is(ul, ol).l2 { padding-left: calc(1.3em + 10px); }
+  html[data-lang="l2"][data-lang2="ko"] body, html[data-lang-mode="both"][data-lang2="ko"] .l2,
+  html[data-lang="l2"][data-lang2="ja"] body, html[data-lang-mode="both"][data-lang2="ja"] .l2,
+  html[data-lang="l2"][data-lang2="zh"] body, html[data-lang-mode="both"][data-lang2="zh"] .l2 { word-break: keep-all; }
+
+  /* Layout */
+  .shell {
+    display: grid;
+    grid-template-columns: 236px minmax(0, 1fr);
+    gap: 0;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 32px 28px 96px;
+  }
+  html[data-width="wide"] .shell { max-width: none; padding-left: 24px; padding-right: 24px; }
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: minmax(0, 1fr); gap: 20px; padding: 20px 16px 72px; }
+    .rail { position: static !important; max-height: none; overflow: visible; padding-right: 0; }
+    main { padding-left: 0; }
+    html[data-rail="collapsed"] .shell { grid-template-columns: minmax(0, 1fr); }
+    html[data-rail="collapsed"] .rail { flex-direction: row; align-items: center; gap: 8px; }
+    .rail-strip { flex-direction: row; flex-wrap: wrap; }
+    .rail-strip hr { width: 0; height: 20px; border-top: 0; border-left: 1px solid var(--line-strong); margin: 0 4px; }
+    .icon-btn .tip { left: 50%; top: calc(100% + 8px); transform: translateX(-50%); }
+  }
+  .rail {
+    position: sticky;
+    top: 20px;
+    align-self: start;
+    max-height: calc(100vh - 40px);
+    z-index: 30;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+    padding-right: 10px;
+    padding-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    font-size: 0.86rem;
+  }
+  .rail::-webkit-scrollbar { width: 5px; }
+  .rail::-webkit-scrollbar-track { background: transparent; }
+  .rail::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 3px; }
+  .rail::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+  .rail-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+  }
+  nav.toc { display: flex; flex-direction: column; gap: 2px; }
+  nav.toc a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    line-height: 1.35;
+    border-radius: 5px;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+  }
+  nav.toc a.sub { padding-left: 18px; font-size: 0.8rem; color: var(--muted); }
+  nav.toc a.sub.group { padding-left: 14px; font-weight: 600; color: var(--ink-2); margin-top: 4px; }
+  nav.toc a.sub.file { padding-left: 24px; font-family: var(--font-mono); font-size: 0.74rem; }
+  nav.toc a .dots { display: inline-flex; gap: 3px; flex: none; align-self: flex-start; margin-top: 0.15em; }
+  nav.toc a:hover { background: var(--surface-2); color: var(--ink); }
+  nav.toc a.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-soft); }
+  .kind-dot { display: inline-block; font-size: 0.62rem; line-height: 1; flex: none; }
+  .kind-dot::before { content: attr(data-glyph); }
+  html[data-lang-mode="both"] nav.toc a > span:not(.dots) { display: flex; flex-direction: column; gap: 1px; }
+
+  /* Sidebar head, fold button, compact icon strip */
+  .rail-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .rail-head .icon-btn .tip { left: auto; right: 0; top: calc(100% + 8px); transform: none; }
+  html[data-rail="collapsed"] .rail-head .icon-btn .tip { left: calc(100% + 10px); right: auto; top: 50%; transform: translateY(-50%); }
+  .rail-actions { display: flex; align-items: center; gap: 2px; }
+  html[data-rail="collapsed"] .rail-actions { flex-direction: column; }
+  .rail-full { display: flex; flex-direction: column; gap: 18px; }
+  .icon-btn {
+    position: relative;
+    appearance: none;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ink-2);
+    width: 32px; height: 32px;
+    padding: 0;
+    border-radius: 7px;
+    display: inline-grid; place-items: center;
+    cursor: pointer;
+    font: inherit;
+  }
+  .icon-btn > span:not(.tip) { display: inline-grid; place-items: center; }
+  .icon-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .icon-btn:hover { background: var(--surface-2); color: var(--ink); }
+  .icon-btn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+  .icon-btn[aria-expanded="true"][data-icon="toc"] { background: var(--accent); color: var(--accent-ink); }
+  .icon-btn .tip {
+    position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%);
+    background: var(--ink); color: var(--ground);
+    font-family: var(--font-body); font-size: 0.74rem; font-weight: 500; line-height: 1.3;
+    padding: 5px 8px; border-radius: 5px; white-space: nowrap;
+    pointer-events: none; opacity: 0; transition: opacity .12s ease; z-index: 40;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .icon-btn:hover .tip, .icon-btn:focus-visible .tip { opacity: 1; }
+  .icon-btn .tip kbd { font-family: var(--font-mono); font-size: 0.68rem; padding: 0 4px; border: 1px solid color-mix(in srgb, var(--ground) 40%, transparent); border-radius: 3px; }
+  .rail-strip { display: none; flex-direction: column; align-items: center; gap: 4px; }
+  .rail-strip hr { width: 20px; border: 0; border-top: 1px solid var(--line-strong); margin: 4px 0; }
+
+  html[data-rail="collapsed"] .shell { grid-template-columns: 48px minmax(0, 1fr); }
+  html[data-rail="collapsed"] .rail { overflow: visible; padding-right: 0; align-items: center; gap: 10px; }
+  html[data-rail="collapsed"] .rail-title, html[data-rail="collapsed"] .rail-full { display: none; }
+  html[data-rail="collapsed"] .rail-strip { display: flex; }
+  html[data-rail="collapsed"] .rail-head { justify-content: center; }
+
+  /* Icon halves and tooltip halves that depend on the current state */
+  html[data-view="unified"] .when-split, html[data-view="split"] .when-unified,
+  html[data-width="normal"] .when-wide, html[data-width="wide"] .when-normal,
+  html[data-rail="expanded"] .when-collapsed, html[data-rail="collapsed"] .when-expanded,
+  html:not([data-cvd="on"]) .when-cvd-on, html[data-cvd="on"] .when-cvd-off { display: none !important; }
+
+  .toc-pop {
+    position: fixed; z-index: 50;
+    width: 280px; max-height: calc(100vh - 32px); overflow-y: auto;
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px;
+    box-shadow: var(--shadow); padding: 8px;
+    font-size: 0.86rem;
+  }
+
+  .controls { display: flex; flex-direction: column; gap: 10px; }
+  .control-group { display: flex; flex-direction: column; gap: 5px; }
+  .control-group .lbl { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .seg {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 3px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--surface-2);
+    isolation: isolate;
+  }
+  .seg::before {
+    content: "";
+    position: absolute;
+    top: 3px; bottom: 3px; left: 3px;
+    width: calc(50% - 3px);
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow: 0 1px 2px rgba(0,0,0,.18);
+    transition: transform .18s ease;
+    z-index: 0;
+  }
+  .seg[data-index="1"]::before { transform: translateX(100%); }
+  .seg.seg-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .seg.seg-3::before { width: calc((100% - 6px) / 3); }
+  .seg.seg-3[data-index="2"]::before { transform: translateX(200%); }
+  .seg button {
+    position: relative;
+    z-index: 1;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--ink-2);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 999px;
+    text-align: center;
+    cursor: pointer;
+    transition: color .18s ease;
+    white-space: nowrap;
+  }
+  .seg button[aria-pressed="true"] { color: var(--accent-ink); }
+  .seg button:focus-visible { outline-offset: -2px; }
+  .check {
+    display: flex; align-items: flex-start; gap: 8px; font-size: 0.84rem; line-height: 1.4; color: var(--ink-2); cursor: pointer;
+  }
+  .check > span { min-width: 0; }
+  .check code { white-space: nowrap; }
+  .check input { accent-color: var(--accent); width: 15px; height: 15px; margin: 2px 0 0; flex: none; }
+  .btn-quiet {
+    appearance: none; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2);
+    font: inherit; font-size: 0.82rem; padding: 5px 10px; border-radius: 6px; cursor: pointer;
+  }
+  .btn-quiet:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  main { min-width: 0; display: flex; flex-direction: column; gap: 56px; padding-left: 18px; }
+  main:focus { outline: none; }
+
+  /* Header */
+  .eyebrow {
+    display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center;
+    font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600;
+  }
+  .eyebrow a { color: inherit; }
+  .eyebrow code { text-transform: none; letter-spacing: 0; background: var(--surface-2); padding: 0.08em 0.4em; border-radius: 4px; }
+  .eyebrow code a { text-decoration: none; }
+  header.page { display: flex; flex-direction: column; gap: 16px; }
+  header.page .lede { font-size: 1.05rem; color: var(--ink-2); max-width: 64ch; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .stat { padding: 14px 18px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; }
+  .stat:last-child { border-right: 0; }
+  @media (max-width: 900px) { .stat { border-right: 0; border-bottom: 1px solid var(--line); } .stat:last-child { border-bottom: 0; } }
+  .stat .n { font-family: var(--font-display); font-weight: 800; font-size: 1.7rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .stat .n.bad { color: var(--alert); }
+  .stat .n.ok { color: var(--ok); }
+  .stat .n.grey { color: var(--nodata); }
+  .stat .n.warn { color: var(--warn); }
+  .stat .l { font-size: 0.84rem; color: var(--muted); }
+
+  section { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 76px; }
+
+  /* Sticky top bar over the main column */
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    margin: -32px 0 -24px -18px;
+    padding: 10px 14px 10px 20px;
+    background: color-mix(in srgb, var(--ground) 88%, transparent);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar-id { font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); white-space: nowrap; }
+  .topbar-id a { color: inherit; text-decoration: none; }
+  .topbar-id a:hover { color: var(--accent); }
+  .topbar-id .sep { color: var(--muted); }
+  .searchbox {
+    flex: 1 1 200px; max-width: 520px;
+    display: flex; align-items: center; gap: 2px;
+    padding: 2px 4px 2px 10px;
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px;
+  }
+  .searchbox:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+  .searchbox svg.mag { width: 16px; height: 16px; fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-linecap: round; flex: none; }
+  .searchbox input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 0.9rem; padding: 5px 6px; outline: none; }
+  .searchbox input::-webkit-search-cancel-button { display: none; }
+  .searchbox input::placeholder { color: var(--muted); }
+  .search-count { font-family: var(--font-mono); font-size: 0.74rem; color: var(--muted); white-space: nowrap; padding: 0 6px; font-variant-numeric: tabular-nums; }
+  .search-count.none { color: var(--alert); }
+  .icon-btn.sm { width: 26px; height: 26px; border-radius: 6px; }
+  .icon-btn.sm svg { width: 15px; height: 15px; }
+  .icon-btn.sm .tip { left: 50%; top: calc(100% + 8px); transform: translateX(-50%); }
+  .topbar-hint { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+  .topbar-hint kbd, .topbar kbd, .help-grid kbd { font-family: var(--font-mono); font-size: 0.72rem; padding: 0 5px; border: 1px solid var(--line-strong); border-radius: 4px; background: var(--surface); color: var(--ink-2); }
+  .icon-btn .tip kbd { border-color: color-mix(in srgb, var(--ground) 40%, transparent); background: transparent; color: inherit; }
+  .topbar-tools { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+  .topbar-tools .seg { font-size: 0.78rem; }
+  .topbar-tools .seg button { padding: 3px 9px; font-size: 0.76rem; }
+  .topbar-tools .icon-btn .tip { left: auto; right: 0; top: calc(100% + 8px); transform: none; }
+  mark.hit { background: var(--hit); color: var(--hit-ink); border-radius: 2px; padding: 0 1px; }
+  mark.hit.cur { background: var(--hit-cur); box-shadow: 0 0 0 2px var(--hit-cur); }
+  @media (max-width: 900px) {
+    .topbar { margin-top: 0; margin-left: 0; padding-left: 12px; padding-right: 8px; }
+    .topbar-hint { display: none; }
+    .topbar-tools { margin-left: 0; flex-basis: 100%; }
+  }
+
+  /* Help dialog */
+  dialog#help {
+    border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--ink);
+    padding: 20px 22px; max-width: 440px; width: calc(100% - 32px); box-shadow: var(--shadow);
+  }
+  dialog#help::backdrop { background: rgba(0,0,0,.35); }
+  dialog#help h2 { font-size: 1.1rem; margin-bottom: 12px; }
+  .help-grid { display: grid; grid-template-columns: max-content 1fr; gap: 8px 14px; font-size: 0.9rem; align-items: baseline; }
+  .help-grid kbd { font-size: 0.78rem; }
+  .help-close { margin-top: 16px; }
+
+  .callout {
+    display: grid; grid-template-columns: 4px minmax(0, 1fr); gap: 16px;
+    padding: 16px 18px 16px 14px;
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+    border-radius: var(--radius);
+  }
+  .callout .bar { background: var(--accent); border-radius: 2px; }
+  .callout h3 { color: var(--accent); margin-bottom: 4px; }
+  .callout p, .callout li { color: var(--ink); font-size: 0.95rem; max-width: 72ch; }
+  .callout ul { margin-top: 6px; }
+  .callout .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .callout .effect { margin-top: 14px; background: var(--surface); }
+
+  .route {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 0.74rem; font-weight: 500;
+    padding: 2px 8px; border-radius: 4px;
+    background: var(--accent-soft); color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  .route s { opacity: .7; text-decoration-thickness: 1.5px; }
+  .section-head { display: flex; flex-direction: column; gap: 6px; }
+  .section-head .sub { color: var(--muted); font-size: 0.95rem; }
+
+  /* Group headings inside Changes */
+  .group-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap;
+    margin-top: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line-strong);
+    scroll-margin-top: 76px;
+  }
+  .group-head > span:first-child { flex: 1 1 auto; }
+  .group-head .count { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); font-weight: 400; min-width: 0; overflow-wrap: anywhere; text-align: right; }
+
+  /* Findings */
+  .findings { display: grid; gap: 12px; }
+  .finding {
+    display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 14px;
+    padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  }
+  .finding .bar { border-radius: 3px; position: relative; }
+  .finding .bar::after { content: attr(data-glyph); position: absolute; top: -2px; left: 50%; transform: translateX(-50%); font-size: 0.6rem; color: var(--surface); line-height: 1; }
+  .finding h3 { margin-bottom: 4px; }
+  .finding p { color: var(--ink-2); font-size: 0.95rem; }
+
+  /* Change blocks */
+  .block {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    scroll-margin-top: 76px;
+  }
+  .block > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 16px;
+    align-items: center;
+  }
+  .block > summary::-webkit-details-marker { display: none; }
+  .block > summary:hover { background: color-mix(in srgb, var(--surface-2) 55%, var(--surface)); }
+  .block > summary .name { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .block > summary .name .module { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
+  .block > summary .name .module a { color: inherit; }
+  .block > summary .name h3 { overflow-wrap: anywhere; }
+  .block > summary .chev { grid-column: 2; grid-row: 1 / span 2; width: 18px; height: 18px; color: var(--muted); transition: transform .18s ease; }
+  .block[open] > summary .chev { transform: rotate(90deg); }
+  .block > summary .meta { grid-column: 1; grid-row: 2; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 0.82rem; color: var(--muted); }
+  .block .body { padding: 4px 20px 20px; display: flex; flex-direction: column; gap: 16px; border-top: 1px solid var(--line); }
+  .note { font-size: 0.86rem; color: var(--muted); padding-top: 12px; }
+  .note + .note { padding-top: 0; }
+
+  .kind {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.72rem; letter-spacing: 0.07em; text-transform: uppercase; font-weight: 600;
+    padding: 2px 8px; border-radius: 4px;
+  }
+  .kind::before { content: attr(data-glyph); font-size: 0.7rem; }
+{{kindsCss}}
+
+  .status { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.76rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; }
+  .status.lines { color: var(--ink-2); background: var(--surface-2); }
+  .status.filestat { color: var(--muted); background: var(--surface-2); }
+  .arrow { color: var(--muted); }
+
+  /* Identity badge, filled by JS */
+  .ident { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 500; padding: 2px 9px; border-radius: 999px; border: 1px solid transparent; }
+  .ident .glyph { font-weight: 700; }
+  .ident.ok { color: var(--ok); background: var(--ok-soft); border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
+  .ident.bad { color: var(--alert); background: var(--alert-soft); border-color: color-mix(in srgb, var(--alert) 30%, transparent); }
+  .ident.rep { color: var(--accent); background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+  .ident.pending { color: var(--muted); background: var(--surface-2); }
+  .ident:empty { display: none; }
+
+  .two-col { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; }
+  @media (max-width: 900px) { .two-col { grid-template-columns: minmax(0, 1fr); } }
+  .why { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; }
+  .why p, .why li { color: var(--ink-2); font-size: 0.95rem; }
+
+  .effect { display: grid; grid-template-columns: max-content minmax(0, 1fr) minmax(0, 1fr); gap: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; font-size: 0.86rem; }
+  .effect > div { padding: 8px 12px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+  .effect > div:nth-last-child(-n+3) { border-bottom: 0; }
+  .effect .h { background: var(--surface-2); font-size: 0.72rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .effect .k { color: var(--muted); background: var(--code-bg); border-right: 1px solid var(--line); }
+  .effect .v { font-family: var(--font-mono); font-size: 0.79rem; }
+  .effect .v.was { color: var(--del-ink); }
+  .effect .v.now { color: var(--add-ink); }
+  .effect .v.white { color: var(--warn); }
+  .effect .v .same { color: var(--muted); font-family: var(--font-body); font-style: italic; }
+  .effect .v .src { color: var(--muted); font-family: var(--font-body); font-size: 0.85em; }
+  @media (max-width: 720px) {
+    .effect { grid-template-columns: minmax(0, 1fr); }
+    .effect .k { border-right: 0; }
+    .effect .h { display: none; }
+    .effect .k::before { content: attr(data-label) " · "; }
+  }
+
+  /* Figure (mechanism) */
+  .figure { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px 12px; }
+  .figure svg { display: block; width: 100%; height: auto; font-family: var(--font-body); }
+  .figure svg text { fill: var(--ink); font-size: 13px; }
+  .figure svg text.lbl { font-family: var(--font-display); font-weight: 700; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; fill: var(--muted); }
+  .figure svg text.mono { font-family: var(--font-mono); font-size: 12px; }
+  .figure svg text.tag { font-size: 12px; font-weight: 600; }
+  .figure svg text.tag.bad { fill: var(--warn); }
+  .figure svg text.tag.good { fill: var(--ok); }
+  .figure svg text.tag.muted { fill: var(--muted); font-weight: 400; }
+  .figure svg .ly { stroke: var(--line-strong); stroke-width: 1; }
+  .figure svg .ly-base { fill: var(--surface-2); }
+  .figure svg .ly-soft { fill: var(--warn-soft); }
+  .figure svg .ly-plain { fill: var(--code-bg); }
+  .figure svg .ly-bad { fill: url(#hatch); stroke: var(--warn); stroke-dasharray: 4 3; }
+  .figure svg .ly-good { fill: var(--ok-soft); stroke: var(--ok); }
+  .figure svg .hatch-line { stroke: var(--warn); stroke-width: 1; opacity: .55; }
+  .figure svg .ghost { fill: var(--warn); opacity: .18; }
+  .figure svg .rule { stroke: var(--line); stroke-width: 1; }
+  .figure svg .arrowline { stroke: var(--muted); stroke-width: 1.4; fill: none; }
+  .figure svg .arrowhead { fill: var(--muted); }
+  .figure .caption { margin-top: 10px; font-size: 0.86rem; color: var(--muted); max-width: none; }
+
+  /* Diff viewer */
+  .diff { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--code-bg); }
+  .diff-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; background: var(--surface-2); border-bottom: 1px solid var(--line); font-size: 0.78rem; color: var(--muted); flex-wrap: wrap; }
+  .diff-head a { color: inherit; }
+  .diff-head .counts { display: inline-flex; gap: 10px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .diff-head .counts .plus { color: var(--add-ink); }
+  .diff-head .counts .minus { color: var(--del-ink); }
+  .diff-head .counts .tilde { color: var(--muted); }
+  .diff-scroll { overflow-x: auto; }
+  table.udiff, table.sdiff { border-collapse: collapse; width: 100%; font-family: var(--font-mono); font-size: 0.79rem; line-height: 1.55; }
+  table.udiff td, table.sdiff td { padding: 0 10px; white-space: pre; vertical-align: top; }
+  html[data-wrap="on"] table.udiff, html[data-wrap="on"] table.sdiff { table-layout: fixed; }
+  html[data-wrap="on"] td.code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  col.c-ln { width: 46px; }
+  col.c-sign { width: 22px; }
+  col.c-gutter { width: 1px; }
+  td.ln { width: 3.2ch; min-width: 3.2ch; text-align: right; color: var(--muted); user-select: none; font-size: 0.72rem; padding-top: 2px; border-right: 1px solid var(--line); }
+  td.sign { width: 1ch; min-width: 1ch; text-align: center; color: var(--muted); user-select: none; padding: 0 4px; }
+  tr.del td { background: var(--del-bg); color: var(--del-ink); }
+  tr.add td { background: var(--add-bg); color: var(--add-ink); }
+  tr.del td.ln, tr.add td.ln { color: inherit; opacity: .7; }
+  tr.ws td.code::after { content: "  {{wsTag}}"; color: var(--muted); font-size: 0.68rem; letter-spacing: .06em; opacity: .8; }
+  td.code mark.d { background: var(--del-mark); color: inherit; border-radius: 2px; }
+  td.code mark.a { background: var(--add-mark); color: inherit; border-radius: 2px; }
+  table.sdiff td.gutter { width: 1px; padding: 0; border-left: 1px solid var(--line); }
+  table.sdiff td.side { width: 50%; }
+  table.sdiff tr.pair td.l { background: var(--del-bg); color: var(--del-ink); }
+  table.sdiff tr.pair td.r { background: var(--add-bg); color: var(--add-ink); }
+  table.sdiff td.empty { background: repeating-linear-gradient(135deg, transparent 0 6px, var(--surface-2) 6px 7px); }
+  .diff .caption { padding: 8px 12px; border-top: 1px solid var(--line); font-size: 0.78rem; color: var(--muted); font-family: var(--font-body); }
+  .diff .empty-note { padding: 14px 12px; font-size: 0.86rem; color: var(--muted); font-family: var(--font-body); }
+  .linkish { appearance: none; border: 0; background: none; padding: 0; font: inherit; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+
+  /* Quoted PR material */
+  .quote { display: grid; grid-template-columns: 4px minmax(0, 1fr); gap: 16px; padding: 16px 18px 16px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+  .quote .bar { background: var(--nodata); border-radius: 2px; }
+  .quote .q-body { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .quote .label { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--nodata); font-weight: 600; }
+  .quote blockquote { margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--line-strong); color: var(--ink-2); font-size: 0.95rem; display: flex; flex-direction: column; gap: 10px; }
+  .quote blockquote p { max-width: 72ch; }
+  .quote blockquote pre { margin: 0; padding: 8px 10px; background: var(--code-bg); border: 1px solid var(--line); border-radius: 4px; overflow-x: auto; font-size: 0.78rem; line-height: 1.5; }
+  .quote .summary { font-size: 0.9rem; color: var(--muted); padding-left: 16px; }
+  .quote .summary .tag { font-weight: 600; color: var(--nodata); }
+  .table-scroll { overflow-x: auto; }
+  table.pr { border-collapse: collapse; font-family: var(--font-mono); font-size: 0.78rem; font-variant-numeric: tabular-nums; min-width: 520px; }
+  table.pr th, table.pr td { padding: 5px 12px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  table.pr th:first-child, table.pr td:first-child { text-align: left; }
+  table.pr th { font-family: var(--font-body); font-weight: 600; font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); }
+  table.pr td.saved { font-weight: 600; color: var(--ok); }
+  table.pr tr.total td { font-weight: 600; border-bottom: 0; }
+  table.pr caption { text-align: left; font-family: var(--font-body); font-size: 0.8rem; color: var(--muted); padding: 0 0 6px; }
+
+  /* Verification and extra sections */
+  .checks { display: grid; gap: 10px; }
+  .check-row { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; align-items: start; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+  .check-row .ic { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 0.75rem; font-weight: 700; margin-top: 2px; }
+  .check-row .ic.pass { background: var(--ok-soft); color: var(--ok); }
+  .check-row .ic.skip { background: var(--nodata-soft); color: var(--nodata); }
+  .check-row .ic.warn { background: var(--warn-soft); color: var(--warn); }
+  .check-row .ic.fail { background: var(--alert-soft); color: var(--alert); }
+  .check-row .t { font-weight: 600; }
+  .check-row .t code { font-weight: 500; }
+  .check-row p { font-size: 0.92rem; color: var(--ink-2); }
+  .check-row pre { margin: 8px 0 0; padding: 8px 10px; background: var(--code-bg); border: 1px solid var(--line); border-radius: 4px; overflow-x: auto; font-size: 0.78rem; }
+
+  /* Commits */
+  .commits-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .commits-table th, .commits-table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .commits-table th { font-size: 0.72rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--surface-2); }
+  .commits-table tr:last-child td { border-bottom: 0; }
+  .commits-table td.sha { font-family: var(--font-mono); font-size: 0.8rem; white-space: nowrap; }
+  .commits-table td.who { white-space: nowrap; }
+  .commit-msgs { display: flex; flex-direction: column; gap: 10px; }
+  details.commit { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+  details.commit > summary { list-style: none; cursor: pointer; padding: 12px 16px; font-weight: 600; display: flex; gap: 10px; align-items: baseline; }
+  details.commit > summary::-webkit-details-marker { display: none; }
+  details.commit > summary code { font-weight: 500; color: var(--muted); }
+  details.commit pre { margin: 0; padding: 4px 20px 18px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.82rem; line-height: 1.6; }
+  details.commit pre .subject { font-weight: 600; color: var(--ink); }
+  .copy {
+    position: absolute; top: 8px; right: 10px;
+    appearance: none; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2);
+    font: inherit; font-size: 0.78rem; padding: 4px 10px; border-radius: 5px; cursor: pointer;
+  }
+  .copy:hover { border-color: var(--accent); color: var(--accent); }
+  .copy[data-done="true"] { border-color: var(--ok); color: var(--ok); }
+
+  .followup h3 { font-size: 0.95rem; margin-bottom: 6px; }
+  .followup .lists { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .followup .tagline { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+  .followup li { font-size: 0.95rem; color: var(--ink-2); }
+
+  footer.page { color: var(--muted); font-size: 0.82rem; border-top: 1px solid var(--line); padding-top: 16px; }
+  footer.page p { max-width: none; }
+
+  /* High contrast modes keep their edges */
+  @media (forced-colors: active) {
+    .block, .kind, .seg button, .finding, .check-row, .callout, .quote, .ident, .status { border: 1px solid CanvasText; }
+    mark.hit { outline: 1px solid CanvasText; }
+    [aria-pressed="true"] { outline: 2px solid Highlight; }
+    .seg::before { display: none; }
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="shell">
+  <aside class="rail" id="rail" aria-label="Page navigation and view controls">
+    <div class="rail-head">
+      <div class="rail-title">{{railTitle}}</div>
+      <div class="rail-actions">
+      <button type="button" class="icon-btn" id="to-top" aria-label="Back to top">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 3.5h12M10 16.5V7M5.5 11.5L10 7l4.5 4.5"/></svg>
+        <span class="tip" aria-hidden="true">Back to top</span>
+      </button>
+      <button type="button" class="icon-btn" id="rail-fold" aria-expanded="true" aria-controls="rail" aria-label="Collapse or expand the sidebar">
+        <span class="when-expanded"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M11 4l-6 6 6 6M17 4l-6 6 6 6"/></svg></span><span class="when-collapsed"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M9 4l6 6-6 6M3 4l6 6-6 6"/></svg></span>
+        <span class="tip" aria-hidden="true"><span class="when-expanded">Collapse sidebar</span><span class="when-collapsed">Expand sidebar</span><kbd>[</kbd></span>
+      </button>
+      </div>
+    </div>
+    <div class="rail-full">
+    <nav id="toc" class="toc" aria-label="Contents">
+{{tocHtml}}
+    </nav>
+
+    <div class="controls">
+      <div class="control-group">
+        <span class="lbl" id="lbl-view">Diff layout</span>
+        <div class="seg" role="group" aria-labelledby="lbl-view">
+          <button type="button" data-view-btn="unified" aria-pressed="true">Unified</button>
+          <button type="button" data-view-btn="split" aria-pressed="false">Side by side</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="lbl" id="lbl-width">Page width</span>
+        <div class="seg" role="group" aria-labelledby="lbl-width">
+          <button type="button" data-width-btn="normal" aria-pressed="true">Normal</button>
+          <button type="button" data-width-btn="wide" aria-pressed="false">Wide</button>
+        </div>
+      </div>
+      <label class="check">
+        <input type="checkbox" id="wrap-toggle" checked>
+        <span>Wrap long lines</span>
+      </label>
+      <label class="check">
+        <input type="checkbox" id="ws-toggle" checked>
+        <span><span class="en">{{wsLabelEn}}</span>{{wsLabelL2}}</span>
+      </label>
+      <div class="btn-row">
+        <button type="button" class="btn-quiet" id="expand-all">Expand all</button>
+        <button type="button" class="btn-quiet" id="collapse-all">Collapse all</button>
+      </div>
+    </div>
+    </div>
+
+    <div class="rail-strip" role="toolbar" aria-label="Compact page controls">
+      <button type="button" class="icon-btn" id="toc-btn" data-icon="toc" aria-haspopup="dialog" aria-expanded="false" aria-controls="toc-pop" aria-label="Contents">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5h10M7 10h10M7 15h6"/><circle cx="3.5" cy="5" r="1" fill="currentColor" stroke="none"/><circle cx="3.5" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="3.5" cy="15" r="1" fill="currentColor" stroke="none"/></svg><span class="tip" aria-hidden="true">Contents</span>
+      </button>
+      <hr>
+      <button type="button" class="icon-btn" data-icon="view" aria-label="Toggle diff layout">
+        <span class="when-unified"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="1.5"/><path d="M3 8h14M3 12h14"/></svg></span><span class="when-split"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="1.5"/><path d="M10 4v12M5.5 8h2.5M12 8h2.5M5.5 12h2.5M12 12h2.5"/></svg></span>
+        <span class="tip" aria-hidden="true"><span class="when-unified">Diff layout: unified. Click for side by side</span><span class="when-split">Diff layout: side by side. Click for unified</span></span>
+      </button>
+      <button type="button" class="icon-btn" data-icon="width" aria-label="Toggle page width">
+        <span class="when-normal"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4v12M17 4v12"/><rect x="6.5" y="6" width="7" height="8" rx="1"/></svg></span><span class="when-wide"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14M6 7l-3 3 3 3M14 7l3 3-3 3"/></svg></span>
+        <span class="tip" aria-hidden="true"><span class="when-normal">Page width: normal. Click for wide</span><span class="when-wide">Page width: wide. Click for normal</span></span>
+      </button>
+      <button type="button" class="icon-btn" data-icon="wrap" aria-pressed="true" aria-label="Wrap long lines">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h12M4 10h8.5a2.5 2.5 0 0 1 0 5H11M4 14h4"/><path d="M12.5 13l-1.5 2 1.5 2"/></svg><span class="tip" aria-hidden="true">Wrap long lines</span>
+      </button>
+      <button type="button" class="icon-btn" data-icon="ws" aria-pressed="true" aria-label="{{wsLabelEn}}">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h5M11 6h5M4 10h3.5M11 10h5M4 14h6M11 14h5"/></svg><span class="tip" aria-hidden="true">{{wsLabelEn}}</span>
+      </button>
+      <hr>
+      <button type="button" class="icon-btn" data-icon="expand" aria-label="Expand all blocks">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5-4 5 4M5 12l5 4 5-4"/></svg><span class="tip" aria-hidden="true">Expand all blocks</span>
+      </button>
+      <button type="button" class="icon-btn" data-icon="collapse" aria-label="Collapse all blocks">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 4l5 4 5-4M5 16l5-4 5 4"/></svg><span class="tip" aria-hidden="true">Collapse all blocks</span>
+      </button>
+    </div>
+  </aside>
+
+  <main id="main" tabindex="-1">
+    <div class="topbar">
+      <div class="topbar-id">
+        <a href="#top" id="topbar-home">{{railTitle}}</a>
+        <span class="sep" aria-hidden="true">·</span>
+        <a href="{{prUrl}}">PR #{{prNumber}}</a>
+      </div>
+      <div class="searchbox" role="search">
+        <svg class="mag" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M12.5 12.5L17 17"/></svg>
+        <input type="search" id="search" autocomplete="off" spellcheck="false" aria-label="Search this page" placeholder="Search this page">
+        <span class="search-count" id="search-count" aria-live="polite"></span>
+        <button type="button" class="icon-btn sm" id="search-prev" aria-label="Previous match">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 12.5l5-5 5 5"/></svg>
+          <span class="tip" aria-hidden="true">Previous match<kbd>⇧↵</kbd></span>
+        </button>
+        <button type="button" class="icon-btn sm" id="search-next" aria-label="Next match">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 7.5l5 5 5-5"/></svg>
+          <span class="tip" aria-hidden="true">Next match<kbd>↵</kbd></span>
+        </button>
+        <button type="button" class="icon-btn sm" id="search-clear" aria-label="Clear search">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></svg>
+          <span class="tip" aria-hidden="true">Clear<kbd>Esc</kbd></span>
+        </button>
+      </div>
+      <span class="topbar-hint">Press <kbd>/</kbd> to search</span>
+      <div class="topbar-tools">
+        <div class="seg seg-3" role="group" aria-label="Colour theme">
+          <button type="button" data-theme-btn="system" aria-pressed="true">System</button>
+          <button type="button" data-theme-btn="light" aria-pressed="false">Light</button>
+          <button type="button" data-theme-btn="dark" aria-pressed="false">Dark</button>
+        </div>
+        <button type="button" class="icon-btn" id="cvd-toggle" aria-pressed="false" aria-label="Colour vision deficiency palette">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="M10 3.5v13" /><path d="M10 3.5a6.5 6.5 0 0 1 0 13" fill="currentColor" stroke="none" opacity=".5"/></svg>
+          <span class="tip" aria-hidden="true"><span class="when-cvd-off">Colour vision deficiency palette: off. Click to turn on</span><span class="when-cvd-on">Colour vision deficiency palette: on. Click to turn off</span><kbd>c</kbd></span>
+        </button>
+        <button type="button" class="icon-btn" id="help-btn" aria-label="Keyboard shortcuts" aria-haspopup="dialog">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M7.8 8a2.2 2.2 0 1 1 3.4 1.8c-.8.5-1.2.9-1.2 1.7"/><circle cx="10" cy="14" r=".6" fill="currentColor" stroke="none"/></svg>
+          <span class="tip" aria-hidden="true">Keyboard shortcuts<kbd>?</kbd></span>
+        </button>
+      </div>
+    </div>
+    <div id="announce" class="sr-only" aria-live="polite"></div>
+
+    <header class="page" id="top">
+      <div class="eyebrow">
+        {{ticketHtml}}
+        <a href="{{prUrl}}">PR #{{prNumber}}</a>
+        <span aria-hidden="true">·</span>
+        <a href="{{repoUrl}}">{{repoName}}</a>
+        <span aria-hidden="true">·</span>
+        <a href="{{authorUrl}}">@{{authorLogin}}</a>
+        <span aria-hidden="true">·</span>
+        <code>{{branch}}</code>
+        <span aria-hidden="true">·</span>
+        <code><a href="{{baseUrl}}" title="Base commit on {{baseRef}}">{{baseShort}}</a></code>
+        <span aria-hidden="true">→</span>
+        <code><a href="{{headUrl}}" title="Head commit of the pull request">{{headShort}}</a></code>
+        <span aria-hidden="true">·</span>
+        <span>Analysed {{analysedOn}}</span>
+      </div>
+      <h1>{{title}}</h1>
+{{headerLede}}
+      <div class="stats" role="list">
+{{statTiles}}
+      </div>
+    </header>
+
+    <section id="findings">
+      <div class="section-head">
+        <h2>Findings</h2>
+      </div>
+      <div class="findings">
+{{findings}}
+      </div>
+    </section>
+
+{{mechanism}}
+
+    <section id="changes">
+      <div class="section-head">
+        <h2>Changes</h2>
+{{changesIntro}}
+      </div>
+{{changesBody}}
+    </section>
+
+{{fromPr}}
+
+    <section id="verification">
+      <div class="section-head">
+        <h2>Verification</h2>
+      </div>
+{{verification}}
+    </section>
+
+{{extraSections}}
+
+    <section id="followup" class="followup">
+      <div class="section-head">
+        <h2>Follow-up</h2>
+      </div>
+{{followup}}
+    </section>
+
+    <section id="commits">
+      <div class="section-head">
+        <h2>Commits</h2>
+        <p class="sub">Commits in <a href="{{prUrl}}">PR #{{prNumber}}</a> from <a href="{{baseUrl}}">{{baseShort}}</a> on <code>{{baseRef}}</code> to <a href="{{headUrl}}">{{headShort}}</a>.</p>
+      </div>
+{{commits}}
+    </section>
+
+    <footer class="page">
+{{footer}}
+    </footer>
+  </main>
+</div>
+
+<div class="toc-pop" id="toc-pop" role="dialog" aria-label="Contents" hidden>
+  <nav class="toc" aria-label="Contents"></nav>
+</div>
+
+<dialog id="help" aria-labelledby="help-title">
+  <h2 id="help-title">Keyboard shortcuts</h2>
+  <div class="help-grid">
+    <kbd>/</kbd><span>Search this page</span>
+    <kbd>↵</kbd><span>Next match, or run a new search</span>
+    <kbd>⇧↵</kbd><span>Previous match</span>
+    <kbd>Esc</kbd><span>Clear the search, close the contents popup or this dialog</span>
+    <kbd>[</kbd><span>Collapse or expand the sidebar</span>
+    <kbd>t</kbd><span>Cycle theme: system, light, dark</span>
+    <kbd>c</kbd><span>Toggle the colour vision deficiency palette</span>
+    <kbd>?</kbd><span>Show this list</span>
+  </div>
+  <form method="dialog"><button type="submit" class="btn-quiet help-close">Close</button></form>
+</dialog>
+
+<script>
+(function () {
+  'use strict';
+
+  const STORE = '{{storagePrefix}}';
+  const LANG2 = '{{lang2}}';
+
+  // ---------- Embedded file versions, filled by the build step ----------
+  const BLOCKS = {{blocksJs}};
+  // Per-group masks applied before comparing files against their representative
+  const MASKS = {{maskJs}};
+
+  // ---------- Diff engine ----------
+  const norm = (ignoreWs) => ignoreWs
+    ? (s) => s.replace(/\s+/g, ' ').trim()
+    : (s) => s;
+
+  function splitLines(text) {
+    return text === '' ? [] : text.split('\n');
+  }
+
+  function diffLines(aText, bText, ignoreWs) {
+    const A = splitLines(aText), B = splitLines(bText);
+    const f = norm(ignoreWs);
+    const na = A.map(f), nb = B.map(f);
+    const n = A.length, m = B.length;
+    const dp = [];
+    for (let i = 0; i <= n; i++) dp.push(new Uint16Array(m + 1));
+    for (let i = n - 1; i >= 0; i--) {
+      for (let j = m - 1; j >= 0; j--) {
+        dp[i][j] = na[i] === nb[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+      }
+    }
+    const ops = [];
+    let i = 0, j = 0;
+    while (i < n && j < m) {
+      if (na[i] === nb[j]) { ops.push({ t: 'eq', a: A[i], b: B[j], ai: i, bi: j }); i++; j++; }
+      else if (dp[i + 1][j] >= dp[i][j + 1]) { ops.push({ t: 'del', a: A[i], ai: i }); i++; }
+      else { ops.push({ t: 'add', b: B[j], bi: j }); j++; }
+    }
+    while (i < n) { ops.push({ t: 'del', a: A[i], ai: i }); i++; }
+    while (j < m) { ops.push({ t: 'add', b: B[j], bi: j }); j++; }
+    return ops;
+  }
+
+  // Group consecutive del/add ops into hunks so they can be paired side by side
+  function hunks(ops) {
+    const out = [];
+    let cur = null;
+    for (const op of ops) {
+      if (op.t === 'eq') { if (cur) { out.push(cur); cur = null; } out.push({ t: 'eq', op }); }
+      else {
+        if (!cur) cur = { t: 'chg', dels: [], adds: [] };
+        (op.t === 'del' ? cur.dels : cur.adds).push(op);
+      }
+    }
+    if (cur) out.push(cur);
+    return out;
+  }
+
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  // Character-level highlight for a paired old/new line: common prefix and suffix stay plain
+  function inlineMarks(a, b) {
+    let p = 0;
+    const max = Math.min(a.length, b.length);
+    while (p < max && a[p] === b[p]) p++;
+    let s = 0;
+    while (s < max - p && a[a.length - 1 - s] === b[b.length - 1 - s]) s++;
+    const midA = a.slice(p, a.length - s), midB = b.slice(p, b.length - s);
+    if (!midA && !midB) return { a: esc(a), b: esc(b) };
+    return {
+      a: esc(a.slice(0, p)) + (midA ? '<mark class="d">' + esc(midA) + '</mark>' : '') + esc(a.slice(a.length - s)),
+      b: esc(b.slice(0, p)) + (midB ? '<mark class="a">' + esc(midB) + '</mark>' : '') + esc(b.slice(b.length - s))
+    };
+  }
+
+  function counts(ops) {
+    let plus = 0, minus = 0, ws = 0;
+    for (const op of ops) {
+      if (op.t === 'add') plus++;
+      else if (op.t === 'del') minus++;
+      else if (op.a !== op.b) ws++;
+    }
+    return { plus, minus, ws };
+  }
+
+  const SR_ADD = '<span class="sr-only">added</span>';
+  const SR_DEL = '<span class="sr-only">removed</span>';
+
+  function renderUnified(block, ops) {
+    const rows = [];
+    for (const op of ops) {
+      if (op.t === 'eq') {
+        const ws = op.a !== op.b;
+        rows.push(`<tr class="${ws ? 'ws' : ''}"><td class="ln">${block.startBefore + op.ai}</td><td class="ln">${block.startAfter + op.bi}</td><td class="sign"></td><td class="code">${esc(op.b)}</td></tr>`);
+      } else if (op.t === 'del') {
+        rows.push(`<tr class="del"><td class="ln">${block.startBefore + op.ai}</td><td class="ln"></td><td class="sign"><span aria-hidden="true">−</span>${SR_DEL}</td><td class="code">${esc(op.a)}</td></tr>`);
+      } else {
+        rows.push(`<tr class="add"><td class="ln"></td><td class="ln">${block.startAfter + op.bi}</td><td class="sign"><span aria-hidden="true">+</span>${SR_ADD}</td><td class="code">${esc(op.b)}</td></tr>`);
+      }
+    }
+    return `<table class="udiff"><colgroup><col class="c-ln"><col class="c-ln"><col class="c-sign"><col></colgroup><tbody>${rows.join('')}</tbody></table>`;
+  }
+
+  function renderSplit(block, ops) {
+    const rows = [];
+    for (const h of hunks(ops)) {
+      if (h.t === 'eq') {
+        const op = h.op;
+        const ws = op.a !== op.b;
+        rows.push(`<tr class="${ws ? 'ws' : ''}"><td class="ln">${block.startBefore + op.ai}</td><td class="side code">${esc(op.a)}</td><td class="gutter"></td><td class="ln">${block.startAfter + op.bi}</td><td class="side code">${esc(op.b)}</td></tr>`);
+      } else {
+        const len = Math.max(h.dels.length, h.adds.length);
+        for (let k = 0; k < len; k++) {
+          const d = h.dels[k], a = h.adds[k];
+          let left = '', right = '';
+          if (d && a) {
+            const m = inlineMarks(d.a, a.b);
+            left = m.a; right = m.b;
+          } else {
+            if (d) left = esc(d.a);
+            if (a) right = esc(a.b);
+          }
+          rows.push(`<tr class="pair">` +
+            (d ? `<td class="ln l">${block.startBefore + d.ai}${SR_DEL}</td><td class="side code l">${left}</td>` : `<td class="ln empty"></td><td class="side code empty"></td>`) +
+            `<td class="gutter"></td>` +
+            (a ? `<td class="ln r">${block.startAfter + a.bi}${SR_ADD}</td><td class="side code r">${right}</td>` : `<td class="ln empty"></td><td class="side code empty"></td>`) +
+            `</tr>`);
+        }
+      }
+    }
+    return `<table class="sdiff"><colgroup><col class="c-ln"><col><col class="c-gutter"><col class="c-ln"><col></colgroup><tbody>${rows.join('')}</tbody></table>`;
+  }
+
+  const state = {
+    view: 'unified',
+    ignoreWs: true,
+    lang: 'en',
+    width: 'normal',
+    wrap: true,
+    rail: 'expanded',
+    theme: 'system',
+    cvd: false
+  };
+
+  const DIFF_HEAD = {{diffHeadLabel}};
+  const WS_TAG = {{wsTagJs}};
+  const WS_LABEL = {{wsLabelJs}};
+
+  function renderAll() {
+    document.querySelectorAll('.diff[data-block]').forEach((el) => {
+      const key = el.getAttribute('data-block');
+      const block = BLOCKS[key];
+      if (!block) return;
+      if (block.before === '' && block.after === '') {
+        el.innerHTML = `<div class="diff-head"><span>${DIFF_HEAD}</span></div><div class="empty-note">No text embedded for this block.</div>`;
+        return;
+      }
+      const ops = diffLines(block.before, block.after, state.ignoreWs);
+      const c = counts(ops);
+      const wsNote = c.ws ? `<span class="tilde">~${c.ws} ${esc(WS_TAG)}</span>` : '';
+      const head = `<div class="diff-head">
+        <span>${DIFF_HEAD}</span>
+        <span class="counts"><span class="minus">−${c.minus}</span><span class="plus">+${c.plus}</span>${wsNote}</span>
+      </div>`;
+      const body = state.view === 'split' ? renderSplit(block, ops) : renderUnified(block, ops);
+      const notes = [];
+      if (c.ws && state.ignoreWs) {
+        notes.push(`Lines tagged <em>${esc(WS_TAG)}</em> differ only in whitespace. Untick <em>${esc(WS_LABEL)}</em> in the sidebar to see them as changes.`);
+      }
+      if (state.view === 'split' && state.width !== 'wide') {
+        notes.push(state.wrap
+          ? `Both panes share the column width. <button type="button" class="linkish" data-width-btn="wide">Switch to wide width</button> for fewer wrapped lines.`
+          : `Long lines scroll inside the table, so the right pane may sit off-screen. Turn on <em>Wrap long lines</em> or <button type="button" class="linkish" data-width-btn="wide">switch to wide width</button>.`);
+      }
+      const caption = notes.length ? `<div class="caption">${notes.join('<br>')}</div>` : '';
+      el.innerHTML = head + `<div class="diff-scroll">${body}</div>` + caption;
+    });
+    if (typeof refreshSearch === 'function') refreshSearch();
+  }
+
+  // ---------- Identity badges: is this file the same edit as its group's representative? ----------
+  function maskFile(text, group) {
+    const rules = (group && MASKS[group]) || [];
+    let out = text;
+    for (const r of rules) out = out.replace(new RegExp(r.pattern, r.flags || 'g'), r.replacement);
+    return out;
+  }
+
+  function representativeOf(block) {
+    if (!block.group) return null;
+    for (const k of Object.keys(BLOCKS)) {
+      const b = BLOCKS[k];
+      if (b.group === block.group && b.rep) return { key: k, block: b };
+    }
+    return null;
+  }
+
+  function identityFor(key) {
+    const block = BLOCKS[key];
+    if (block.rep) return { kind: 'rep' };
+    const rep = representativeOf(block);
+    if (!rep) return { kind: 'none' };
+    const g = block.group;
+    const sameBefore = maskFile(rep.block.before, g) === maskFile(block.before, g);
+    const sameAfter = maskFile(rep.block.after, g) === maskFile(block.after, g);
+    if (sameBefore && sameAfter) return { kind: 'ok', rep: rep.block.file, masked: (MASKS[g] || []).length > 0 };
+    const ops = diffLines(maskFile(rep.block.after, g), maskFile(block.after, g), false);
+    const c = counts(ops);
+    return { kind: 'bad', rep: rep.block.file, lines: c.plus + c.minus };
+  }
+
+  function renderBadges() {
+    document.querySelectorAll('.ident[data-ident]').forEach((el) => {
+      const key = el.getAttribute('data-ident');
+      const block = BLOCKS[key];
+      if (!block) return;
+      const r = identityFor(key);
+      el.classList.remove('pending', 'ok', 'bad', 'rep');
+      if (r.kind === 'rep') {
+        el.classList.add('rep');
+        el.innerHTML = `<span class="glyph" aria-hidden="true">★</span>Representative for the group`;
+      } else if (r.kind === 'ok') {
+        el.classList.add('ok');
+        el.innerHTML = `<span class="glyph" aria-hidden="true">✓</span>Same edit as ${esc(r.rep)}${r.masked ? ', apart from masked tokens' : ''}`;
+      } else if (r.kind === 'bad') {
+        el.classList.add('bad');
+        el.innerHTML = `<span class="glyph" aria-hidden="true">✕</span>Differs from ${esc(r.rep)}: ${r.lines} lines`;
+      } else {
+        el.innerHTML = '';
+      }
+    });
+    document.querySelectorAll('.status.lines[data-lines]').forEach((el) => {
+      const block = BLOCKS[el.getAttribute('data-lines')];
+      if (!block) return;
+      const before = splitLines(block.before).length, after = splitLines(block.after).length;
+      el.textContent = `${before} → ${after} lines`;
+    });
+  }
+
+  // ---------- Live region ----------
+  const announceEl = document.getElementById('announce');
+  function announce(text) {
+    if (!announceEl) return;
+    announceEl.textContent = '';
+    requestAnimationFrame(() => { announceEl.textContent = text; });
+  }
+
+  // ---------- Controls ----------
+  function store(key, value) {
+    try { localStorage.setItem(STORE + key, value); } catch (e) { /* storage unavailable */ }
+  }
+  function load(key) {
+    try { return localStorage.getItem(STORE + key); } catch (e) { return null; }
+  }
+
+  function setPressed(selector, attr, value) {
+    document.querySelectorAll(selector).forEach((b) => {
+      const on = b.getAttribute(attr) === value;
+      b.setAttribute('aria-pressed', String(on));
+      const seg = b.closest('.seg');
+      if (on && seg) seg.setAttribute('data-index', String(Array.from(seg.children).indexOf(b)));
+    });
+  }
+
+  // Language is chosen only through the URL: ?lang=<code> shows the second language
+  function applyLang(code) {
+    const isL2 = LANG2 && code === LANG2;
+    state.lang = isL2 ? 'l2' : 'en';
+    document.documentElement.setAttribute('data-lang', state.lang);
+    document.documentElement.setAttribute('lang', isL2 ? LANG2 : 'en');
+  }
+
+  function applyView(view, quiet) {
+    state.view = view;
+    document.documentElement.setAttribute('data-view', view);
+    setPressed('[data-view-btn]', 'data-view-btn', view);
+    store('view', view);
+    renderAll();
+    if (!quiet) announce(view === 'split' ? 'Diff layout: side by side' : 'Diff layout: unified');
+  }
+
+  function applyWidth(width, quiet) {
+    state.width = width;
+    document.documentElement.setAttribute('data-width', width);
+    setPressed('.seg [data-width-btn]', 'data-width-btn', width);
+    store('width', width);
+    renderAll();
+    if (!quiet) announce(width === 'wide' ? 'Page width: wide' : 'Page width: normal');
+  }
+  document.addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-width-btn]');
+    if (b) applyWidth(b.getAttribute('data-width-btn'));
+  });
+
+  document.querySelectorAll('[data-view-btn]').forEach((b) => b.addEventListener('click', () => applyView(b.getAttribute('data-view-btn'))));
+
+  const wsToggle = document.getElementById('ws-toggle');
+  function applyWs(on, quiet) {
+    state.ignoreWs = on;
+    wsToggle.checked = on;
+    document.documentElement.setAttribute('data-ws', on ? 'on' : 'off');
+    store('ws', on ? 'on' : 'off');
+    syncIcons();
+    renderAll();
+    if (!quiet) announce(`${WS_LABEL}: ${on ? 'on' : 'off'}`);
+  }
+  wsToggle.addEventListener('change', () => applyWs(wsToggle.checked));
+
+  const wrapToggle = document.getElementById('wrap-toggle');
+  function applyWrap(on, quiet) {
+    state.wrap = on;
+    wrapToggle.checked = on;
+    document.documentElement.setAttribute('data-wrap', on ? 'on' : 'off');
+    store('wrap', on ? 'on' : 'off');
+    syncIcons();
+    renderAll();
+    if (!quiet) announce(`Wrap long lines: ${on ? 'on' : 'off'}`);
+  }
+  wrapToggle.addEventListener('change', () => applyWrap(wrapToggle.checked));
+
+  function setAllBlocks(open) {
+    document.querySelectorAll('details.block').forEach((d) => { d.open = open; });
+    announce(open ? 'All blocks expanded' : 'All blocks collapsed');
+  }
+  document.getElementById('expand-all').addEventListener('click', () => setAllBlocks(true));
+  document.getElementById('collapse-all').addEventListener('click', () => setAllBlocks(false));
+
+  // ---------- Theme and colour vision deficiency palette ----------
+  const THEMES = ['system', 'light', 'dark'];
+  function applyTheme(mode, quiet) {
+    if (!THEMES.includes(mode)) mode = 'system';
+    state.theme = mode;
+    if (mode === 'system') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', mode);
+    setPressed('[data-theme-btn]', 'data-theme-btn', mode);
+    store('theme', mode);
+    if (!quiet) announce(`Theme: ${mode}`);
+  }
+  document.querySelectorAll('[data-theme-btn]').forEach((b) => b.addEventListener('click', () => applyTheme(b.getAttribute('data-theme-btn'))));
+
+  const cvdBtn = document.getElementById('cvd-toggle');
+  function applyCvd(on, quiet) {
+    state.cvd = !!on;
+    if (state.cvd) document.documentElement.setAttribute('data-cvd', 'on');
+    else document.documentElement.removeAttribute('data-cvd');
+    cvdBtn.setAttribute('aria-pressed', String(state.cvd));
+    store('cvd', state.cvd ? 'on' : 'off');
+    if (!quiet) announce(`Colour vision deficiency palette: ${state.cvd ? 'on' : 'off'}`);
+  }
+  cvdBtn.addEventListener('click', () => applyCvd(!state.cvd));
+
+  // ---------- Help dialog ----------
+  const helpDialog = document.getElementById('help');
+  function openHelp() { if (helpDialog && !helpDialog.open) helpDialog.showModal(); }
+  document.getElementById('help-btn').addEventListener('click', openHelp);
+
+  // ---------- Sidebar fold, compact icon strip, floating contents ----------
+  function syncIcons() {
+    const wrapBtn = document.querySelector('[data-icon="wrap"]');
+    const wsBtn = document.querySelector('[data-icon="ws"]');
+    if (wrapBtn) wrapBtn.setAttribute('aria-pressed', String(state.wrap));
+    if (wsBtn) wsBtn.setAttribute('aria-pressed', String(state.ignoreWs));
+  }
+
+  const tocPop = document.getElementById('toc-pop');
+  const tocBtn = document.getElementById('toc-btn');
+  tocPop.querySelector('nav').innerHTML = document.getElementById('toc').innerHTML;
+
+  function positionToc() {
+    const r = tocBtn.getBoundingClientRect();
+    if (window.innerWidth <= 900) {
+      tocPop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 288)) + 'px';
+      tocPop.style.top = (r.bottom + 8) + 'px';
+    } else {
+      tocPop.style.left = (r.right + 10) + 'px';
+      tocPop.style.top = Math.max(8, r.top) + 'px';
+    }
+  }
+  function openToc() {
+    positionToc();
+    tocPop.hidden = false;
+    tocBtn.setAttribute('aria-expanded', 'true');
+    const first = tocPop.querySelector('a');
+    if (first) first.focus();
+  }
+  function closeToc(returnFocus) {
+    if (tocPop.hidden) return;
+    const hadFocus = tocPop.contains(document.activeElement);
+    tocPop.hidden = true;
+    tocBtn.setAttribute('aria-expanded', 'false');
+    if (returnFocus !== false && hadFocus) tocBtn.focus();
+  }
+  // Keep Tab inside the popup while it is open
+  tocPop.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Tab') return;
+    const links = Array.from(tocPop.querySelectorAll('a'));
+    if (!links.length) return;
+    const first = links[0], last = links[links.length - 1];
+    if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+    else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+  });
+  document.addEventListener('click', (ev) => {
+    if (tocPop.hidden) return;
+    if (tocPop.contains(ev.target) || tocBtn.contains(ev.target)) return;
+    closeToc(false);
+  });
+  window.addEventListener('resize', () => closeToc(false));
+
+  function applyRail(rail, quiet) {
+    state.rail = rail;
+    document.documentElement.setAttribute('data-rail', rail);
+    document.getElementById('rail-fold').setAttribute('aria-expanded', String(rail === 'expanded'));
+    store('rail', rail);
+    closeToc(false);
+    if (!quiet) announce(rail === 'expanded' ? 'Sidebar expanded' : 'Sidebar collapsed');
+  }
+  function toggleRail() { applyRail(state.rail === 'expanded' ? 'collapsed' : 'expanded'); }
+  document.getElementById('rail-fold').addEventListener('click', toggleRail);
+
+  document.querySelector('.rail-strip').addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-icon]');
+    if (!b) return;
+    switch (b.getAttribute('data-icon')) {
+      case 'toc': tocPop.hidden ? openToc() : closeToc(); break;
+      case 'view': applyView(state.view === 'split' ? 'unified' : 'split'); break;
+      case 'width': applyWidth(state.width === 'wide' ? 'normal' : 'wide'); break;
+      case 'wrap': applyWrap(!state.wrap); break;
+      case 'ws': applyWs(!state.ignoreWs); break;
+      case 'expand': setAllBlocks(true); break;
+      case 'collapse': setAllBlocks(false); break;
+    }
+  });
+
+  // ---------- Back to top ----------
+  document.getElementById('to-top').addEventListener('click', () => { window.scrollTo({ top: 0 }); document.getElementById('main').focus(); });
+  document.getElementById('topbar-home').addEventListener('click', (ev) => { ev.preventDefault(); window.scrollTo({ top: 0 }); });
+
+  // ---------- In-page search ----------
+  const mainEl = document.querySelector('main');
+  const searchInput = document.getElementById('search');
+  const searchCount = document.getElementById('search-count');
+  let hits = [], hitIdx = -1, lastQuery = '';
+
+  function clearHits() {
+    document.querySelectorAll('mark.hit').forEach((m) => {
+      const parent = m.parentNode;
+      parent.replaceChild(document.createTextNode(m.textContent), m);
+      parent.normalize();
+    });
+    hits = []; hitIdx = -1;
+  }
+  // Text hidden by display:none (for example the other-language copy) is not searchable
+  function isDisplayed(el, cache) {
+    for (let a = el; a && a !== mainEl; a = a.parentElement) {
+      let v = cache.get(a);
+      if (v === undefined) { v = getComputedStyle(a).display !== 'none'; cache.set(a, v); }
+      if (!v) return false;
+    }
+    return true;
+  }
+  function updateCount() {
+    if (lastQuery.length < 2) { searchCount.textContent = ''; searchCount.classList.remove('none'); return; }
+    searchCount.textContent = hits.length ? `${hitIdx + 1} / ${hits.length}` : '0';
+    searchCount.classList.toggle('none', hits.length === 0);
+  }
+  function focusHit(scroll) {
+    hits.forEach((h, i) => h.classList.toggle('cur', i === hitIdx));
+    updateCount();
+    const cur = hits[hitIdx];
+    if (!cur) return;
+    for (let d = cur.closest('details'); d; d = d.parentElement && d.parentElement.closest('details')) d.open = true;
+    if (scroll) cur.scrollIntoView({ block: 'center' });
+  }
+  function runSearch(q, keepIndex) {
+    const prevIdx = hitIdx;
+    clearHits();
+    lastQuery = q;
+    if (q.length < 2) { updateCount(); return; }
+    const needle = q.toLowerCase();
+    const walker = document.createTreeWalker(mainEl, NodeFilter.SHOW_TEXT, {
+      acceptNode(n) {
+        if (!n.nodeValue || !n.nodeValue.toLowerCase().includes(needle)) return NodeFilter.FILTER_REJECT;
+        const el = n.parentElement;
+        if (!el || el.closest('.topbar, .tip, .sr-only, script, style')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = []; let n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    const cache = new Map();
+    for (const node of nodes) {
+      if (!isDisplayed(node.parentElement, cache)) continue;
+      const text = node.nodeValue, lower = text.toLowerCase();
+      const frag = document.createDocumentFragment();
+      let pos = 0, i;
+      while ((i = lower.indexOf(needle, pos)) !== -1) {
+        if (i > pos) frag.appendChild(document.createTextNode(text.slice(pos, i)));
+        const m = document.createElement('mark');
+        m.className = 'hit';
+        m.textContent = text.slice(i, i + needle.length);
+        frag.appendChild(m); hits.push(m);
+        pos = i + needle.length;
+      }
+      if (pos < text.length) frag.appendChild(document.createTextNode(text.slice(pos)));
+      node.parentNode.replaceChild(frag, node);
+    }
+    if (hits.length) hitIdx = keepIndex ? Math.min(Math.max(prevIdx, 0), hits.length - 1) : 0;
+    focusHit(!keepIndex);
+  }
+  function refreshSearch() { if (lastQuery.length >= 2) runSearch(lastQuery, true); }
+  function stepHit(delta) {
+    if (!hits.length) return;
+    hitIdx = (hitIdx + delta + hits.length) % hits.length;
+    focusHit(true);
+  }
+  function clearSearch() { searchInput.value = ''; runSearch('', false); }
+
+  let searchTimer = null;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => runSearch(searchInput.value.trim(), false), 160);
+  });
+  searchInput.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') { ev.preventDefault(); clearTimeout(searchTimer); if (searchInput.value.trim() !== lastQuery) runSearch(searchInput.value.trim(), false); else stepHit(ev.shiftKey ? -1 : 1); }
+    else if (ev.key === 'Escape') { ev.preventDefault(); clearSearch(); searchInput.blur(); }
+  });
+  document.getElementById('search-next').addEventListener('click', () => stepHit(1));
+  document.getElementById('search-prev').addEventListener('click', () => stepHit(-1));
+  document.getElementById('search-clear').addEventListener('click', () => { clearSearch(); searchInput.focus(); });
+
+  // Keyboard shortcuts. None fire while typing in a field.
+  document.addEventListener('keydown', (ev) => {
+    if (ev.defaultPrevented || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    const t = ev.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    if (helpDialog && helpDialog.open) return;
+    if (ev.key === '[') { ev.preventDefault(); toggleRail(); }
+    else if (ev.key === '/') { ev.preventDefault(); searchInput.focus(); searchInput.select(); }
+    else if (ev.key === '?') { ev.preventDefault(); openHelp(); }
+    else if (ev.key === 't') { ev.preventDefault(); applyTheme(THEMES[(THEMES.indexOf(state.theme) + 1) % THEMES.length]); }
+    else if (ev.key === 'c') { ev.preventDefault(); applyCvd(!state.cvd); }
+    else if (ev.key === 'Escape') closeToc();
+  });
+
+  // Copy buttons: the label is restored from the button's own initial markup
+  document.querySelectorAll('[data-copy-target]').forEach((btn) => {
+    const initial = btn.innerHTML;
+    btn.addEventListener('click', async () => {
+      const src = document.getElementById(btn.getAttribute('data-copy-target'));
+      if (!src) return;
+      const text = src.innerText;
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.setAttribute('data-done', 'true');
+        btn.textContent = 'Copied';
+        announce('Copied to clipboard');
+        setTimeout(() => { btn.removeAttribute('data-done'); btn.innerHTML = initial; }, 1800);
+      } catch (e) {
+        const range = document.createRange();
+        range.selectNodeContents(src);
+        const sel = window.getSelection();
+        sel.removeAllRanges(); sel.addRange(range);
+      }
+    });
+  });
+
+  // Open the block a hash points at
+  function openFromHash() {
+    const id = location.hash.slice(1);
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (el && el.tagName === 'DETAILS') el.open = true;
+  }
+  window.addEventListener('hashchange', openFromHash);
+  document.querySelectorAll('nav.toc a').forEach((a) => a.addEventListener('click', () => {
+    const el = document.getElementById(a.getAttribute('href').slice(1));
+    if (el && el.tagName === 'DETAILS') el.open = true;
+    closeToc(false);
+  }));
+
+  // Highlight the current section in the rail and in the floating contents
+  const tocLinks = Array.from(document.querySelectorAll('nav.toc a'));
+  const targets = Array.from(new Set(tocLinks.map((a) => document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean)));
+  if ('IntersectionObserver' in window) {
+    const visible = new Map();
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => visible.set(e.target.id, e.isIntersecting ? e.boundingClientRect.top : Infinity));
+      let best = null, bestTop = Infinity;
+      visible.forEach((top, id) => { if (top < bestTop) { bestTop = top; best = id; } });
+      if (best === null) return;
+      tocLinks.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === '#' + best));
+    }, { rootMargin: '-10% 0px -70% 0px', threshold: 0 });
+    targets.forEach((t) => io.observe(t));
+  }
+
+  // ---------- Init ----------
+  let lang = 'en', view = 'unified', width = 'normal', wrap = 'on', ws = 'on', rail = 'expanded', theme = 'system', cvd = 'off';
+  view = load('view') || view;
+  width = load('width') || width;
+  wrap = load('wrap') || wrap;
+  ws = load('ws') || ws;
+  rail = load('rail') || rail;
+  theme = load('theme') || theme;
+  cvd = load('cvd') || cvd;
+  // URL parameters make a particular view linkable, e.g. ?view=split&width=wide&theme=dark. Language is URL-only: ?lang=<code>
+  const qs = new URLSearchParams(location.search);
+  lang = qs.get('lang') || lang;
+  view = qs.get('view') || view;
+  width = qs.get('width') || width;
+  wrap = qs.get('wrap') || wrap;
+  ws = qs.get('ws') || ws;
+  rail = qs.get('rail') || rail;
+  theme = qs.get('theme') || theme;
+  cvd = qs.get('cvd') || cvd;
+  if (view !== 'unified' && view !== 'split') view = 'unified';
+  if (width !== 'normal' && width !== 'wide') width = 'normal';
+  if (rail !== 'expanded' && rail !== 'collapsed') rail = 'expanded';
+  applyLang(lang);
+  applyTheme(theme, true);
+  applyCvd(cvd === 'on', true);
+  state.view = view;
+  document.documentElement.setAttribute('data-view', view);
+  setPressed('[data-view-btn]', 'data-view-btn', view);
+  state.width = width;
+  document.documentElement.setAttribute('data-width', width);
+  setPressed('.seg [data-width-btn]', 'data-width-btn', width);
+  state.wrap = wrap !== 'off';
+  wrapToggle.checked = state.wrap;
+  document.documentElement.setAttribute('data-wrap', state.wrap ? 'on' : 'off');
+  state.ignoreWs = ws !== 'off';
+  wsToggle.checked = state.ignoreWs;
+  document.documentElement.setAttribute('data-ws', state.ignoreWs ? 'on' : 'off');
+  state.rail = rail;
+  document.documentElement.setAttribute('data-rail', rail);
+  document.getElementById('rail-fold').setAttribute('aria-expanded', String(rail === 'expanded'));
+  syncIcons();
+  renderAll();
+  renderBadges();
+  openFromHash();
+})();
+</script>
+</body>
+</html>
