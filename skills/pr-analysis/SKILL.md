@@ -98,7 +98,7 @@ Nothing is committed, pushed, or published.
 
 ## What not to do
 
-- Do not publish to Claude Artifacts or any external service. The deliverable is the local HTML file.
+- Do not publish to Claude Artifacts, Codex Sites, Gemini Canvas or any external service unless explicitly requested. The deliverable is the local HTML file.
 - Do not edit the generated HTML by hand. The manifest and fragments are the source, the build is the only writer.
 - Do not hard code organisation hosts, repository names, or ticket systems. Everything comes from `meta.json`, the manifest, or the user's references.
 - Do not write email addresses, full names, or anything that looks like a credential into the page.
