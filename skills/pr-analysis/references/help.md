@@ -40,13 +40,16 @@ WHAT THE PAGE CONTAINS
   (unified or side by side, wrap, whitespace handling), verification, optional
   quoted PR figures, optional extra sections, follow-ups, commits, footer.
   Theme toggle System/Light/Dark, colour vision deficiency palette toggle,
-  in-page search, foldable sidebar, keyboard shortcuts (? opens the list).
+  text size panel (12 to 32 px), in-page search, foldable sidebar,
+  keyboard shortcuts (? opens the list).
 
 URL PARAMETERS THE PAGE UNDERSTANDS
   lang=<code>   show the second language (hidden bilingual mode only)
   theme=system|light|dark
   cvd=on|off
   view=unified|split     width=normal|wide     wrap=on|off     rail=expanded|collapsed
+  font=12..32   text size of the content column in pixels, default 16
+  Shortcuts: f opens or closes the text size panel, - and = step its presets, ? lists them all.
 
 REQUIREMENTS
   git, gh (authenticated: gh auth status), Node 18 or newer.

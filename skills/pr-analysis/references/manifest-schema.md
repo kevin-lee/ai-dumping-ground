@@ -163,7 +163,7 @@ Rows are triples: `.k` then two `.v`. Use `.v.was` and `.v.now` for changed rows
 
 ### block-<key>.html (optional)
 
-One or more `<p class="note">` lines shown above the diff. Use it for "new file", "representative for this group", or a redaction notice.
+One or more `<p class="note">` lines shown above the diff. Use it for "representative for this group", a redaction notice, or a skipped binary. New and deleted files are labelled by the build.
 
 ### from-pr.html (optional)
 
