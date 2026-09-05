@@ -24,6 +24,18 @@ if (!existsSync(manifestPath)) fail(`missing ${manifestPath}`);
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
 let template = readFileSync(templatePath, 'utf8');
 
+// Named palettes for the switch, read next to the template at build time. The output never references this file.
+const palettesPath = join(dirname(templatePath), 'palettes.json');
+if (!existsSync(palettesPath)) fail(`missing ${palettesPath}`);
+let NAMED;
+try { NAMED = JSON.parse(readFileSync(palettesPath, 'utf8')); } catch (e) { fail(`cannot parse ${palettesPath}: ${e.message}`); }
+const COLOUR_KEYS = ['accentLight', 'accentDark', 'paperLight', 'paperDark'];
+if (!NAMED || typeof NAMED !== 'object' || Array.isArray(NAMED) || !Object.keys(NAMED).length) fail(`${palettesPath} must be an object with at least one palette`);
+for (const [n, p] of Object.entries(NAMED)) {
+  if (!/^[a-z][a-z0-9-]*$/.test(n) || n === 'default') fail(`palettes.json key "${n}" must match ^[a-z][a-z0-9-]*$ and cannot be "default"`);
+  for (const k of COLOUR_KEYS) if (!p || !/^#[0-9A-Fa-f]{6}$/.test(p[k] || '')) fail(`palettes.json "${n}".${k} must be a #RRGGBB colour`);
+}
+
 const escHtml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const jsStr = (s) => JSON.stringify(String(s));
 
@@ -323,11 +335,32 @@ const wsTag = labels.wsTag || 'ws';
 // ---------- Palette and dark token duplication ----------
 const defines = {};
 template = template.replace(/\/\*@define (\w+)\n([\s\S]*?)@end\*\/\n?/g, (m, name, body) => { defines[name] = body.replace(/\n$/, ''); return ''; });
-const palette = manifest.palette || {};
+const palette = { ...(manifest.palette || {}) };
+if (palette.name) {
+  if (!NAMED[palette.name]) fail(`manifest.palette.name "${palette.name}" is not in palettes.json (${Object.keys(NAMED).join(', ')})`);
+  if (COLOUR_KEYS.some((k) => k in palette)) fail('manifest.palette.name cannot be combined with accentLight, accentDark, paperLight, paperDark');
+  for (const k of COLOUR_KEYS) palette[k] = NAMED[palette.name][k];
+}
 for (const k of ['accentLight', 'accentDark', 'paperLight', 'paperDark', 'fontDisplay', 'fontBody', 'fontMono', 'fontsHref']) {
   if (!palette[k]) fail(`manifest.palette.${k} is required`);
 }
 if (!/^https:\/\/fonts\.googleapis\.com\//.test(palette.fontsHref)) fail('palette.fontsHref must be a fonts.googleapis.com URL');
+
+// The report's own palette is the default. A named pastel with the same four values is labelled as the default instead of listed twice.
+const norm = (h) => String(h).toUpperCase();
+const defaultName = Object.keys(NAMED).find((n) => COLOUR_KEYS.every((k) => norm(NAMED[n][k]) === norm(palette[k]))) || null;
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const swatchRule = (n, p) => `  .swatch[data-palette-btn="${n}"] { --sw-accent-light: ${p.accentLight}; --sw-accent-dark: ${p.accentDark}; --sw-paper-light: ${p.paperLight}; --sw-paper-dark: ${p.paperDark}; }`;
+const namedOthers = Object.keys(NAMED).filter((n) => n !== defaultName);
+const paletteCss = [
+  '  /* Named palettes for the switch. The report\'s own palette is the default and needs no rule. */',
+  ...namedOthers.map((n) => `  :root[data-palette="${n}"] { --accent-light: ${NAMED[n].accentLight}; --accent-dark: ${NAMED[n].accentDark}; --paper-light: ${NAMED[n].paperLight}; --paper-dark: ${NAMED[n].paperDark}; }`),
+  swatchRule('default', palette),
+  ...namedOthers.map((n) => swatchRule(n, NAMED[n]))
+].join('\n');
+const paletteOptions = [['default', defaultName ? `${cap(defaultName)} (default)` : 'Default'], ...namedOthers.map((n) => [n, cap(n)])]
+  .map(([n, label]) => `            <button type="button" class="swatch" data-palette-btn="${n}" aria-pressed="${n === 'default'}"><span class="dot" aria-hidden="true"></span><span class="sw-name">${escHtml(label)}</span></button>`)
+  .join('\n');
 
 // ---------- Substitution ----------
 const values = {
@@ -361,6 +394,8 @@ const values = {
   accentDark: palette.accentDark,
   paperLight: palette.paperLight,
   paperDark: palette.paperDark,
+  paletteCss,
+  paletteOptions,
   darkTokens: defines.darkTokens || '',
   cvdLightTokens: defines.cvdLightTokens || '',
   cvdDarkTokens: defines.cvdDarkTokens || '',
@@ -403,4 +438,4 @@ if (errors.length) fail('\n  ' + errors.join('\n  '));
 
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, html);
-process.stdout.write(`build: wrote ${outPath} (${(Buffer.byteLength(html) / 1024).toFixed(0)} KB, ${blocks.length} block(s), ${groups.length} group(s))\n`);
+process.stdout.write(`build: wrote ${outPath} (${(Buffer.byteLength(html) / 1024).toFixed(0)} KB, ${blocks.length} block(s), ${groups.length} group(s), palette ${defaultName || 'custom'})\n`);

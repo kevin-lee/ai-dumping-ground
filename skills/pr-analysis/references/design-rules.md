@@ -15,21 +15,14 @@ Four inputs drive every colour on the page. The template derives ground, surface
 
 ### Named pastel set
 
+The six named sets live in `assets/palettes.json`: `lavender`, `sage`, `sky`, `peach`, `sand`, `rose`. Each carries the four inputs. Put the name in `manifest.palette.name` instead of copying values, the build resolves it. The build also embeds all six in the page so a reader can switch between them, with the report's own palette as the default.
+
 Pick one at random when the user says "Pick a pastel for me". State which one you picked in the completion message.
 
-| Name | accentLight | accentDark | paperLight | paperDark |
-|---|---|---|---|---|
-| lavender | `#6B5BB5` | `#B9AEF2` | `#FBFAF7` | `#16161D` |
-| sage | `#4F7F5C` | `#9FD1AC` | `#F9FAF6` | `#141814` |
-| sky | `#3B6FA8` | `#9CC3EE` | `#F7F9FB` | `#13171D` |
-| peach | `#B85F3A` | `#F0AE8E` | `#FBF8F5` | `#1B1614` |
-| sand | `#8A6D2F` | `#DCC08A` | `#FBF9F3` | `#191712` |
-| rose | `#A64D6E` | `#EFA6BF` | `#FBF7F8` | `#1A1417` |
-
-Random pick without thinking about it:
+Random pick without thinking about it (`<skill>` is the skill directory, as in SKILL.md):
 
 ```
-node -e 'const p=["lavender","sage","sky","peach","sand","rose"];console.log(p[Math.floor(Math.random()*p.length)])'
+node -e 'const p=Object.keys(require("<skill>/assets/palettes.json"));console.log(p[Math.floor(Math.random()*p.length)])'
 ```
 
 ### From a colour brief
@@ -40,6 +33,7 @@ When the user describes what they want, translate the words:
 - Ground words name the paper. "Solarized light" is `#FDF6E3` with dark `#002B36`. "Cream" or "warm" is `#FBF7EE` with dark `#1B1712`. "Cool" or "blue-grey" is `#F5F7FA` with dark `#13161C`. "Paper" or "neutral" is `#FAFAF7` with dark `#161616`.
 - Solarized light worked example: paper `#FDF6E3`, dark paper `#002B36`, accent `#268BD2` light and `#83C2F0` dark. Note that Solarized blue on Solarized paper is just under 4.5:1, so darken the light accent to `#1F6FB0` unless the user asked for the exact Solarized values.
 - If the brief names a controls colour and a ground colour separately, that is exactly the accent and paper split.
+- A brief palette goes into the manifest as the four values. It stays the page's default and the switch offers the six named sets next to it. `paperDark` must be near-black (the named sets are between `#13171D` and `#1B1614`), because the dark diff row tints are fixed values chosen against a near-black well. The Solarized example's `#002B36` is at the limit: rows still differ by hue but barely by lightness.
 
 Contrast check for a candidate pair (WCAG relative luminance):
 
@@ -97,3 +91,5 @@ Each kind also carries a glyph from `◆ ▲ ● ■ ✚ ✦ ⬟ ✱`. The glyph
 - Wide content (tables, code, diagrams) sits inside a container with `overflow-x: auto`. Use `.table-scroll` around tables.
 - The page must read at rest. No content hidden until scroll or hover.
 - The content column (page header, sections, footer) scales with the text size control through `zoom`. The sidebar and the top bar keep their sizes, so new chrome must not assume the content size, and new content rules keep using the template's units.
+- Reading surfaces are neutral. `--surface-2` (chips, table headers, control tracks, the diff head) and `--code-bg` (diff wells, `pre` blocks, the effect key column) derive from ink and paper, never from the accent, and mix in oklab because near-grey colours have no hue and an oklch mix turns their leftover chroma red. The accent lives in links, controls, kind chips, the callout tint, and the page ground.
+- The palette switch changes only the four inputs. Anything new takes its colour from the derived tokens so it follows the switch, the theme, and the CVD toggle.

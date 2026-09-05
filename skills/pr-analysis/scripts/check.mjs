@@ -158,6 +158,7 @@ if (!/<html lang="/.test(html)) a11y.push('<html lang> missing');
 if (!/<title>[^<]+<\/title>/.test(html)) a11y.push('<title> missing');
 if (!/<dialog id="help"/.test(html)) a11y.push('dialog#help missing');
 if (!/id="font-pop"/.test(html)) a11y.push('text size panel missing');
+if (!/id="palette-pop"/.test(html)) a11y.push('colour palette panel missing');
 for (const m of html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g)) {
   const attrs = m[1], inner = m[2].replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/<span class="tip"[\s\S]*?<\/span>\s*<\/span>|<span class="tip"[\s\S]*?<\/span>/g, '').replace(/<[^>]+>/g, '').trim();
   if (!/aria-label=/.test(attrs) && !inner) a11y.push(`button without text or aria-label: <button${attrs.slice(0, 60)}>`);
@@ -177,7 +178,16 @@ for (const m of html.matchAll(/<input\b([^>]*)>/g)) {
   if (labelSpans.some(([s, e]) => m.index > s && m.index < e)) continue;
   a11y.push(`input without a label: <input${attrs.slice(0, 60)}>`);
 }
-if (a11y.length) fail(`accessibility: ${[...new Set(a11y)].slice(0, 8).join('; ')}`); else pass('skip link, live region, labelled buttons and inputs, hidden decorative SVG, title, lang, help dialog, text size panel');
+if (a11y.length) fail(`accessibility: ${[...new Set(a11y)].slice(0, 8).join('; ')}`); else pass('skip link, live region, labelled buttons and inputs, hidden decorative SVG, title, lang, help dialog, text size panel, colour palette panel');
+
+// 10b. palette switch: every swatch button has a palette rule, exactly one default, and the page never references the build-time file
+const swatchNames = [...html.matchAll(/<button\b[^>]*\sdata-palette-btn="([^"]+)"/g)].map((m) => m[1]);
+const paletteProblems = [];
+if (swatchNames.filter((n) => n === 'default').length !== 1) paletteProblems.push('expected exactly one default swatch');
+for (const n of swatchNames) if (n !== 'default' && !html.includes(`:root[data-palette="${n}"]`)) paletteProblems.push(`no palette rule for "${n}"`);
+if (/palettes\.json/.test(html)) paletteProblems.push('page references palettes.json');
+if (paletteProblems.length) fail(`palette switch: ${paletteProblems.join('; ')}`);
+else pass(`palette switch: default plus ${swatchNames.length - 1} named palette(s), no runtime file references`);
 
 // 11. acronym reminder
 const proseText = fragments.map(([, f]) => stripQuoted(f)).join(' ') + ' ' + ((manifest.title || '') + ' ' + (manifest.statTiles || []).map((t) => t.en).join(' '));

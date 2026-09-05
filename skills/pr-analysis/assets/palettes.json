@@ -1,0 +1,8 @@
+{
+  "lavender": { "accentLight": "#6B5BB5", "accentDark": "#B9AEF2", "paperLight": "#FBFAF7", "paperDark": "#16161D" },
+  "sage":     { "accentLight": "#4F7F5C", "accentDark": "#9FD1AC", "paperLight": "#F9FAF6", "paperDark": "#141814" },
+  "sky":      { "accentLight": "#3B6FA8", "accentDark": "#9CC3EE", "paperLight": "#F7F9FB", "paperDark": "#13171D" },
+  "peach":    { "accentLight": "#B85F3A", "accentDark": "#F0AE8E", "paperLight": "#FBF8F5", "paperDark": "#1B1614" },
+  "sand":     { "accentLight": "#8A6D2F", "accentDark": "#DCC08A", "paperLight": "#FBF9F3", "paperDark": "#191712" },
+  "rose":     { "accentLight": "#A64D6E", "accentDark": "#EFA6BF", "paperLight": "#FBF7F8", "paperDark": "#1A1417" }
+}

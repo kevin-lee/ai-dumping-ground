@@ -1,6 +1,6 @@
 ---
 name: pr-analysis
-description: Create an interactive, single-file HTML report that explains what a pull request changes and why, block by block with live diffs, findings, verification, follow-ups, a theme toggle, a text size control, and a colour vision deficiency palette. Use this whenever the user invokes /pr-analysis, asks for a PR report, PR explainer, PR walkthrough, PR summary page, "explain this PR as a page", "HTML report for PR 123", "help my team understand this PR", or wants a shareable document about a pull request, even if they do not say "report" or "HTML". Do not use it to post review comments on GitHub, that is what code-review does.
+description: Create an interactive, single-file HTML report that explains what a pull request changes and why, block by block with live diffs, findings, verification, follow-ups, a theme toggle, a text size control, a colour palette switch, and a colour vision deficiency palette. Use this whenever the user invokes /pr-analysis, asks for a PR report, PR explainer, PR walkthrough, PR summary page, "explain this PR as a page", "HTML report for PR 123", "help my team understand this PR", or wants a shareable document about a pull request, even if they do not say "report" or "HTML". Do not use it to post review comments on GitHub, that is what code-review does.
 ---
 
 # pr-analysis
@@ -15,9 +15,9 @@ The text after `/pr-analysis` is the argument string (the harness substitutes it
 
 - `--help` or `help`: print `references/help.md` verbatim (the fenced block, without the fence) and stop. Make no other tool call.
 - A PR identifier: a bare integer (`123`), `#123`, or a PR URL.
-- `bilingual=<Language>` followed by free words. The language is the token after `=` up to the next space. The mode is `hidden` when the remaining words contain `hid` or `param`, otherwise `both`. Map the language name to a code with the table in `references/writing-rules.md`. Unknown name: use the lowercased name as the code and say so at the end.
+- `bilingual=<Language>` optionally followed by `show` or `hide`. The language is the token after `=` up to the next space. The mode is `both` when the words after the language contain `show` or `both`, otherwise `hidden`. So `bilingual=Korean` alone and `bilingual=Korean hide` are hidden, `bilingual=Korean show` is both, and the older `show both` and `hidden with the param` resolve by the same rule. Map the language name to a code with the table in `references/writing-rules.md`. Unknown name: use the lowercased name as the code and say so at the end.
 
-Without `bilingual=` the report is English only. Examples: `/pr-analysis 70`, `/pr-analysis 70 bilingual=Korean show both`, `/pr-analysis #70 bilingual=Korean hidden with the param`.
+Without `bilingual=` the report is English only. Examples: `/pr-analysis 70`, `/pr-analysis 70 bilingual=Korean show`, `/pr-analysis #70 bilingual=Korean hide`, `/pr-analysis #70 bilingual=Korean` (hidden, same as `hide`).
 
 ## 1. Intake, before anything else
 
@@ -59,7 +59,7 @@ Before embedding anything, scan the changed files for credentials. `references/w
 
 ## 5. Design the content
 
-Follow `references/content-spec.md`. Decide, in this order: the kinds (two to four categories with a tone and a glyph), the findings, the grouping of files into blocks and groups, which optional sections earn their place (mechanism figure, quoted PR figures, extra sections for reference questions), the verification rows, the follow-ups, and the stat tiles. Then pick the palette and font pairing per `references/design-rules.md`.
+Follow `references/content-spec.md`. Decide, in this order: the kinds (two to four categories with a tone and a glyph), the findings, the grouping of files into blocks and groups, which optional sections earn their place (mechanism figure, quoted PR figures, extra sections for reference questions), the verification rows, the follow-ups, and the stat tiles. Then pick the palette (a name from `assets/palettes.json` for a pastel, or four values from a colour brief) and the font pairing per `references/design-rules.md`.
 
 ## 6. Write the manifest and fragments
 
@@ -72,6 +72,8 @@ node <skill>/scripts/build.mjs --work <workdir> --template <skill>/assets/templa
 ```
 
 The build validates the manifest, escapes and embeds the file text, generates the table of contents, blocks, and commits section, and fills the template. It fails loudly on a missing fragment, an unknown kind, or an anchor without a target.
+
+The build reads `assets/palettes.json` next to the template and embeds the named palettes in the page for the palette switch. The output never references that file.
 
 ## 8. Check
 
@@ -91,7 +93,7 @@ Report, in this order:
 
 - The absolute output path, a markdown link to it with a relative path (opens in the editor), and a `file://` link (opens in the browser). For hidden bilingual mode add the same `file://` link with `?lang=<code>`.
 - One sentence on what the page contains (blocks, groups, findings, extra sections).
-- Which palette and font pairing you used.
+- Which palette (name, or custom from the brief) and font pairing you used.
 - Any warnings: local state from gather, an unknown language code, redactions, WARN lines left standing and why.
 
 Nothing is committed, pushed, or published.
