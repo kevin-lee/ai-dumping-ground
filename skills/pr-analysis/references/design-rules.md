@@ -96,3 +96,4 @@ Each kind also carries a glyph from `◆ ▲ ● ■ ✚ ✦ ⬟ ✱`. The glyph
 - Structure encodes meaning. Numbered lists only for real sequences. Section eyebrows only when they say something true.
 - Wide content (tables, code, diagrams) sits inside a container with `overflow-x: auto`. Use `.table-scroll` around tables.
 - The page must read at rest. No content hidden until scroll or hover.
+- The content column (page header, sections, footer) scales with the text size control through `zoom`. The sidebar and the top bar keep their sizes, so new chrome must not assume the content size, and new content rules keep using the template's units.

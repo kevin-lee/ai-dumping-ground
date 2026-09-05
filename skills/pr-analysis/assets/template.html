@@ -98,6 +98,7 @@
     --hit-ink: #22242C;
     --shadow: 0 1px 2px rgba(22,24,30,.06), 0 8px 24px -12px rgba(22,24,30,.18);
     --radius: 6px;
+    --content-zoom: 1; /* the text size control sets this to px / 16 */
 
     /* Derived */
     --ground: color-mix(in oklch, var(--accent) 6%, var(--paper));
@@ -388,6 +389,8 @@
 
   main { min-width: 0; display: flex; flex-direction: column; gap: 56px; padding-left: 18px; }
   main:focus { outline: none; }
+  /* Text size: the content column scales by zoom, the sidebar and the top bar do not */
+  main > header.page, main > section, main > footer.page { zoom: var(--content-zoom, 1); }
 
   /* Header */
   .eyebrow {
@@ -420,7 +423,7 @@
   .stat .n.warn { color: var(--warn); }
   .stat .l { font-size: 0.84rem; color: var(--muted); }
 
-  section { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 76px; }
+  section { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: calc(76px / var(--content-zoom, 1)); }
 
   /* Sticky top bar over the main column */
   .topbar {
@@ -455,10 +458,36 @@
   .topbar-hint { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
   .topbar-hint kbd, .topbar kbd, .help-grid kbd { font-family: var(--font-mono); font-size: 0.72rem; padding: 0 5px; border: 1px solid var(--line-strong); border-radius: 4px; background: var(--surface); color: var(--ink-2); }
   .icon-btn .tip kbd { border-color: color-mix(in srgb, var(--ground) 40%, transparent); background: transparent; color: inherit; }
-  .topbar-tools { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+  .topbar-tools { position: relative; display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
   .topbar-tools .seg { font-size: 0.78rem; }
   .topbar-tools .seg button { padding: 3px 9px; font-size: 0.76rem; }
   .topbar-tools .icon-btn .tip { left: auto; right: 0; top: calc(100% + 8px); transform: none; }
+  /* Text size panel: lives inside the sticky top bar so it follows the bar while the page scrolls */
+  #font-btn[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink); }
+  #font-btn[aria-expanded="true"] .tip { display: none; }
+  .font-pop {
+    position: absolute; right: 0; top: calc(100% + 8px); z-index: 45;
+    width: 300px; max-width: calc(100vw - 24px);
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px;
+    box-shadow: var(--shadow); padding: 12px 14px 14px;
+    display: flex; flex-direction: column; gap: 10px;
+    font-size: 0.84rem; color: var(--ink-2);
+  }
+  .font-pop[hidden] { display: none; }
+  .font-pop .font-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .font-pop .font-title { font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; color: var(--ink); }
+  .font-pop .font-row { display: flex; align-items: center; gap: 8px; }
+  .font-pop .font-a { font-family: var(--font-display); font-weight: 700; line-height: 1; user-select: none; }
+  .font-pop .font-a.small { font-size: 0.7rem; }
+  .font-pop .font-a.large { font-size: 1.15rem; }
+  .font-pop .icon-btn[aria-disabled="true"] { opacity: .4; cursor: default; background: transparent; color: var(--ink-2); }
+  .font-pop input[type="range"] { flex: 1; min-width: 0; margin: 0; accent-color: var(--accent); }
+  .font-pop input[type="range"].custom { accent-color: var(--nodata); opacity: .55; }
+  .font-pop .font-num { display: inline-flex; align-items: center; gap: 6px; }
+  .font-pop input[type="number"] { width: 4.4em; font: inherit; font-family: var(--font-mono); font-size: 0.86rem; padding: 3px 6px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface-2); color: var(--ink); text-align: right; }
+  .font-pop .unit { color: var(--muted); }
+  .font-pop .font-reset { margin-left: auto; }
+  .font-pop .font-reset[hidden] { display: none; }
   mark.hit { background: var(--hit); color: var(--hit-ink); border-radius: 2px; padding: 0 1px; }
   mark.hit.cur { background: var(--hit-cur); box-shadow: 0 0 0 2px var(--hit-cur); }
   @media (max-width: 900px) {
@@ -507,10 +536,16 @@
   .group-head {
     display: flex; align-items: baseline; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap;
     margin-top: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line-strong);
-    scroll-margin-top: 76px;
+    scroll-margin-top: calc(76px / var(--content-zoom, 1));
   }
   .group-head > span:first-child { flex: 1 1 auto; }
-  .group-head .count { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); font-weight: 400; min-width: 0; overflow-wrap: anywhere; text-align: right; }
+  .group-head .count { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); font-weight: 400; white-space: nowrap; }
+  .group-intro { display: flex; flex-direction: column; gap: 8px; }
+  .group-files { display: flex; flex-wrap: wrap; gap: 4px 0; margin: 0; padding: 0; list-style: none; max-width: none; font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted); }
+  .group-files li, .group-files li + li { margin: 0; }
+  .group-files li:not(:last-child)::after { content: "·"; color: var(--muted); margin: 0 10px; }
+  .group-files a { color: var(--ink-2); text-decoration-color: var(--line-strong); text-underline-offset: 3px; overflow-wrap: anywhere; }
+  .group-files a:hover { color: var(--accent); text-decoration-color: var(--accent); }
 
   /* Findings */
   .findings { display: grid; gap: 12px; }
@@ -529,7 +564,7 @@
     border: 1px solid var(--line);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    scroll-margin-top: 76px;
+    scroll-margin-top: calc(76px / var(--content-zoom, 1));
   }
   .block > summary {
     list-style: none;
@@ -629,6 +664,7 @@
   .diff-head .counts .plus { color: var(--add-ink); }
   .diff-head .counts .minus { color: var(--del-ink); }
   .diff-head .counts .tilde { color: var(--muted); }
+  .diff-head .counts .onesided { font-family: var(--font-body); font-weight: 600; color: var(--ink-2); }
   .diff-scroll { overflow-x: auto; }
   table.udiff, table.sdiff { border-collapse: collapse; width: 100%; font-family: var(--font-mono); font-size: 0.79rem; line-height: 1.55; }
   table.udiff td, table.sdiff td { padding: 0 10px; white-space: pre; vertical-align: top; }
@@ -637,6 +673,7 @@
   col.c-ln { width: 46px; }
   col.c-sign { width: 22px; }
   col.c-gutter { width: 1px; }
+  col.c-stub { width: 46px; }
   td.ln { width: 3.2ch; min-width: 3.2ch; text-align: right; color: var(--muted); user-select: none; font-size: 0.72rem; padding-top: 2px; border-right: 1px solid var(--line); }
   td.sign { width: 1ch; min-width: 1ch; text-align: center; color: var(--muted); user-select: none; padding: 0 4px; }
   tr.del td { background: var(--del-bg); color: var(--del-ink); }
@@ -649,7 +686,8 @@
   table.sdiff td.side { width: 50%; }
   table.sdiff tr.pair td.l { background: var(--del-bg); color: var(--del-ink); }
   table.sdiff tr.pair td.r { background: var(--add-bg); color: var(--add-ink); }
-  table.sdiff td.empty { background: repeating-linear-gradient(135deg, transparent 0 6px, var(--surface-2) 6px 7px); }
+  table.sdiff td.empty, table.sdiff td.stub { background: repeating-linear-gradient(135deg, transparent 0 6px, var(--surface-2) 6px 7px); }
+  table.sdiff td.stub { width: 46px; min-width: 46px; padding: 0; }
   .diff .caption { padding: 8px 12px; border-top: 1px solid var(--line); font-size: 0.78rem; color: var(--muted); font-family: var(--font-body); }
   .diff .empty-note { padding: 14px 12px; font-size: 0.86rem; color: var(--muted); font-family: var(--font-body); }
   .linkish { appearance: none; border: 0; background: none; padding: 0; font: inherit; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
@@ -718,7 +756,7 @@
 
   /* High contrast modes keep their edges */
   @media (forced-colors: active) {
-    .block, .kind, .seg button, .finding, .check-row, .callout, .quote, .ident, .status { border: 1px solid CanvasText; }
+    .block, .kind, .seg button, .finding, .check-row, .callout, .quote, .ident, .status, .font-pop, .font-pop .icon-btn, .font-pop input[type="number"] { border: 1px solid CanvasText; }
     mark.hit { outline: 1px solid CanvasText; }
     [aria-pressed="true"] { outline: 2px solid Highlight; }
     .seg::before { display: none; }
@@ -841,6 +879,28 @@
           <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="M10 3.5v13" /><path d="M10 3.5a6.5 6.5 0 0 1 0 13" fill="currentColor" stroke="none" opacity=".5"/></svg>
           <span class="tip" aria-hidden="true"><span class="when-cvd-off">Colour vision deficiency palette: off. Click to turn on</span><span class="when-cvd-on">Colour vision deficiency palette: on. Click to turn off</span><kbd>c</kbd></span>
         </button>
+        <button type="button" class="icon-btn" id="font-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="font-pop" aria-label="Text size">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 15l3.2-8 3.2 8M3.3 12.2h3.8"/><path d="M9.5 16l4-11 4 11M11 12h5"/></svg>
+          <span class="tip" aria-hidden="true">Text size<kbd>f</kbd></span>
+        </button>
+        <div class="font-pop" id="font-pop" role="dialog" aria-labelledby="font-title" hidden>
+          <div class="font-head">
+            <span class="font-title" id="font-title">Text size</span>
+            <button type="button" class="icon-btn sm" id="font-close" aria-label="Close text size panel">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></svg>
+            </button>
+          </div>
+          <div class="font-row">
+            <button type="button" class="icon-btn sm" id="font-down" aria-label="Smaller text"><span class="font-a small" aria-hidden="true">A</span></button>
+            <input type="range" id="font-range" min="0" max="4" step="1" value="2" list="font-stops" aria-label="Text size preset">
+            <button type="button" class="icon-btn sm" id="font-up" aria-label="Larger text"><span class="font-a large" aria-hidden="true">A</span></button>
+          </div>
+          <datalist id="font-stops"><option value="0"></option><option value="1"></option><option value="2"></option><option value="3"></option><option value="4"></option></datalist>
+          <div class="font-row">
+            <span class="font-num"><input type="number" id="font-num" min="12" max="32" step="1" value="16" inputmode="numeric" aria-label="Text size in pixels"><span class="unit" aria-hidden="true">px</span></span>
+            <button type="button" class="btn-quiet font-reset" id="font-reset" hidden>Reset to 16 px</button>
+          </div>
+        </div>
         <button type="button" class="icon-btn" id="help-btn" aria-label="Keyboard shortcuts" aria-haspopup="dialog">
           <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M7.8 8a2.2 2.2 0 1 1 3.4 1.8c-.8.5-1.2.9-1.2 1.7"/><circle cx="10" cy="14" r=".6" fill="currentColor" stroke="none"/></svg>
           <span class="tip" aria-hidden="true">Keyboard shortcuts<kbd>?</kbd></span>
@@ -934,10 +994,13 @@
     <kbd>/</kbd><span>Search this page</span>
     <kbd>↵</kbd><span>Next match, or run a new search</span>
     <kbd>⇧↵</kbd><span>Previous match</span>
-    <kbd>Esc</kbd><span>Clear the search, close the contents popup or this dialog</span>
+    <kbd>Esc</kbd><span>Clear the search, close the contents popup, the text size panel, or this dialog</span>
     <kbd>[</kbd><span>Collapse or expand the sidebar</span>
     <kbd>t</kbd><span>Cycle theme: system, light, dark</span>
     <kbd>c</kbd><span>Toggle the colour vision deficiency palette</span>
+    <kbd>f</kbd><span>Open or close the text size panel</span>
+    <kbd>-</kbd><span>Smaller text, one preset down</span>
+    <kbd>=</kbd><span>Larger text, one preset up</span>
     <kbd>?</kbd><span>Show this list</span>
   </div>
   <form method="dialog"><button type="submit" class="btn-quiet help-close">Close</button></form>
@@ -1048,7 +1111,21 @@
     return `<table class="udiff"><colgroup><col class="c-ln"><col class="c-ln"><col class="c-sign"><col></colgroup><tbody>${rows.join('')}</tbody></table>`;
   }
 
-  function renderSplit(block, ops) {
+  function renderSplit(block, ops, oneSided) {
+    if (oneSided) {
+      // Single pane: every op sits on one side, so the absent side is one hatched stub cell spanning every row
+      const stub = `<td class="stub" rowspan="${ops.length}"></td>`;
+      const rows = ops.map((op, i) => {
+        const first = i === 0 ? stub : '';
+        return oneSided === 'added'
+          ? `<tr class="pair">${first}<td class="gutter"></td><td class="ln r">${block.startAfter + op.bi}${SR_ADD}</td><td class="code r">${esc(op.b)}</td></tr>`
+          : `<tr class="pair"><td class="ln l">${block.startBefore + op.ai}${SR_DEL}</td><td class="code l">${esc(op.a)}</td><td class="gutter"></td>${first}</tr>`;
+      });
+      const cols = oneSided === 'added'
+        ? '<col class="c-stub"><col class="c-gutter"><col class="c-ln"><col>'
+        : '<col class="c-ln"><col><col class="c-gutter"><col class="c-stub">';
+      return `<table class="sdiff onesided"><colgroup>${cols}</colgroup><tbody>${rows.join('')}</tbody></table>`;
+    }
     const rows = [];
     for (const h of hunks(ops)) {
       if (h.t === 'eq') {
@@ -1086,7 +1163,8 @@
     wrap: true,
     rail: 'expanded',
     theme: 'system',
-    cvd: false
+    cvd: false,
+    font: 16
   };
 
   const DIFF_HEAD = {{diffHeadLabel}};
@@ -1104,17 +1182,25 @@
       }
       const ops = diffLines(block.before, block.after, state.ignoreWs);
       const c = counts(ops);
+      // One-sided blocks have text on one side only. The label comes from the file status the build carries,
+      // not from the empty text: a ranged block with before [0, 0] inside a modified file is an insertion, not a new file.
+      const oneSided = block.before === '' ? 'added' : (block.after === '' ? 'deleted' : null);
+      const oneSidedLabel = oneSided === 'added' ? (block.status === 'A' ? 'New file' : 'Inserted lines')
+        : oneSided === 'deleted' ? (block.status === 'D' ? 'Deleted file' : 'Removed lines') : '';
       const wsNote = c.ws ? `<span class="tilde">~${c.ws} ${esc(WS_TAG)}</span>` : '';
+      const countsHtml = oneSided === 'added' ? `<span class="onesided">${oneSidedLabel}</span><span class="plus">+${c.plus}</span>`
+        : oneSided === 'deleted' ? `<span class="onesided">${oneSidedLabel}</span><span class="minus">−${c.minus}</span>`
+        : `<span class="minus">−${c.minus}</span><span class="plus">+${c.plus}</span>`;
       const head = `<div class="diff-head">
         <span>${DIFF_HEAD}</span>
-        <span class="counts"><span class="minus">−${c.minus}</span><span class="plus">+${c.plus}</span>${wsNote}</span>
+        <span class="counts">${countsHtml}${wsNote}</span>
       </div>`;
-      const body = state.view === 'split' ? renderSplit(block, ops) : renderUnified(block, ops);
+      const body = state.view === 'split' ? renderSplit(block, ops, oneSided) : renderUnified(block, ops);
       const notes = [];
       if (c.ws && state.ignoreWs) {
         notes.push(`Lines tagged <em>${esc(WS_TAG)}</em> differ only in whitespace. Untick <em>${esc(WS_LABEL)}</em> in the sidebar to see them as changes.`);
       }
-      if (state.view === 'split' && state.width !== 'wide') {
+      if (state.view === 'split' && state.width !== 'wide' && !oneSided) {
         notes.push(state.wrap
           ? `Both panes share the column width. <button type="button" class="linkish" data-width-btn="wide">Switch to wide width</button> for fewer wrapped lines.`
           : `Long lines scroll inside the table, so the right pane may sit off-screen. Turn on <em>Wrap long lines</em> or <button type="button" class="linkish" data-width-btn="wide">switch to wide width</button>.`);
@@ -1274,6 +1360,8 @@
 
   // ---------- Theme and colour vision deficiency palette ----------
   const THEMES = ['system', 'light', 'dark'];
+  const FONT_STOPS = [12, 14, 16, 18, 20];
+  const FONT_MIN = 12, FONT_MAX = 32, FONT_DEFAULT = 16;
   function applyTheme(mode, quiet) {
     if (!THEMES.includes(mode)) mode = 'system';
     state.theme = mode;
@@ -1296,9 +1384,109 @@
   }
   cvdBtn.addEventListener('click', () => applyCvd(!state.cvd));
 
+  // ---------- Text size: zoom on the content column, the sidebar and the top bar keep their size ----------
+  const fontBtn = document.getElementById('font-btn');
+  const fontPop = document.getElementById('font-pop');
+  const fontRange = document.getElementById('font-range');
+  const fontNum = document.getElementById('font-num');
+  const fontDown = document.getElementById('font-down');
+  const fontUp = document.getElementById('font-up');
+  const fontReset = document.getElementById('font-reset');
+  const fontClose = document.getElementById('font-close');
+
+  function clampFont(v) {
+    const n = Math.round(Number(v));
+    if (!Number.isFinite(n)) return FONT_DEFAULT;
+    return Math.min(FONT_MAX, Math.max(FONT_MIN, n));
+  }
+  function nearestStopIndex(px) {
+    let best = 0;
+    for (let i = 1; i < FONT_STOPS.length; i++) {
+      if (Math.abs(FONT_STOPS[i] - px) < Math.abs(FONT_STOPS[best] - px)) best = i;
+    }
+    return best;
+  }
+  // aria-disabled rather than disabled: a button that disables under the pointer would drop keyboard focus to the body
+  function setInert(btn, inert) {
+    if (inert) btn.setAttribute('aria-disabled', 'true');
+    else btn.removeAttribute('aria-disabled');
+  }
+  function syncFontUi() {
+    const idx = FONT_STOPS.indexOf(state.font);
+    const custom = idx === -1;
+    const pos = String(custom ? nearestStopIndex(state.font) : idx);
+    fontRange.classList.toggle('custom', custom);
+    fontRange.value = pos;
+    fontRange.setAttribute('value', pos);
+    fontRange.setAttribute('aria-valuetext', `${state.font} px${custom ? ', between presets' : ''}`);
+    if (document.activeElement !== fontNum) {
+      fontNum.value = String(state.font);
+      fontNum.setAttribute('value', String(state.font));
+    }
+    setInert(fontDown, state.font <= FONT_STOPS[0]);
+    setInert(fontUp, state.font >= FONT_STOPS[FONT_STOPS.length - 1]);
+    fontReset.hidden = state.font === FONT_DEFAULT;
+  }
+  function applyFont(px, quiet) {
+    state.font = clampFont(px);
+    document.documentElement.style.setProperty('--content-zoom', String(state.font / 16));
+    store('font', String(state.font));
+    syncFontUi();
+    if (!quiet) announce(`Text size: ${state.font} px`);
+  }
+  function announceFont() { announce(`Text size: ${state.font} px`); }
+  function stepFont(delta) {
+    const stop = delta > 0
+      ? FONT_STOPS.find((s) => s > state.font)
+      : FONT_STOPS.slice().reverse().find((s) => s < state.font);
+    if (stop === undefined) return;
+    applyFont(stop);
+  }
+  function openFontPop() {
+    closeToc(false);
+    fontPop.hidden = false;
+    fontBtn.setAttribute('aria-expanded', 'true');
+    fontRange.focus();
+  }
+  function closeFontPop(returnFocus) {
+    if (fontPop.hidden) return;
+    const hadFocus = fontPop.contains(document.activeElement);
+    fontPop.hidden = true;
+    fontBtn.setAttribute('aria-expanded', 'false');
+    if (returnFocus !== false && hadFocus) fontBtn.focus();
+  }
+  function toggleFontPop() { if (fontPop.hidden) openFontPop(); else closeFontPop(true); }
+  // The number box applies live while the typed value is in range, and clamps only once the user has finished
+  function commitFontNum() {
+    if (fontNum.value.trim() === '' || !Number.isFinite(Number(fontNum.value))) { fontNum.value = String(state.font); return; }
+    applyFont(fontNum.value, true);
+    fontNum.value = String(state.font);
+    announceFont();
+  }
+  fontBtn.addEventListener('click', toggleFontPop);
+  fontClose.addEventListener('click', () => closeFontPop(true));
+  fontRange.addEventListener('input', () => applyFont(FONT_STOPS[Number(fontRange.value)], true));
+  fontRange.addEventListener('change', announceFont);
+  fontNum.addEventListener('input', () => {
+    const n = Number(fontNum.value);
+    if (Number.isInteger(n) && n >= FONT_MIN && n <= FONT_MAX) applyFont(n, true);
+  });
+  fontNum.addEventListener('change', commitFontNum);
+  fontNum.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); commitFontNum(); } });
+  fontDown.addEventListener('click', () => stepFont(-1));
+  fontUp.addEventListener('click', () => stepFont(1));
+  fontReset.addEventListener('click', () => applyFont(FONT_DEFAULT));
+  // Escape closes the panel only while focus is inside it. The global handler never sees keys typed in inputs.
+  fontPop.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Escape') return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    closeFontPop(true);
+  });
+
   // ---------- Help dialog ----------
   const helpDialog = document.getElementById('help');
-  function openHelp() { if (helpDialog && !helpDialog.open) helpDialog.showModal(); }
+  function openHelp() { closeFontPop(false); if (helpDialog && !helpDialog.open) helpDialog.showModal(); }
   document.getElementById('help-btn').addEventListener('click', openHelp);
 
   // ---------- Sidebar fold, compact icon strip, floating contents ----------
@@ -1324,6 +1512,7 @@
     }
   }
   function openToc() {
+    closeFontPop(false);
     positionToc();
     tocPop.hidden = false;
     tocBtn.setAttribute('aria-expanded', 'true');
@@ -1467,6 +1656,7 @@
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => runSearch(searchInput.value.trim(), false), 160);
   });
+  searchInput.addEventListener('focus', () => closeFontPop(false));
   searchInput.addEventListener('keydown', (ev) => {
     if (ev.key === 'Enter') { ev.preventDefault(); clearTimeout(searchTimer); if (searchInput.value.trim() !== lastQuery) runSearch(searchInput.value.trim(), false); else stepHit(ev.shiftKey ? -1 : 1); }
     else if (ev.key === 'Escape') { ev.preventDefault(); clearSearch(); searchInput.blur(); }
@@ -1486,6 +1676,9 @@
     else if (ev.key === '?') { ev.preventDefault(); openHelp(); }
     else if (ev.key === 't') { ev.preventDefault(); applyTheme(THEMES[(THEMES.indexOf(state.theme) + 1) % THEMES.length]); }
     else if (ev.key === 'c') { ev.preventDefault(); applyCvd(!state.cvd); }
+    else if (ev.key === 'f') { ev.preventDefault(); toggleFontPop(); }
+    else if (ev.key === '-') { ev.preventDefault(); stepFont(-1); }
+    else if (ev.key === '=' || ev.key === '+') { ev.preventDefault(); stepFont(1); }
     else if (ev.key === 'Escape') closeToc();
   });
 
@@ -1541,7 +1734,7 @@
   }
 
   // ---------- Init ----------
-  let lang = 'en', view = 'unified', width = 'normal', wrap = 'on', ws = 'on', rail = 'expanded', theme = 'system', cvd = 'off';
+  let lang = 'en', view = 'unified', width = 'normal', wrap = 'on', ws = 'on', rail = 'expanded', theme = 'system', cvd = 'off', font = '16';
   view = load('view') || view;
   width = load('width') || width;
   wrap = load('wrap') || wrap;
@@ -1549,6 +1742,7 @@
   rail = load('rail') || rail;
   theme = load('theme') || theme;
   cvd = load('cvd') || cvd;
+  font = load('font') || font;
   // URL parameters make a particular view linkable, e.g. ?view=split&width=wide&theme=dark. Language is URL-only: ?lang=<code>
   const qs = new URLSearchParams(location.search);
   lang = qs.get('lang') || lang;
@@ -1559,12 +1753,14 @@
   rail = qs.get('rail') || rail;
   theme = qs.get('theme') || theme;
   cvd = qs.get('cvd') || cvd;
+  font = qs.get('font') || font;
   if (view !== 'unified' && view !== 'split') view = 'unified';
   if (width !== 'normal' && width !== 'wide') width = 'normal';
   if (rail !== 'expanded' && rail !== 'collapsed') rail = 'expanded';
   applyLang(lang);
   applyTheme(theme, true);
   applyCvd(cvd === 'on', true);
+  applyFont(font, true);
   state.view = view;
   document.documentElement.setAttribute('data-view', view);
   setPressed('[data-view-btn]', 'data-view-btn', view);
@@ -1584,6 +1780,11 @@
   renderAll();
   renderBadges();
   openFromHash();
+  // The browser scrolled to the fragment while parsing, before the restored size and view reflowed the page
+  if (location.hash) {
+    const target = document.getElementById(location.hash.slice(1));
+    if (target) target.scrollIntoView({ behavior: 'instant', block: 'start' });
+  }
 })();
 </script>
 </body>

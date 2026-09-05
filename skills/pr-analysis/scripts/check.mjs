@@ -157,6 +157,7 @@ if (!/id="announce"[^>]*aria-live=/.test(html)) a11y.push('#announce live region
 if (!/<html lang="/.test(html)) a11y.push('<html lang> missing');
 if (!/<title>[^<]+<\/title>/.test(html)) a11y.push('<title> missing');
 if (!/<dialog id="help"/.test(html)) a11y.push('dialog#help missing');
+if (!/id="font-pop"/.test(html)) a11y.push('text size panel missing');
 for (const m of html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g)) {
   const attrs = m[1], inner = m[2].replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/<span class="tip"[\s\S]*?<\/span>\s*<\/span>|<span class="tip"[\s\S]*?<\/span>/g, '').replace(/<[^>]+>/g, '').trim();
   if (!/aria-label=/.test(attrs) && !inner) a11y.push(`button without text or aria-label: <button${attrs.slice(0, 60)}>`);
@@ -165,7 +166,18 @@ for (const m of html.matchAll(/<svg\b([^>]*)>/g)) {
   if (!/role="img"/.test(m[1]) && !/aria-hidden="true"/.test(m[1])) a11y.push(`svg without role="img" or aria-hidden: <svg${m[1].slice(0, 60)}>`);
 }
 for (const m of html.matchAll(/<img\b([^>]*)>/g)) if (!/\salt=/.test(m[1])) a11y.push('img without alt');
-if (a11y.length) fail(`accessibility: ${[...new Set(a11y)].slice(0, 8).join('; ')}`); else pass('skip link, live region, labelled buttons, hidden decorative SVG, title, lang, help dialog');
+// Every input is labelled: aria-label, aria-labelledby, a <label for>, or nesting inside a <label>
+const labelFor = new Set([...html.matchAll(/<label\b[^>]*\sfor="([^"]+)"/g)].map((m) => m[1]));
+const labelSpans = [...html.matchAll(/<label\b[^>]*>[\s\S]*?<\/label>/g)].map((m) => [m.index, m.index + m[0].length]);
+for (const m of html.matchAll(/<input\b([^>]*)>/g)) {
+  const attrs = m[1];
+  if (/aria-label(?:ledby)?=/.test(attrs)) continue;
+  const id = (attrs.match(/\sid="([^"]+)"/) || [])[1];
+  if (id && labelFor.has(id)) continue;
+  if (labelSpans.some(([s, e]) => m.index > s && m.index < e)) continue;
+  a11y.push(`input without a label: <input${attrs.slice(0, 60)}>`);
+}
+if (a11y.length) fail(`accessibility: ${[...new Set(a11y)].slice(0, 8).join('; ')}`); else pass('skip link, live region, labelled buttons and inputs, hidden decorative SVG, title, lang, help dialog, text size panel');
 
 // 11. acronym reminder
 const proseText = fragments.map(([, f]) => stripQuoted(f)).join(' ') + ' ' + ((manifest.title || '') + ' ' + (manifest.statTiles || []).map((t) => t.en).join(' '));

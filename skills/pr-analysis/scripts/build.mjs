@@ -160,7 +160,7 @@ for (const b of blocks) {
   const before = b.range ? sliceLines(beforeFull, b.range.before) : beforeFull;
   const after = b.range ? sliceLines(afterFull, b.range.after) : afterFull;
   BLOCKS[b.key] = {
-    file: f.path, group: b.group || null, rep: !!b.rep,
+    file: f.path, group: b.group || null, rep: !!b.rep, status: f.status,
     before, after,
     startBefore: b.range && b.range.before[0] > 0 ? b.range.before[0] : 1,
     startAfter: b.range && b.range.after[0] > 0 ? b.range.after[0] : 1
@@ -211,19 +211,25 @@ const tocLabel = (b) => {
 };
 const groupCount = (members) => {
   const paths = [...new Set(members.map((m) => meta.files[m.fileIndex].path))];
-  const files = `${paths.length} file${paths.length === 1 ? '' : 's'}`;
-  if (paths.length === 1 && members.length > 1) return `${members.length} blocks · ${escHtml(paths[0])}`;
-  return `${files} · ${paths.map(escHtml).join(' · ')}`;
+  if (paths.length === 1 && members.length > 1) return `${members.length} blocks`;
+  return `${paths.length} file${paths.length === 1 ? '' : 's'}`;
 };
+// The member files, linked to their blocks, listed under the heading rather than inside it
+const groupFiles = (members) => members.map((m) => `<li><a href="#b-${m.key}" title="${escHtml(meta.files[m.fileIndex].path)}">${escHtml(tocLabel(m))}</a></li>`).join('\n          ');
 for (const b of blocks) {
   if (b.group && !emittedGroups.has(b.group)) {
     emittedGroups.add(b.group);
     const g = groups.find((x) => x.key === b.group);
     const members = blocks.filter((x) => x.group === g.key);
-    changesParts.push(`      <h3 class="group-head" id="g-${g.key}">
-        <span>${pair(g.en, g.l2)}</span>
-        <span class="count">${groupCount(members)}</span>
-      </h3>`);
+    changesParts.push(`      <div class="group-intro">
+        <h3 class="group-head" id="g-${g.key}">
+          <span>${pair(g.en, g.l2)}</span>
+          <span class="count">${groupCount(members)}</span>
+        </h3>
+        <ul class="group-files" aria-label="Files in this group">
+          ${groupFiles(members)}
+        </ul>
+      </div>`);
     if (g.calloutFragment) changesParts.push(frags[g.calloutFragment].split('\n').map((l) => '      ' + l).join('\n'));
     tocParts.push(`      <a href="#g-${g.key}" class="sub group"><span>${pair(g.en, g.l2)}</span></a>`);
     for (const m of members) {

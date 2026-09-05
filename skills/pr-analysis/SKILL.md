@@ -1,6 +1,6 @@
 ---
 name: pr-analysis
-description: Create an interactive, single-file HTML report that explains what a pull request changes and why, block by block with live diffs, findings, verification, follow-ups, a theme toggle, and a colour vision deficiency palette. Use this whenever the user invokes /pr-analysis, asks for a PR report, PR explainer, PR walkthrough, PR summary page, "explain this PR as a page", "HTML report for PR 123", "help my team understand this PR", or wants a shareable document about a pull request, even if they do not say "report" or "HTML". Do not use it to post review comments on GitHub, that is what code-review does.
+description: Create an interactive, single-file HTML report that explains what a pull request changes and why, block by block with live diffs, findings, verification, follow-ups, a theme toggle, a text size control, and a colour vision deficiency palette. Use this whenever the user invokes /pr-analysis, asks for a PR report, PR explainer, PR walkthrough, PR summary page, "explain this PR as a page", "HTML report for PR 123", "help my team understand this PR", or wants a shareable document about a pull request, even if they do not say "report" or "HTML". Do not use it to post review comments on GitHub, that is what code-review does.
 ---
 
 # pr-analysis
@@ -83,7 +83,7 @@ Fix every FAIL by editing the manifest or fragments and rebuilding. Read every W
 
 ## 9. Look once
 
-If `open` or a headless Chrome is available, render the page once and glance at it: header, one diff block, the theme toggle. One pass of fixes through the fragments, rebuild, then stop. Do not loop on screenshots.
+If `open` or a headless Chrome is available, render the page once and glance at it: header, one diff block, the theme toggle. One pass of fixes through the fragments, rebuild, then stop. Do not loop on screenshots. When headless Chrome does not exit in a sandbox, pass `--host-resolver-rules="MAP * ~NOTFOUND"` so the font stylesheet fails fast, and avoid `#fragment` URLs, which render blank in headless mode.
 
 ## 10. Finish
 

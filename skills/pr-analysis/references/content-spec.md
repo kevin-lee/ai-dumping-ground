@@ -21,10 +21,10 @@ Include only when a picture explains something prose cannot: layers, request flo
 
 - Intro (`changes-intro.html`): one sentence on how the blocks are organised.
 - Blocks: one per changed file by default. Use `range` to split one file into several blocks when it mixes unrelated changes, with each block's `before` and `after` line windows chosen so both contain the whole hunk plus two or three context lines.
-- Groups: create a group when two or more files carry the same edit or serve one purpose. A group gets a heading (from the manifest) and a callout (`group-<key>.html`) with Why bullets and a Before/After effect grid. Write the reasoning once, in the callout, not in every block.
+- Groups: create a group when two or more files carry the same edit or serve one purpose. A group gets a heading (from the manifest) and a callout (`group-<key>.html`) with Why bullets and a Before/After effect grid. Write the reasoning once, in the callout, not in every block. The build lists the group's files under the heading, linked to their blocks, so the callout need not repeat the names.
 - Identity badge: in a group where files should be the same edit apart from known tokens (version numbers, jdk/jre, module names), mark one block `rep: true` and give the group a `mask` list. The browser then proves in the page that the other files match the representative, or shows how many lines differ. Without a mask, files are compared byte for byte.
 - Block heading: one line in the imperative describing what the change does ("Fail loudly on a bad download"), not what the diff looks like ("Change curl flags").
-- Block notes (`block-<key>.html`): only when there is something the diff does not show: new file, deleted file, representative, redacted value, binary skipped.
+- Block notes (`block-<key>.html`): only when there is something the diff does not show: representative, redacted value, binary skipped. New and deleted files are labelled by the build in the diff head.
 - Kinds: two to four per page. Define them in the manifest with a label, tone, and glyph. Use the same kind for the same idea everywhere: findings, blocks, and TOC dots.
 
 Grouping rule of thumb:
