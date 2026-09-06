@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-lang="en" data-lang-mode="{{langMode}}" data-lang2="{{lang2}}">
+<html lang="en" data-lang="en" data-lang-mode="{{langMode}}" data-lang2="{{lang2}}" data-hl="{{hlFlag}}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -33,6 +33,11 @@
       --del-ink: #F3B9BC;
       --del-mark: #7A343C;
       --hit-ink: #16171C;
+      --sy-comment: #A2ABB5;
+      --sy-keyword: #DCB9FF;
+      --sy-string: #A5D6FF;
+      --sy-number: #FFC58B;
+      --sy-name: #79C0FF;
       --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
   @end*/
   /*@define cvdLightTokens
@@ -97,6 +102,12 @@
     --del-ink: #7A1F26;
     --del-mark: #F3BFC2;
     --hit-ink: #22242C;
+    /* Syntax colors: 4.5:1 or more on the diff well and on every row tint in both themes, so no CVD copy */
+    --sy-comment: #5D6470;
+    --sy-keyword: #6639BA;
+    --sy-string: #0A3069;
+    --sy-number: #8A4600;
+    --sy-name: #0550AE;
     --shadow: 0 1px 2px rgba(22,24,30,.06), 0 8px 24px -12px rgba(22,24,30,.18);
     --radius: 6px;
     --content-zoom: 1; /* the text size control sets this to px / 16 */
@@ -105,7 +116,7 @@
     --ground: color-mix(in oklch, var(--accent) 6%, var(--paper));
     --surface: color-mix(in oklch, white var(--mix-surface), var(--ground));
     /* Reading surfaces derive from ink and paper, never the accent, so code and diffs read neutral under every palette.
-       Mixed in oklab, not oklch: near-grey colours have no hue and an oklch mix turns the leftover chroma red. */
+       Mixed in oklab, not oklch: near-grey colors have no hue and an oklch mix turns the leftover chroma red. */
     --surface-2: color-mix(in oklab, var(--ink) 7%, var(--paper));
     --line: color-mix(in oklch, var(--ink) 22%, var(--ground));
     --line-strong: color-mix(in oklch, var(--ink) 38%, var(--ground));
@@ -492,7 +503,7 @@
   .font-pop .unit { color: var(--muted); }
   .font-pop .font-reset { margin-left: auto; }
   .font-pop .font-reset[hidden] { display: none; }
-  /* Colour palette panel: same pattern as the text size panel */
+  /* Color palette panel: same pattern as the text size panel */
   #palette-btn[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink); }
   #palette-btn[aria-expanded="true"] .tip { display: none; }
   .palette-pop {
@@ -659,6 +670,7 @@
     .effect .k { border-right: 0; }
     .effect .h { display: none; }
     .effect .k::before { content: attr(data-label) " · "; }
+    .figure .pair { grid-template-columns: minmax(0, 1fr); }
   }
 
   /* Figure (mechanism) */
@@ -683,6 +695,50 @@
   .figure svg .arrowline { stroke: var(--muted); stroke-width: 1.4; fill: none; }
   .figure svg .arrowhead { fill: var(--muted); }
   .figure .caption { margin-top: 10px; font-size: 0.86rem; color: var(--muted); max-width: none; }
+  .figure .src, .figure .same { color: var(--muted); font-size: 0.85em; }
+  .figure pre { margin: 0; padding: 8px 10px; background: var(--code-bg); border: 1px solid var(--line); border-radius: 4px; overflow-x: auto; font-size: 0.78rem; line-height: 1.5; }
+  .finding .figure { margin-top: 10px; }
+  .callout .figure { margin-top: 12px; background: var(--surface); }
+  /* SVG tone classes, so a hand-drawn figure follows the theme, the CVD palette, and the palette switch */
+  .figure svg .fill-ok { fill: var(--ok-soft); stroke: var(--ok); }
+  .figure svg .fill-warn { fill: var(--warn-soft); stroke: var(--warn); }
+  .figure svg .fill-alert { fill: var(--alert-soft); stroke: var(--alert); }
+  .figure svg .fill-accent { fill: var(--accent-soft); stroke: var(--accent); }
+  .figure svg .fill-muted { fill: var(--surface-2); stroke: var(--line-strong); }
+  .figure svg .stroke-ok { stroke: var(--ok); fill: none; stroke-width: 1.4; }
+  .figure svg .stroke-warn { stroke: var(--warn); fill: none; stroke-width: 1.4; }
+  .figure svg .stroke-alert { stroke: var(--alert); fill: none; stroke-width: 1.4; }
+  .figure svg .stroke-accent { stroke: var(--accent); fill: none; stroke-width: 1.4; }
+  .figure svg .stroke-muted { stroke: var(--muted); fill: none; stroke-width: 1.4; }
+  .figure svg text.tag.alert { fill: var(--alert); }
+  .figure svg text.small { font-size: 11px; }
+  /* Step flow: boxes joined by arrows, wrapping on narrow screens */
+  .figure ol.flow { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: stretch; }
+  .figure .flow li { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); font-size: 0.86rem; max-width: 24ch; min-width: 0; }
+  .figure .flow li + li::before { content: "→"; position: absolute; left: -17px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 0.95rem; line-height: 1; }
+  .figure .flow li .t { font-weight: 600; color: var(--ink); }
+  .figure .flow li .d { color: var(--ink-2); font-size: 0.8rem; }
+  .figure .flow li.ok { background: var(--ok-soft); border-color: var(--ok); }
+  .figure .flow li.warn { background: var(--warn-soft); border-color: var(--warn); }
+  .figure .flow li.alert { background: var(--alert-soft); border-color: var(--alert); }
+  .figure .flow li.accent { background: var(--accent-soft); border-color: var(--accent); }
+  /* Before and after pair */
+  .figure .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .figure .pair > div { padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); font-size: 0.86rem; min-width: 0; }
+  .figure .pair .h { font-size: 0.72rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .figure .pair .was .h { color: var(--del-ink); }
+  .figure .pair .now .h { color: var(--add-ink); }
+  .figure .pair p, .figure .pair li { max-width: none; }
+  /* Bar list for quoted numbers. The template sets --pct from data-pct at load. */
+  .figure .bars { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 6px 12px; align-items: center; font-size: 0.84rem; }
+  .figure .bars .k { color: var(--ink-2); }
+  .figure .bars .bar { height: 12px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+  .figure .bars .bar > span { display: block; height: 100%; width: var(--pct, 0%); background: var(--accent); }
+  .figure .bars .bar.ok > span { background: var(--ok); }
+  .figure .bars .bar.warn > span { background: var(--warn); }
+  .figure .bars .bar.alert > span { background: var(--alert); }
+  .figure .bars .bar.muted > span { background: var(--nodata); }
+  .figure .bars .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 0.78rem; color: var(--ink); }
 
   /* Diff viewer */
   .diff { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--code-bg); }
@@ -710,6 +766,12 @@
   tr.ws td.code::after { content: "  {{wsTag}}"; color: var(--muted); font-size: 0.68rem; letter-spacing: .06em; opacity: .8; }
   td.code mark.d { background: var(--del-mark); color: inherit; border-radius: 2px; }
   td.code mark.a { background: var(--add-mark); color: inherit; border-radius: 2px; }
+  .sy-comment { color: var(--sy-comment); font-style: italic; }
+  .sy-keyword { color: var(--sy-keyword); }
+  .sy-string { color: var(--sy-string); }
+  .sy-number { color: var(--sy-number); }
+  .sy-name { color: var(--sy-name); }
+  html[data-hl="off"] .needs-hl { display: none !important; }
   table.sdiff td.gutter { width: 1px; padding: 0; border-left: 1px solid var(--line); }
   table.sdiff td.side { width: 50%; }
   table.sdiff tr.pair td.l { background: var(--del-bg); color: var(--del-ink); }
@@ -718,6 +780,13 @@
   table.sdiff td.stub { width: 46px; min-width: 46px; padding: 0; }
   .diff .caption { padding: 8px 12px; border-top: 1px solid var(--line); font-size: 0.78rem; color: var(--muted); font-family: var(--font-body); }
   .diff .empty-note { padding: 14px 12px; font-size: 0.86rem; color: var(--muted); font-family: var(--font-body); }
+  /* Expander rows for hidden unchanged lines */
+  tr.gap td { padding: 0; background: var(--surface-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .gap-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; padding: 3px 10px; font-family: var(--font-body); font-size: 0.76rem; color: var(--muted); white-space: normal; }
+  .gap-row .gap-label { font-variant-numeric: tabular-nums; }
+  .gap-btn { appearance: none; border: 1px solid var(--line-strong); background: var(--surface); color: var(--accent); font: inherit; font-size: 0.74rem; line-height: 1.3; padding: 1px 8px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+  .gap-btn:hover { border-color: var(--accent); }
+  .diff-scroll:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   .linkish { appearance: none; border: 0; background: none; padding: 0; font: inherit; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 
   /* Quoted PR material */
@@ -784,7 +853,7 @@
 
   /* High contrast modes keep their edges */
   @media (forced-colors: active) {
-    .block, .kind, .seg button, .finding, .check-row, .callout, .quote, .ident, .status, .font-pop, .font-pop .icon-btn, .font-pop input[type="number"], .palette-pop, .swatch { border: 1px solid CanvasText; }
+    .block, .kind, .seg button, .finding, .check-row, .callout, .quote, .ident, .status, .font-pop, .font-pop .icon-btn, .font-pop input[type="number"], .palette-pop, .swatch, .gap-btn, .figure .flow li, .figure .pair > div, .figure .bars .bar { border: 1px solid CanvasText; }
     mark.hit { outline: 1px solid CanvasText; }
     [aria-pressed="true"] { outline: 2px solid Highlight; }
     .seg::before { display: none; }
@@ -836,6 +905,14 @@
         <input type="checkbox" id="ws-toggle" checked>
         <span><span class="en">{{wsLabelEn}}</span>{{wsLabelL2}}</span>
       </label>
+      <label class="check">
+        <input type="checkbox" id="full-toggle">
+        <span>Show whole file</span>
+      </label>
+      <label class="check needs-hl">
+        <input type="checkbox" id="syntax-toggle" checked>
+        <span>Syntax colors</span>
+      </label>
       <div class="btn-row">
         <button type="button" class="btn-quiet" id="expand-all">Expand all</button>
         <button type="button" class="btn-quiet" id="collapse-all">Collapse all</button>
@@ -861,6 +938,12 @@
       </button>
       <button type="button" class="icon-btn" data-icon="ws" aria-pressed="true" aria-label="{{wsLabelEn}}">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h5M11 6h5M4 10h3.5M11 10h5M4 14h6M11 14h5"/></svg><span class="tip" aria-hidden="true">{{wsLabelEn}}</span>
+      </button>
+      <button type="button" class="icon-btn" data-icon="full" aria-pressed="false" aria-label="Show whole file">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="3" width="12" height="14" rx="1.5"/><path d="M7 7h6M7 10h6M7 13h4"/></svg><span class="tip" aria-hidden="true">Show whole file</span>
+      </button>
+      <button type="button" class="icon-btn needs-hl" data-icon="syntax" aria-pressed="true" aria-label="Syntax colors">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 16l3.5-9.5L10 16M4.6 12.5h3.8"/><path d="M12 16V7.5M12 11.2c0-1.3 1-2.2 2.3-2.2 1.6 0 2.7 1.1 2.7 2.7S15.9 14.4 14.3 14.4c-1.2 0-2.3-.7-2.3-1.9"/></svg><span class="tip" aria-hidden="true">Syntax colors</span>
       </button>
       <hr>
       <button type="button" class="icon-btn" data-icon="expand" aria-label="Expand all blocks">
@@ -898,14 +981,14 @@
       </div>
       <span class="topbar-hint">Press <kbd>/</kbd> to search</span>
       <div class="topbar-tools">
-        <div class="seg seg-3" role="group" aria-label="Colour theme">
+        <div class="seg seg-3" role="group" aria-label="Color theme">
           <button type="button" data-theme-btn="system" aria-pressed="true">System</button>
           <button type="button" data-theme-btn="light" aria-pressed="false">Light</button>
           <button type="button" data-theme-btn="dark" aria-pressed="false">Dark</button>
         </div>
-        <button type="button" class="icon-btn" id="cvd-toggle" aria-pressed="false" aria-label="Colour vision deficiency palette">
+        <button type="button" class="icon-btn" id="cvd-toggle" aria-pressed="false" aria-label="Color vision deficiency palette">
           <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="M10 3.5v13" /><path d="M10 3.5a6.5 6.5 0 0 1 0 13" fill="currentColor" stroke="none" opacity=".5"/></svg>
-          <span class="tip" aria-hidden="true"><span class="when-cvd-off">Colour vision deficiency palette: off. Click to turn on</span><span class="when-cvd-on">Colour vision deficiency palette: on. Click to turn off</span><kbd>c</kbd></span>
+          <span class="tip" aria-hidden="true"><span class="when-cvd-off">Color vision deficiency palette: off. Click to turn on</span><span class="when-cvd-on">Color vision deficiency palette: on. Click to turn off</span><kbd>c</kbd></span>
         </button>
         <button type="button" class="icon-btn" id="font-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="font-pop" aria-label="Text size">
           <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 15l3.2-8 3.2 8M3.3 12.2h3.8"/><path d="M9.5 16l4-11 4 11M11 12h5"/></svg>
@@ -929,18 +1012,18 @@
             <button type="button" class="btn-quiet font-reset" id="font-reset" hidden>Reset to 16 px</button>
           </div>
         </div>
-        <button type="button" class="icon-btn" id="palette-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="palette-pop" aria-label="Colour palette">
+        <button type="button" class="icon-btn" id="palette-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="palette-pop" aria-label="Color palette">
           <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3a7 7 0 1 0 0 14c1.1 0 1.5-.7 1.2-1.5-.4-1 .2-2 1.3-2H14a3 3 0 0 0 3-3.3A7 7 0 0 0 10 3z"/><circle cx="6.8" cy="9" r="1" fill="currentColor" stroke="none"/><circle cx="9.5" cy="6.3" r="1" fill="currentColor" stroke="none"/><circle cx="13.2" cy="7.2" r="1" fill="currentColor" stroke="none"/></svg>
-          <span class="tip" aria-hidden="true">Colour palette<kbd>p</kbd></span>
+          <span class="tip" aria-hidden="true">Color palette<kbd>p</kbd></span>
         </button>
         <div class="palette-pop" id="palette-pop" role="dialog" aria-labelledby="palette-title" hidden>
           <div class="pal-head">
-            <span class="pal-title" id="palette-title">Colour palette</span>
-            <button type="button" class="icon-btn sm" id="palette-close" aria-label="Close colour palette panel">
+            <span class="pal-title" id="palette-title">Color palette</span>
+            <button type="button" class="icon-btn sm" id="palette-close" aria-label="Close color palette panel">
               <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></svg>
             </button>
           </div>
-          <div class="swatches" role="group" aria-label="Colour palette">
+          <div class="swatches" role="group" aria-label="Color palette">
 {{paletteOptions}}
           </div>
         </div>
@@ -967,7 +1050,7 @@
         <span aria-hidden="true">→</span>
         <code><a href="{{headUrl}}" title="Head commit of the pull request">{{headShort}}</a></code>
         <span aria-hidden="true">·</span>
-        <span>Analysed {{analysedOn}}</span>
+        <span>Analyzed {{analysedOn}}</span>
       </div>
       <h1>{{title}}</h1>
 {{headerLede}}
@@ -1037,20 +1120,21 @@
     <kbd>/</kbd><span>Search this page</span>
     <kbd>↵</kbd><span>Next match, or run a new search</span>
     <kbd>⇧↵</kbd><span>Previous match</span>
-    <kbd>Esc</kbd><span>Clear the search, close the contents popup, the text size or colour palette panel, or this dialog</span>
+    <kbd>Esc</kbd><span>Clear the search, close the contents popup, the text size or color palette panel, or this dialog</span>
     <kbd>[</kbd><span>Collapse or expand the sidebar</span>
     <kbd>t</kbd><span>Cycle theme: system, light, dark</span>
-    <kbd>c</kbd><span>Toggle the colour vision deficiency palette</span>
+    <kbd>c</kbd><span>Toggle the color vision deficiency palette</span>
     <kbd>f</kbd><span>Open or close the text size panel</span>
     <kbd>-</kbd><span>Smaller text, one preset down</span>
     <kbd>=</kbd><span>Larger text, one preset up</span>
-    <kbd>p</kbd><span>Open or close the colour palette panel</span>
+    <kbd>p</kbd><span>Open or close the color palette panel</span>
     <kbd>?</kbd><span>Show this list</span>
   </div>
   <form method="dialog"><button type="submit" class="btn-quiet help-close">Close</button></form>
 </dialog>
 
 <script>
+{{vendorJs}}
 (function () {
   'use strict';
 
@@ -1071,37 +1155,82 @@
     return text === '' ? [] : text.split('\n');
   }
 
+  // Line diff by longest common subsequence. The common prefix and suffix are trimmed first,
+  // so the quadratic table only covers the part of the file that moved.
   function diffLines(aText, bText, ignoreWs) {
     const A = splitLines(aText), B = splitLines(bText);
     const f = norm(ignoreWs);
     const na = A.map(f), nb = B.map(f);
     const n = A.length, m = B.length;
+    let p = 0;
+    while (p < n && p < m && na[p] === nb[p]) p++;
+    let s = 0;
+    while (s < n - p && s < m - p && na[n - 1 - s] === nb[m - 1 - s]) s++;
+    const ops = [];
+    for (let i = 0; i < p; i++) ops.push({ t: 'eq', a: A[i], b: B[i], ai: i, bi: i });
+    const n2 = n - p - s, m2 = m - p - s;
     const dp = [];
-    for (let i = 0; i <= n; i++) dp.push(new Uint16Array(m + 1));
-    for (let i = n - 1; i >= 0; i--) {
-      for (let j = m - 1; j >= 0; j--) {
-        dp[i][j] = na[i] === nb[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    for (let i = 0; i <= n2; i++) dp.push(new Uint16Array(m2 + 1));
+    for (let i = n2 - 1; i >= 0; i--) {
+      for (let j = m2 - 1; j >= 0; j--) {
+        dp[i][j] = na[p + i] === nb[p + j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
       }
     }
-    const ops = [];
     let i = 0, j = 0;
-    while (i < n && j < m) {
-      if (na[i] === nb[j]) { ops.push({ t: 'eq', a: A[i], b: B[j], ai: i, bi: j }); i++; j++; }
-      else if (dp[i + 1][j] >= dp[i][j + 1]) { ops.push({ t: 'del', a: A[i], ai: i }); i++; }
-      else { ops.push({ t: 'add', b: B[j], bi: j }); j++; }
+    while (i < n2 && j < m2) {
+      if (na[p + i] === nb[p + j]) { ops.push({ t: 'eq', a: A[p + i], b: B[p + j], ai: p + i, bi: p + j }); i++; j++; }
+      else if (dp[i + 1][j] >= dp[i][j + 1]) { ops.push({ t: 'del', a: A[p + i], ai: p + i }); i++; }
+      else { ops.push({ t: 'add', b: B[p + j], bi: p + j }); j++; }
     }
-    while (i < n) { ops.push({ t: 'del', a: A[i], ai: i }); i++; }
-    while (j < m) { ops.push({ t: 'add', b: B[j], bi: j }); j++; }
+    while (i < n2) { ops.push({ t: 'del', a: A[p + i], ai: p + i }); i++; }
+    while (j < m2) { ops.push({ t: 'add', b: B[p + j], bi: p + j }); j++; }
+    for (let k = 0; k < s; k++) ops.push({ t: 'eq', a: A[n - s + k], b: B[m - s + k], ai: n - s + k, bi: m - s + k });
     return ops;
   }
 
-  // Group consecutive del/add ops into hunks so they can be paired side by side
-  function hunks(ops) {
+  // ---------- Collapsed context ----------
+  // Only changed lines and three lines around them are rendered. The rest sits behind an expander row.
+  // Revealed lines are remembered per block by their before-side index, which survives the whitespace toggle.
+  const CTX = 3, STEP = 20;
+  const REVEAL = new Map();
+  const changed = (op) => op.t !== 'eq' || op.a !== op.b;
+
+  function collapse(ops, key) {
+    if (state.full) return ops;
+    if (!ops.some(changed)) return ops;
+    const n = ops.length;
+    const keep = new Array(n).fill(false);
+    const revealed = REVEAL.get(key);
+    let dist = Infinity;
+    for (let i = 0; i < n; i++) { dist = changed(ops[i]) ? 0 : dist + 1; if (dist <= CTX) keep[i] = true; }
+    dist = Infinity;
+    for (let i = n - 1; i >= 0; i--) { dist = changed(ops[i]) ? 0 : dist + 1; if (dist <= CTX) keep[i] = true; }
+    if (revealed) for (let i = 0; i < n; i++) if (!keep[i] && revealed.has(ops[i].ai)) keep[i] = true;
+    const items = [];
+    let i = 0;
+    while (i < n) {
+      if (keep[i]) { items.push(ops[i]); i++; continue; }
+      let j = i;
+      while (j + 1 < n && !keep[j + 1]) j++;
+      items.push({
+        t: 'gap', from: i, to: j, n: j - i + 1,
+        aiFrom: ops[i].ai, aiTo: ops[j].ai, biFrom: ops[i].bi, biTo: ops[j].bi,
+        upper: i > 0 ? ops[i - 1].ai : -1, lower: j + 1 < n ? ops[j + 1].ai : -1
+      });
+      i = j + 1;
+    }
+    return items;
+  }
+
+  // Group consecutive del/add ops into hunks so they can be paired side by side. Gaps pass through.
+  function hunks(items) {
     const out = [];
     let cur = null;
-    for (const op of ops) {
-      if (op.t === 'eq') { if (cur) { out.push(cur); cur = null; } out.push({ t: 'eq', op }); }
-      else {
+    for (const op of items) {
+      if (op.t === 'eq' || op.t === 'gap') {
+        if (cur) { out.push(cur); cur = null; }
+        out.push(op.t === 'eq' ? { t: 'eq', op } : { t: 'gap', gap: op });
+      } else {
         if (!cur) cur = { t: 'chg', dels: [], adds: [] };
         (op.t === 'del' ? cur.dels : cur.adds).push(op);
       }
@@ -1112,19 +1241,96 @@
 
   const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-  // Character-level highlight for a paired old/new line: common prefix and suffix stay plain
+  // ---------- Syntax colors ----------
+  // Prism, when the build inlined it, tokenizes each side of a block once. Token types map onto five roles
+  // whose colors are template tokens, so they follow the theme, the CVD palette, and the palette switch.
+  const HL = typeof Prism !== 'undefined' && Prism && Prism.languages ? Prism : null;
+  const ROLE = {};
+  for (const [role, types] of Object.entries({
+    comment: 'comment prolog doctype cdata',
+    keyword: 'keyword boolean important atrule',
+    string: 'string char template-string triple-quoted-string attr-value regex url',
+    number: 'number constant symbol',
+    name: 'function class-name builtin tag selector annotation namespace property attr-name variable entity'
+  })) for (const t of types.split(' ')) ROLE[t] = role;
+  function roleOf(token) {
+    if (ROLE[token.type]) return ROLE[token.type];
+    const aliases = Array.isArray(token.alias) ? token.alias : (token.alias ? [token.alias] : []);
+    for (const a of aliases) if (ROLE[a]) return ROLE[a];
+    return null;
+  }
+  function flatten(tokens, inherited, out) {
+    for (const t of tokens) {
+      if (typeof t === 'string') out.push([t, inherited]);
+      else if (typeof t.content === 'string') out.push([t.content, roleOf(t) || inherited]);
+      else flatten(Array.isArray(t.content) ? t.content : [t.content], roleOf(t) || inherited, out);
+    }
+    return out;
+  }
+  // Per line, an array of [length, role] segments in order. null when the grammar is not in the page.
+  function tokenizeLines(text, lang) {
+    if (!HL || !HL.languages[lang]) return null;
+    const pieces = flatten(HL.tokenize(text, HL.languages[lang]), null, []);
+    const lines = [[]];
+    for (const [str, role] of pieces) {
+      const parts = str.split('\n');
+      for (let i = 0; i < parts.length; i++) {
+        if (i > 0) lines.push([]);
+        if (parts[i]) lines[lines.length - 1].push([parts[i].length, role]);
+      }
+    }
+    return lines;
+  }
+  const TOK = new Map();
+  function lineToks(key, block, side, index) {
+    if (!state.syntax || !block.lang) return null;
+    const id = key + '|' + side;
+    if (!TOK.has(id)) TOK.set(id, tokenizeLines(block[side], block.lang));
+    const lines = TOK.get(id);
+    return lines ? (lines[index] || null) : null;
+  }
+
+  // Character-level marks for a paired old and new line: the common prefix and suffix stay plain
   function inlineMarks(a, b) {
     let p = 0;
     const max = Math.min(a.length, b.length);
     while (p < max && a[p] === b[p]) p++;
     let s = 0;
     while (s < max - p && a[a.length - 1 - s] === b[b.length - 1 - s]) s++;
-    const midA = a.slice(p, a.length - s), midB = b.slice(p, b.length - s);
-    if (!midA && !midB) return { a: esc(a), b: esc(b) };
-    return {
-      a: esc(a.slice(0, p)) + (midA ? '<mark class="d">' + esc(midA) + '</mark>' : '') + esc(a.slice(a.length - s)),
-      b: esc(b.slice(0, p)) + (midB ? '<mark class="a">' + esc(midB) + '</mark>' : '') + esc(b.slice(b.length - s))
-    };
+    if (p + s === a.length && p + s === b.length) return null;
+    return { a: [p, a.length - s], b: [p, b.length - s] };
+  }
+
+  // One code cell: syntax spans from the token segments, and one mark around the changed range.
+  // Segments are cut at the mark boundaries, so a span never crosses the mark.
+  function lineHtml(text, toks, mark) {
+    const from = mark ? mark.from : -1, to = mark ? mark.to : -1;
+    const marked = mark && from < to;
+    if (!toks) {
+      if (!marked) return esc(text);
+      return esc(text.slice(0, from)) + '<mark class="' + mark.cls + '">' + esc(text.slice(from, to)) + '</mark>' + esc(text.slice(to));
+    }
+    const segs = [];
+    let pos = 0;
+    for (const [len, role] of toks) {
+      const start = pos, end = pos + len;
+      pos = end;
+      const cuts = [start];
+      if (marked && from > start && from < end) cuts.push(from);
+      if (marked && to > start && to < end) cuts.push(to);
+      cuts.push(end);
+      for (let c = 0; c + 1 < cuts.length; c++) segs.push([cuts[c], cuts[c + 1], role]);
+    }
+    if (pos < text.length) segs.push([pos, text.length, null]);
+    let out = '', inMark = false;
+    for (const [a, b, role] of segs) {
+      if (inMark && a >= to) { out += '</mark>'; inMark = false; }
+      if (marked && !inMark && a >= from && a < to) { out += '<mark class="' + mark.cls + '">'; inMark = true; }
+      const piece = esc(text.slice(a, b));
+      out += role ? '<span class="sy-' + role + '">' + piece + '</span>' : piece;
+    }
+    if (inMark) out += '</mark>';
+    return out;
   }
 
   function counts(ops) {
@@ -1140,30 +1346,48 @@
   const SR_ADD = '<span class="sr-only">added</span>';
   const SR_DEL = '<span class="sr-only">removed</span>';
 
-  function renderUnified(block, ops) {
+  // Expander row for a run of hidden unchanged lines. Buttons carry the gap's anchors, the kept lines on
+  // either side, so the same gap can be found again after the block re-renders.
+  function gapRow(key, block, gap, colspan) {
+    const first = block.startAfter + gap.biFrom, last = block.startAfter + gap.biTo;
+    const btn = (dir, text, label) => `<button type="button" class="gap-btn" data-key="${key}" data-upper="${gap.upper}" data-lower="${gap.lower}" data-dir="${dir}"${label ? ` aria-label="${label}"` : ''}>${text}</button>`;
+    const buttons = [];
+    if (gap.n <= STEP) buttons.push(btn('all', `Show ${gap.n} line${gap.n === 1 ? '' : 's'}`, ''));
+    else {
+      if (gap.upper !== -1) buttons.push(btn('down', `▼ ${STEP}`, `Show the next ${STEP} hidden lines after line ${first - 1}`));
+      if (gap.lower !== -1) buttons.push(btn('up', `▲ ${STEP}`, `Show the ${STEP} hidden lines before line ${last + 1}`));
+      buttons.push(btn('all', `All ${gap.n} lines`, ''));
+    }
+    return `<tr class="gap"><td colspan="${colspan}"><div class="gap-row"><span class="gap-label">⋯ ${gap.n} unchanged line${gap.n === 1 ? '' : 's'} hidden (lines ${first}–${last})</span>${buttons.join('')}</div></td></tr>`;
+  }
+
+  function renderUnified(block, key, items) {
     const rows = [];
-    for (const op of ops) {
-      if (op.t === 'eq') {
+    for (const op of items) {
+      if (op.t === 'gap') {
+        rows.push(gapRow(key, block, op, 4));
+      } else if (op.t === 'eq') {
         const ws = op.a !== op.b;
-        rows.push(`<tr class="${ws ? 'ws' : ''}"><td class="ln">${block.startBefore + op.ai}</td><td class="ln">${block.startAfter + op.bi}</td><td class="sign"></td><td class="code">${esc(op.b)}</td></tr>`);
+        rows.push(`<tr class="${ws ? 'ws' : ''}"><td class="ln">${block.startBefore + op.ai}</td><td class="ln">${block.startAfter + op.bi}</td><td class="sign"></td><td class="code">${lineHtml(op.b, lineToks(key, block, 'after', op.bi), null)}</td></tr>`);
       } else if (op.t === 'del') {
-        rows.push(`<tr class="del"><td class="ln">${block.startBefore + op.ai}</td><td class="ln"></td><td class="sign"><span aria-hidden="true">−</span>${SR_DEL}</td><td class="code">${esc(op.a)}</td></tr>`);
+        rows.push(`<tr class="del"><td class="ln">${block.startBefore + op.ai}</td><td class="ln"></td><td class="sign"><span aria-hidden="true">−</span>${SR_DEL}</td><td class="code">${lineHtml(op.a, lineToks(key, block, 'before', op.ai), null)}</td></tr>`);
       } else {
-        rows.push(`<tr class="add"><td class="ln"></td><td class="ln">${block.startAfter + op.bi}</td><td class="sign"><span aria-hidden="true">+</span>${SR_ADD}</td><td class="code">${esc(op.b)}</td></tr>`);
+        rows.push(`<tr class="add"><td class="ln"></td><td class="ln">${block.startAfter + op.bi}</td><td class="sign"><span aria-hidden="true">+</span>${SR_ADD}</td><td class="code">${lineHtml(op.b, lineToks(key, block, 'after', op.bi), null)}</td></tr>`);
       }
     }
     return `<table class="udiff"><colgroup><col class="c-ln"><col class="c-ln"><col class="c-sign"><col></colgroup><tbody>${rows.join('')}</tbody></table>`;
   }
 
-  function renderSplit(block, ops, oneSided) {
+  function renderSplit(block, key, items, oneSided) {
     if (oneSided) {
-      // Single pane: every op sits on one side, so the absent side is one hatched stub cell spanning every row
-      const stub = `<td class="stub" rowspan="${ops.length}"></td>`;
-      const rows = ops.map((op, i) => {
+      // Single pane: every op sits on one side, so the absent side is one hatched stub cell spanning every row.
+      // One-sided blocks have no unchanged lines, so items carry no gaps.
+      const stub = `<td class="stub" rowspan="${items.length}"></td>`;
+      const rows = items.map((op, i) => {
         const first = i === 0 ? stub : '';
         return oneSided === 'added'
-          ? `<tr class="pair">${first}<td class="gutter"></td><td class="ln r">${block.startAfter + op.bi}${SR_ADD}</td><td class="code r">${esc(op.b)}</td></tr>`
-          : `<tr class="pair"><td class="ln l">${block.startBefore + op.ai}${SR_DEL}</td><td class="code l">${esc(op.a)}</td><td class="gutter"></td>${first}</tr>`;
+          ? `<tr class="pair">${first}<td class="gutter"></td><td class="ln r">${block.startAfter + op.bi}${SR_ADD}</td><td class="code r">${lineHtml(op.b, lineToks(key, block, 'after', op.bi), null)}</td></tr>`
+          : `<tr class="pair"><td class="ln l">${block.startBefore + op.ai}${SR_DEL}</td><td class="code l">${lineHtml(op.a, lineToks(key, block, 'before', op.ai), null)}</td><td class="gutter"></td>${first}</tr>`;
       });
       const cols = oneSided === 'added'
         ? '<col class="c-stub"><col class="c-gutter"><col class="c-ln"><col>'
@@ -1171,23 +1395,20 @@
       return `<table class="sdiff onesided"><colgroup>${cols}</colgroup><tbody>${rows.join('')}</tbody></table>`;
     }
     const rows = [];
-    for (const h of hunks(ops)) {
-      if (h.t === 'eq') {
+    for (const h of hunks(items)) {
+      if (h.t === 'gap') {
+        rows.push(gapRow(key, block, h.gap, 5));
+      } else if (h.t === 'eq') {
         const op = h.op;
         const ws = op.a !== op.b;
-        rows.push(`<tr class="${ws ? 'ws' : ''}"><td class="ln">${block.startBefore + op.ai}</td><td class="side code">${esc(op.a)}</td><td class="gutter"></td><td class="ln">${block.startAfter + op.bi}</td><td class="side code">${esc(op.b)}</td></tr>`);
+        rows.push(`<tr class="${ws ? 'ws' : ''}"><td class="ln">${block.startBefore + op.ai}</td><td class="side code">${lineHtml(op.a, lineToks(key, block, 'before', op.ai), null)}</td><td class="gutter"></td><td class="ln">${block.startAfter + op.bi}</td><td class="side code">${lineHtml(op.b, lineToks(key, block, 'after', op.bi), null)}</td></tr>`);
       } else {
         const len = Math.max(h.dels.length, h.adds.length);
         for (let k = 0; k < len; k++) {
           const d = h.dels[k], a = h.adds[k];
-          let left = '', right = '';
-          if (d && a) {
-            const m = inlineMarks(d.a, a.b);
-            left = m.a; right = m.b;
-          } else {
-            if (d) left = esc(d.a);
-            if (a) right = esc(a.b);
-          }
+          const m = d && a ? inlineMarks(d.a, a.b) : null;
+          const left = d ? lineHtml(d.a, lineToks(key, block, 'before', d.ai), m ? { from: m.a[0], to: m.a[1], cls: 'd' } : null) : '';
+          const right = a ? lineHtml(a.b, lineToks(key, block, 'after', a.bi), m ? { from: m.b[0], to: m.b[1], cls: 'a' } : null) : '';
           rows.push(`<tr class="pair">` +
             (d ? `<td class="ln l">${block.startBefore + d.ai}${SR_DEL}</td><td class="side code l">${left}</td>` : `<td class="ln empty"></td><td class="side code empty"></td>`) +
             `<td class="gutter"></td>` +
@@ -1209,52 +1430,102 @@
     theme: 'system',
     cvd: false,
     font: 16,
-    palette: 'default'
+    palette: 'default',
+    full: false,
+    syntax: true
   };
 
   const DIFF_HEAD = {{diffHeadLabel}};
   const WS_TAG = {{wsTagJs}};
   const WS_LABEL = {{wsLabelJs}};
 
+  // Diff ops are computed once per block and whitespace mode. applyWs clears the cache.
+  const OPS = new Map();
+  function opsFor(key, block) {
+    const id = key + '|' + (state.ignoreWs ? 1 : 0);
+    if (!OPS.has(id)) OPS.set(id, diffLines(block.before, block.after, state.ignoreWs));
+    return OPS.get(id);
+  }
+
+  function renderBlock(el) {
+    const key = el.getAttribute('data-block');
+    const block = BLOCKS[key];
+    if (!block) return;
+    if (block.before === '' && block.after === '') {
+      el.innerHTML = `<div class="diff-head"><span>${DIFF_HEAD}</span></div><div class="empty-note">No text embedded for this block.</div>`;
+      return;
+    }
+    const ops = opsFor(key, block);
+    const c = counts(ops);
+    // One-sided blocks have text on one side only. The label comes from the file status the build carries,
+    // not from the empty text: a ranged block with before [0, 0] inside a modified file is an insertion, not a new file.
+    const oneSided = block.before === '' ? 'added' : (block.after === '' ? 'deleted' : null);
+    const oneSidedLabel = oneSided === 'added' ? (block.status === 'A' ? 'New file' : 'Inserted lines')
+      : oneSided === 'deleted' ? (block.status === 'D' ? 'Deleted file' : 'Removed lines') : '';
+    const wsNote = c.ws ? `<span class="tilde">~${c.ws} ${esc(WS_TAG)}</span>` : '';
+    const countsHtml = oneSided === 'added' ? `<span class="onesided">${oneSidedLabel}</span><span class="plus">+${c.plus}</span>`
+      : oneSided === 'deleted' ? `<span class="onesided">${oneSidedLabel}</span><span class="minus">−${c.minus}</span>`
+      : `<span class="minus">−${c.minus}</span><span class="plus">+${c.plus}</span>`;
+    const head = `<div class="diff-head">
+      <span>${DIFF_HEAD}</span>
+      <span class="counts">${countsHtml}${wsNote}</span>
+    </div>`;
+    const items = collapse(ops, key);
+    const body = state.view === 'split' ? renderSplit(block, key, items, oneSided) : renderUnified(block, key, items);
+    const notes = [];
+    if (c.ws && state.ignoreWs) {
+      notes.push(`Lines tagged <em>${esc(WS_TAG)}</em> differ only in whitespace. Untick <em>${esc(WS_LABEL)}</em> in the sidebar to see them as changes.`);
+    }
+    if (state.view === 'split' && state.width !== 'wide' && !oneSided) {
+      notes.push(state.wrap
+        ? `Both panes share the column width. <button type="button" class="linkish" data-width-btn="wide">Switch to wide width</button> for fewer wrapped lines.`
+        : `Long lines scroll inside the table, so the right pane may sit off-screen. Turn on <em>Wrap long lines</em> or <button type="button" class="linkish" data-width-btn="wide">switch to wide width</button>.`);
+    }
+    const caption = notes.length ? `<div class="caption">${notes.join('<br>')}</div>` : '';
+    el.innerHTML = head + `<div class="diff-scroll" tabindex="-1">${body}</div>` + caption;
+  }
+
   function renderAll() {
-    document.querySelectorAll('.diff[data-block]').forEach((el) => {
-      const key = el.getAttribute('data-block');
-      const block = BLOCKS[key];
-      if (!block) return;
-      if (block.before === '' && block.after === '') {
-        el.innerHTML = `<div class="diff-head"><span>${DIFF_HEAD}</span></div><div class="empty-note">No text embedded for this block.</div>`;
-        return;
-      }
-      const ops = diffLines(block.before, block.after, state.ignoreWs);
-      const c = counts(ops);
-      // One-sided blocks have text on one side only. The label comes from the file status the build carries,
-      // not from the empty text: a ranged block with before [0, 0] inside a modified file is an insertion, not a new file.
-      const oneSided = block.before === '' ? 'added' : (block.after === '' ? 'deleted' : null);
-      const oneSidedLabel = oneSided === 'added' ? (block.status === 'A' ? 'New file' : 'Inserted lines')
-        : oneSided === 'deleted' ? (block.status === 'D' ? 'Deleted file' : 'Removed lines') : '';
-      const wsNote = c.ws ? `<span class="tilde">~${c.ws} ${esc(WS_TAG)}</span>` : '';
-      const countsHtml = oneSided === 'added' ? `<span class="onesided">${oneSidedLabel}</span><span class="plus">+${c.plus}</span>`
-        : oneSided === 'deleted' ? `<span class="onesided">${oneSidedLabel}</span><span class="minus">−${c.minus}</span>`
-        : `<span class="minus">−${c.minus}</span><span class="plus">+${c.plus}</span>`;
-      const head = `<div class="diff-head">
-        <span>${DIFF_HEAD}</span>
-        <span class="counts">${countsHtml}${wsNote}</span>
-      </div>`;
-      const body = state.view === 'split' ? renderSplit(block, ops, oneSided) : renderUnified(block, ops);
-      const notes = [];
-      if (c.ws && state.ignoreWs) {
-        notes.push(`Lines tagged <em>${esc(WS_TAG)}</em> differ only in whitespace. Untick <em>${esc(WS_LABEL)}</em> in the sidebar to see them as changes.`);
-      }
-      if (state.view === 'split' && state.width !== 'wide' && !oneSided) {
-        notes.push(state.wrap
-          ? `Both panes share the column width. <button type="button" class="linkish" data-width-btn="wide">Switch to wide width</button> for fewer wrapped lines.`
-          : `Long lines scroll inside the table, so the right pane may sit off-screen. Turn on <em>Wrap long lines</em> or <button type="button" class="linkish" data-width-btn="wide">switch to wide width</button>.`);
-      }
-      const caption = notes.length ? `<div class="caption">${notes.join('<br>')}</div>` : '';
-      el.innerHTML = head + `<div class="diff-scroll">${body}</div>` + caption;
-    });
+    document.querySelectorAll('.diff[data-block]').forEach(renderBlock);
     if (typeof refreshSearch === 'function') refreshSearch();
   }
+
+  function diffFor(key) {
+    return Array.from(document.querySelectorAll('.diff[data-block]')).find((d) => d.getAttribute('data-block') === key) || null;
+  }
+  function renderBlockByKey(key) {
+    const el = diffFor(key);
+    if (el) renderBlock(el);
+    if (typeof refreshSearch === 'function') refreshSearch();
+  }
+
+  // Expanders: reveal twenty lines from either edge of a gap, or the whole gap, then re-render that block.
+  // Focus returns to the same button when the gap still exists, otherwise to the diff container.
+  document.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('.gap-btn');
+    if (!btn) return;
+    const key = btn.getAttribute('data-key');
+    const block = BLOCKS[key];
+    if (!block) return;
+    const upper = Number(btn.getAttribute('data-upper')), lower = Number(btn.getAttribute('data-lower')), dir = btn.getAttribute('data-dir');
+    const ops = opsFor(key, block);
+    const gap = collapse(ops, key).find((it) => it.t === 'gap' && it.upper === upper && it.lower === lower);
+    if (!gap) return;
+    let from = gap.from, to = gap.to;
+    if (dir === 'down') to = Math.min(gap.to, gap.from + STEP - 1);
+    else if (dir === 'up') from = Math.max(gap.from, gap.to - STEP + 1);
+    if (!REVEAL.has(key)) REVEAL.set(key, new Set());
+    const set = REVEAL.get(key);
+    for (let i = from; i <= to; i++) set.add(ops[i].ai);
+    const count = to - from + 1;
+    renderBlockByKey(key);
+    const diff = diffFor(key);
+    const same = diff && Array.from(diff.querySelectorAll('.gap-btn')).find((b) =>
+      Number(b.getAttribute('data-upper')) === upper && Number(b.getAttribute('data-lower')) === lower && b.getAttribute('data-dir') === dir);
+    if (same) same.focus({ preventScroll: true });
+    else if (diff) { const scroll = diff.querySelector('.diff-scroll'); if (scroll) scroll.focus({ preventScroll: true }); }
+    announce(`Showed ${count} line${count === 1 ? '' : 's'}`);
+  });
 
   // ---------- Identity badges: is this file the same edit as its group's representative? ----------
   function maskFile(text, group) {
@@ -1378,6 +1649,7 @@
     wsToggle.checked = on;
     document.documentElement.setAttribute('data-ws', on ? 'on' : 'off');
     store('ws', on ? 'on' : 'off');
+    OPS.clear();
     syncIcons();
     renderAll();
     if (!quiet) announce(`${WS_LABEL}: ${on ? 'on' : 'off'}`);
@@ -1396,6 +1668,30 @@
   }
   wrapToggle.addEventListener('change', () => applyWrap(wrapToggle.checked));
 
+  const fullToggle = document.getElementById('full-toggle');
+  function applyFull(on, quiet) {
+    state.full = on;
+    fullToggle.checked = on;
+    document.documentElement.setAttribute('data-full', on ? 'on' : 'off');
+    store('full', on ? 'on' : 'off');
+    syncIcons();
+    renderAll();
+    if (!quiet) announce(`Show whole file: ${on ? 'on' : 'off'}`);
+  }
+  fullToggle.addEventListener('change', () => applyFull(fullToggle.checked));
+
+  const syntaxToggle = document.getElementById('syntax-toggle');
+  function applySyntax(on, quiet) {
+    state.syntax = on;
+    syntaxToggle.checked = on;
+    document.documentElement.setAttribute('data-syntax', on ? 'on' : 'off');
+    store('syntax', on ? 'on' : 'off');
+    syncIcons();
+    renderAll();
+    if (!quiet) announce(`Syntax colors: ${on ? 'on' : 'off'}`);
+  }
+  syntaxToggle.addEventListener('change', () => applySyntax(syntaxToggle.checked));
+
   function setAllBlocks(open) {
     document.querySelectorAll('details.block').forEach((d) => { d.open = open; });
     announce(open ? 'All blocks expanded' : 'All blocks collapsed');
@@ -1403,7 +1699,7 @@
   document.getElementById('expand-all').addEventListener('click', () => setAllBlocks(true));
   document.getElementById('collapse-all').addEventListener('click', () => setAllBlocks(false));
 
-  // ---------- Theme and colour vision deficiency palette ----------
+  // ---------- Theme and color vision deficiency palette ----------
   const THEMES = ['system', 'light', 'dark'];
   const FONT_STOPS = [12, 14, 16, 18, 20];
   const FONT_MIN = 12, FONT_MAX = 32, FONT_DEFAULT = 16;
@@ -1425,7 +1721,7 @@
     else document.documentElement.removeAttribute('data-cvd');
     cvdBtn.setAttribute('aria-pressed', String(state.cvd));
     store('cvd', state.cvd ? 'on' : 'off');
-    if (!quiet) announce(`Colour vision deficiency palette: ${state.cvd ? 'on' : 'off'}`);
+    if (!quiet) announce(`Color vision deficiency palette: ${state.cvd ? 'on' : 'off'}`);
   }
   cvdBtn.addEventListener('click', () => applyCvd(!state.cvd));
 
@@ -1530,7 +1826,7 @@
     closeFontPop(true);
   });
 
-  // ---------- Colour palette: the report's own palette is the default, named pastels override the four inputs ----------
+  // ---------- Color palette: the report's own palette is the default, named pastels override the four inputs ----------
   const paletteBtn = document.getElementById('palette-btn');
   const palettePop = document.getElementById('palette-pop');
   const paletteClose = document.getElementById('palette-close');
@@ -1550,7 +1846,7 @@
     else document.documentElement.setAttribute('data-palette', name);
     setPressed('[data-palette-btn]', 'data-palette-btn', name);
     store('palette', name);
-    if (!quiet) announce(`Colour palette: ${paletteLabel(name)}`);
+    if (!quiet) announce(`Color palette: ${paletteLabel(name)}`);
   }
   function openPalettePop() {
     closeToc(false);
@@ -1590,6 +1886,10 @@
     const wsBtn = document.querySelector('[data-icon="ws"]');
     if (wrapBtn) wrapBtn.setAttribute('aria-pressed', String(state.wrap));
     if (wsBtn) wsBtn.setAttribute('aria-pressed', String(state.ignoreWs));
+    const fullBtn = document.querySelector('[data-icon="full"]');
+    const syntaxBtn = document.querySelector('[data-icon="syntax"]');
+    if (fullBtn) fullBtn.setAttribute('aria-pressed', String(state.full));
+    if (syntaxBtn) syntaxBtn.setAttribute('aria-pressed', String(state.syntax));
   }
 
   const tocPop = document.getElementById('toc-pop');
@@ -1658,14 +1958,17 @@
       case 'width': applyWidth(state.width === 'wide' ? 'normal' : 'wide'); break;
       case 'wrap': applyWrap(!state.wrap); break;
       case 'ws': applyWs(!state.ignoreWs); break;
+      case 'full': applyFull(!state.full); break;
+      case 'syntax': applySyntax(!state.syntax); break;
       case 'expand': setAllBlocks(true); break;
       case 'collapse': setAllBlocks(false); break;
     }
   });
 
   // ---------- Back to top ----------
-  document.getElementById('to-top').addEventListener('click', () => { window.scrollTo({ top: 0 }); document.getElementById('main').focus(); });
-  document.getElementById('topbar-home').addEventListener('click', (ev) => { ev.preventDefault(); window.scrollTo({ top: 0 }); });
+  // scrollIntoView on the document element also scrolls an outer frame (Slack's preview), which a plain scroll to the top cannot
+  document.getElementById('to-top').addEventListener('click', () => { document.documentElement.scrollIntoView({ block: 'start' }); document.getElementById('main').focus(); });
+  document.getElementById('topbar-home').addEventListener('click', (ev) => { ev.preventDefault(); document.documentElement.scrollIntoView({ block: 'start' }); });
 
   // ---------- In-page search ----------
   const mainEl = document.querySelector('main');
@@ -1831,7 +2134,7 @@
   }
 
   // ---------- Init ----------
-  let lang = 'en', view = 'unified', width = 'normal', wrap = 'on', ws = 'on', rail = 'expanded', theme = 'system', cvd = 'off', font = '16', palette = 'default';
+  let lang = 'en', view = 'unified', width = 'normal', wrap = 'on', ws = 'on', rail = 'expanded', theme = 'system', cvd = 'off', font = '16', palette = 'default', full = 'off', syntax = 'on';
   view = load('view') || view;
   width = load('width') || width;
   wrap = load('wrap') || wrap;
@@ -1841,6 +2144,8 @@
   cvd = load('cvd') || cvd;
   font = load('font') || font;
   palette = load('palette') || palette;
+  full = load('full') || full;
+  syntax = load('syntax') || syntax;
   // URL parameters make a particular view linkable, e.g. ?view=split&width=wide&theme=dark. Language is URL-only: ?lang=<code>
   const qs = new URLSearchParams(location.search);
   lang = qs.get('lang') || lang;
@@ -1853,6 +2158,8 @@
   cvd = qs.get('cvd') || cvd;
   font = qs.get('font') || font;
   palette = qs.get('palette') || palette;
+  full = qs.get('full') || full;
+  syntax = qs.get('syntax') || syntax;
   if (view !== 'unified' && view !== 'split') view = 'unified';
   if (width !== 'normal' && width !== 'wide') width = 'normal';
   if (rail !== 'expanded' && rail !== 'collapsed') rail = 'expanded';
@@ -1873,10 +2180,21 @@
   state.ignoreWs = ws !== 'off';
   wsToggle.checked = state.ignoreWs;
   document.documentElement.setAttribute('data-ws', state.ignoreWs ? 'on' : 'off');
+  state.full = full === 'on';
+  fullToggle.checked = state.full;
+  document.documentElement.setAttribute('data-full', state.full ? 'on' : 'off');
+  state.syntax = syntax !== 'off';
+  syntaxToggle.checked = state.syntax;
+  document.documentElement.setAttribute('data-syntax', state.syntax ? 'on' : 'off');
   state.rail = rail;
   document.documentElement.setAttribute('data-rail', rail);
   document.getElementById('rail-fold').setAttribute('aria-expanded', String(rail === 'expanded'));
   syncIcons();
+  // Bar figures: the width comes from data-pct, clamped to 0..100
+  document.querySelectorAll('.bars .bar[data-pct]').forEach((bar) => {
+    const n = Math.max(0, Math.min(100, Number(bar.getAttribute('data-pct')) || 0));
+    bar.style.setProperty('--pct', n + '%');
+  });
   renderAll();
   renderBadges();
   openFromHash();

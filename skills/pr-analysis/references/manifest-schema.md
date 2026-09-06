@@ -41,7 +41,7 @@ The build reads `<workdir>/content/manifest.json` and the fragment files next to
       "en": "Fold cleanups into the install layer",     // one line, imperative
       "l2": null,
       "notesFragment": "block-jre21.html",              // or null
-      "range": null                   // or { "before": [17, 40], "after": [19, 44] } 1-based inclusive line numbers
+      "range": null                   // or { "before": [17, 40], "after": [19, 44] } 1-based inclusive, only to split one file into several blocks. Context is collapsed by the page
     }
   ],
   "sections": {
@@ -75,13 +75,13 @@ Rules the build enforces:
 - Every fragment named in the manifest exists. Required fragments always exist.
 - `langMode: "single"` with `lang2: null` fails if any fragment contains `class="l2"`.
 - `range` line numbers are 1-based and inclusive. `before` may be `[0, 0]` for an added file, `after` may be `[0, 0]` for a deleted file.
-- `palette.name` must be a key of `assets/palettes.json` and cannot be combined with the four colour values. Without `name`, all four colour values are required.
+- `palette.name` must be a key of `assets/palettes.json` and cannot be combined with the four color values. Without `name`, all four color values are required.
 
 ## Fragments
 
 All fragments live in `<workdir>/content/`. Required: `header-lede.html`, `findings.html`, `changes-intro.html`, `verification.html`, `followup.html`, `footer.html`. Optional: `mechanism.html`, `from-pr.html`, `group-<key>.html`, `block-<key>.html`, `extra-<id>.html`.
 
-Fragments are HTML snippets, not documents. No `<html>`, `<head>`, `<style>`, `<script>`, no `style=` attributes, no hex colours. Use only the idioms below, the CSS for them already exists.
+Fragments are HTML snippets, not documents. No `<html>`, `<head>`, `<style>`, `<script>`, no `style=` attributes, no hex colors. Use only the idioms below, the CSS for them already exists.
 
 ### Two language idioms
 
@@ -102,7 +102,7 @@ English-only pages use neither class on text. Just write the element.
 
 ### header-lede.html
 
-One or two `<p class="lede">` paragraphs (with `en`/`l2` when bilingual). What changes, why, how the page is organised. The `h1` comes from the manifest `title`, so do not repeat it here.
+One or two `<p class="lede">` paragraphs (with `en`/`l2` when bilingual). What changes, why, how the page is organized. The `h1` comes from the manifest `title`, so do not repeat it here.
 
 ### findings.html
 
@@ -135,9 +135,15 @@ A `.section-head` is generated. Provide the figure:
 </div>
 ```
 
+Classes and the HTML idioms (step flow, before and after pair, bar list) are in `references/figures.md`.
+
+### Figures in any fragment (optional)
+
+A `<div class="figure">…</div>` may appear in `mechanism.html`, `group-<key>.html` (after the list inside the callout), `findings.html` (after a finding's paragraph), `extra-<id>.html`, and `block-<key>.html` (as a sibling of the notes). See `references/figures.md`.
+
 ### changes-intro.html
 
-One `<p class="sub">` naming what the diffs compare. The build already prints base and head in each diff header, so keep this to how the blocks are organised.
+One `<p class="sub">` naming what the diffs compare. The build already prints base and head in each diff header, so keep this to how the blocks are organized.
 
 ### group-<key>.html (optional, one per group that needs a Why)
 
@@ -163,7 +169,7 @@ Rows are triples: `.k` then two `.v`. Use `.v.was` and `.v.now` for changed rows
 
 ### block-<key>.html (optional)
 
-One or more `<p class="note">` lines shown above the diff. Use it for "representative for this group", a redaction notice, or a skipped binary. New and deleted files are labelled by the build.
+One or more `<p class="note">` lines shown above the diff. Use it for "representative for this group", a redaction notice, or a skipped binary. New and deleted files are labeled by the build.
 
 ### from-pr.html (optional)
 

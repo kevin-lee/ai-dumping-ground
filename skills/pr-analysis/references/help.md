@@ -23,7 +23,7 @@ INTAKE (asked once, before any analysis)
                         or type a number or URL.
   2. Issue ID           Detect from the PR (branch, title, body), None, or type one:
                         ABC-123 (Jira style), 123 or #123 or issue-123 (GitHub issue).
-  3. Colour             "Pick a pastel for me", or describe what you want, for example
+  3. Color             "Pick a pastel for me", or describe what you want, for example
                         "blue controls on a mild solarized-light yellow ground".
                         This palette is the page's default, and the page can switch
                         to the named pastels.
@@ -39,10 +39,12 @@ OUTPUT LOCATION (decided by the skill)
 WHAT THE PAGE CONTAINS
   Header with ticket, PR, repository, author, branch, base and head commits.
   Findings, optional mechanism figure, changes block by block with live diffs
-  (unified or side by side, wrap, whitespace handling), verification, optional
-  quoted PR figures, optional extra sections, follow-ups, commits, footer.
-  Theme toggle System/Light/Dark, colour vision deficiency palette toggle,
-  colour palette panel (the report's own palette plus the named pastels),
+  (unified or side by side, wrap, whitespace handling, syntax colors, changed
+  lines with three lines of context and expanders for the rest, show whole
+  file), verification, optional quoted PR figures, optional extra sections,
+  follow-ups, commits, footer.
+  Theme toggle System/Light/Dark, color vision deficiency palette toggle,
+  color palette panel (the report's own palette plus the named pastels),
   text size panel (12 to 32 px), in-page search, foldable sidebar,
   keyboard shortcuts (? opens the list).
 
@@ -52,11 +54,19 @@ URL PARAMETERS THE PAGE UNDERSTANDS
   cvd=on|off
   palette=default|lavender|sage|sky|peach|sand|rose   the one the report was built with is default
   view=unified|split     width=normal|wide     wrap=on|off     rail=expanded|collapsed
+  full=on|off       show whole file
+  syntax=on|off     syntax colors
+  Search covers the rendered diff rows. Turn on show whole file to search unchanged context.
   font=12..32   text size of the content column in pixels, default 16
-  Shortcuts: f opens or closes the text size panel, - and = step its presets, p opens or closes the colour palette panel, ? lists them all.
+  Shortcuts: f opens or closes the text size panel, - and = step its presets, p opens or closes the color palette panel, ? lists them all.
 
 REQUIREMENTS
   git, gh (authenticated: gh auth status), Node 18 or newer.
   Run from inside the repository the PR belongs to.
+  Network access on the first build per machine: the build downloads the Prism
+  highlighter (1.30.0) into ~/.cache/pr-analysis and reuses it. Without network
+  and cache the report builds without syntax colors. PR_ANALYSIS_CACHE overrides
+  the cache directory, PR_ANALYSIS_VENDOR_BASE points the download at a mirror,
+  --no-highlight on build.mjs skips it.
   Nothing is committed, pushed, or published. The report is one HTML file.
 ```

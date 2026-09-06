@@ -47,7 +47,7 @@ Unknown names: use the lowercased name as the code and say so in the completion 
 
 - Refer to people by GitHub handle, linked to their profile. Never write an email address. Full names only when they appear in the PR title itself.
 - Before embedding a changed file, scan it for anything that looks like a credential: tokens, keys, passwords, connection strings, private keys, cloud account identifiers. Declare a `redact` rule in the manifest that replaces the value with `[REDACTED]` and keeps the key name so the diff still makes sense, then add a verification row saying what was redacted. The build applies the rule to the embedded text and the check applies the same rule before proving the text matches git. If the whole file is a credentials file, do not embed it: describe the change in the block notes and give the block a `range` of `[0, 0]` on both sides.
-- Do not copy internal hostnames, customer data, or personal data from the PR body into the page. Summarise instead.
+- Do not copy internal hostnames, customer data, or personal data from the PR body into the page. Summarize instead.
 
 ## Links
 
