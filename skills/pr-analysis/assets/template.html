@@ -1966,9 +1966,17 @@
   });
 
   // ---------- Back to top ----------
-  // scrollIntoView on the document element also scrolls an outer frame (Slack's preview), which a plain scroll to the top cannot
-  document.getElementById('to-top').addEventListener('click', () => { document.documentElement.scrollIntoView({ block: 'start' }); document.getElementById('main').focus(); });
-  document.getElementById('topbar-home').addEventListener('click', (ev) => { ev.preventDefault(); document.documentElement.scrollIntoView({ block: 'start' }); });
+  // Back to top. In a browser the page's own window scrolls. Inside a frame sized to the content (Slack's preview)
+  // the window has nothing to scroll, so main is scrolled into view instead, which reaches the outer frame the way
+  // anchor jumps do. Focus moves without scrolling so it cannot fight the scroll that is under way.
+  function backToTop(focusMain) {
+    const main = document.getElementById('main');
+    window.scrollTo({ top: 0 });
+    if (document.documentElement.scrollHeight <= window.innerHeight + 1) main.scrollIntoView({ block: 'start' });
+    if (focusMain) main.focus({ preventScroll: true });
+  }
+  document.getElementById('to-top').addEventListener('click', () => backToTop(true));
+  document.getElementById('topbar-home').addEventListener('click', (ev) => { ev.preventDefault(); backToTop(false); });
 
   // ---------- In-page search ----------
   const mainEl = document.querySelector('main');
