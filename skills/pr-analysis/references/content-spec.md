@@ -6,7 +6,7 @@ The page answers two questions for someone who did not write the PR: what change
 
 - `title` (manifest): a name, not a caption. `<ticket or repo> <short subject>`, two to five words after the identifier. Example: `ABC-123 Payment retries`.
 - `h1` is the same as `title`. The lede does the explaining.
-- Lede (`header-lede.html`): one paragraph, three to five sentences. What the PR changes, why, and how the page is organised (for example "grouped by distribution, one block per file").
+- Lede (`header-lede.html`): one paragraph, three to five sentences. What the PR changes, why, and how the page is organized (for example "grouped by distribution, one block per file").
 - Stat tiles (manifest `statTiles`): three to five verified numbers with a label. Files changed, blocks, findings, commits, or a count you computed from the diff. Never a number from the PR body. Tone must match meaning: `grey` for neutral counts, `ok` for good outcomes, `warn` for things to notice, `bad` for risks that existed.
 
 ## Findings
@@ -15,16 +15,16 @@ Two to five cards. Each has a kind chip, a heading that states the problem or th
 
 ## Mechanism (optional)
 
-Include only when a picture explains something prose cannot: layers, request flow, before and after topology, a state machine. Inline SVG, theme classes, `role="img"`, a `<title>`, and a one-sentence caption. Skip it for straightforward PRs. An empty or decorative figure is worse than none.
+Include a figure when it explains something prose cannot: layers, request flow, before and after topology, a state machine, an ordering or timing question, a data shape change, a numeric comparison. Read `references/figures.md` before drawing one: it has a step flow and a before and after pair in plain HTML, a bar list for quoted numbers, and the inline SVG classes. A figure states something the surrounding text does not, and it needs a one-sentence caption. Skip it for straightforward PRs. An empty or decorative figure is worse than none. The mechanism section is for the page-wide picture. A figure that belongs to one group, one finding, or one block goes there instead (see Figures below).
 
 ## Changes
 
-- Intro (`changes-intro.html`): one sentence on how the blocks are organised.
-- Blocks: one per changed file by default. Use `range` to split one file into several blocks when it mixes unrelated changes, with each block's `before` and `after` line windows chosen so both contain the whole hunk plus two or three context lines.
+- Intro (`changes-intro.html`): one sentence on how the blocks are organized.
+- Blocks: one per changed file by default. The page shows only changed lines with three lines of context and lets the reader expand the rest, so do not narrow a block for context. Use `range` only to split one file into several blocks when it mixes unrelated changes, and choose windows that contain each whole hunk.
 - Groups: create a group when two or more files carry the same edit or serve one purpose. A group gets a heading (from the manifest) and a callout (`group-<key>.html`) with Why bullets and a Before/After effect grid. Write the reasoning once, in the callout, not in every block. The build lists the group's files under the heading, linked to their blocks, so the callout need not repeat the names.
 - Identity badge: in a group where files should be the same edit apart from known tokens (version numbers, jdk/jre, module names), mark one block `rep: true` and give the group a `mask` list. The browser then proves in the page that the other files match the representative, or shows how many lines differ. Without a mask, files are compared byte for byte.
 - Block heading: one line in the imperative describing what the change does ("Fail loudly on a bad download"), not what the diff looks like ("Change curl flags").
-- Block notes (`block-<key>.html`): only when there is something the diff does not show: representative, redacted value, binary skipped. New and deleted files are labelled by the build in the diff head.
+- Block notes (`block-<key>.html`): only when there is something the diff does not show: representative, redacted value, binary skipped. New and deleted files are labeled by the build in the diff head.
 - Kinds: two to four per page. Define them in the manifest with a label, tone, and glyph. Use the same kind for the same idea everywhere: findings, blocks, and TOC dots.
 
 Grouping rule of thumb:
@@ -36,6 +36,10 @@ Grouping rule of thumb:
 | Six files, same edit each | 6 | yes, with `rep` and `mask` |
 | Four files serving one feature (handler, test, config, docs) | 4 | yes, no `rep` |
 | Twenty generated files | describe in the callout, embed the two that matter | yes |
+
+## Figures (optional, anywhere)
+
+A `.figure` may sit in `mechanism.html`, inside a group callout, under a finding paragraph, in an extra section, or above a diff as a block note. Same rules as the mechanism figure. Numbers from the PR keep the `(PR)` source mark.
 
 ## Quoted from the PR (optional)
 

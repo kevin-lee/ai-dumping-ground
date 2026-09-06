@@ -158,7 +158,9 @@ if (!/<html lang="/.test(html)) a11y.push('<html lang> missing');
 if (!/<title>[^<]+<\/title>/.test(html)) a11y.push('<title> missing');
 if (!/<dialog id="help"/.test(html)) a11y.push('dialog#help missing');
 if (!/id="font-pop"/.test(html)) a11y.push('text size panel missing');
-if (!/id="palette-pop"/.test(html)) a11y.push('colour palette panel missing');
+if (!/id="palette-pop"/.test(html)) a11y.push('color palette panel missing');
+if (!/id="full-toggle"/.test(html)) a11y.push('show whole file toggle missing');
+if (!/id="syntax-toggle"/.test(html)) a11y.push('syntax colors toggle missing');
 for (const m of html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g)) {
   const attrs = m[1], inner = m[2].replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/<span class="tip"[\s\S]*?<\/span>\s*<\/span>|<span class="tip"[\s\S]*?<\/span>/g, '').replace(/<[^>]+>/g, '').trim();
   if (!/aria-label=/.test(attrs) && !inner) a11y.push(`button without text or aria-label: <button${attrs.slice(0, 60)}>`);
@@ -167,7 +169,7 @@ for (const m of html.matchAll(/<svg\b([^>]*)>/g)) {
   if (!/role="img"/.test(m[1]) && !/aria-hidden="true"/.test(m[1])) a11y.push(`svg without role="img" or aria-hidden: <svg${m[1].slice(0, 60)}>`);
 }
 for (const m of html.matchAll(/<img\b([^>]*)>/g)) if (!/\salt=/.test(m[1])) a11y.push('img without alt');
-// Every input is labelled: aria-label, aria-labelledby, a <label for>, or nesting inside a <label>
+// Every input is labeled: aria-label, aria-labelledby, a <label for>, or nesting inside a <label>
 const labelFor = new Set([...html.matchAll(/<label\b[^>]*\sfor="([^"]+)"/g)].map((m) => m[1]));
 const labelSpans = [...html.matchAll(/<label\b[^>]*>[\s\S]*?<\/label>/g)].map((m) => [m.index, m.index + m[0].length]);
 for (const m of html.matchAll(/<input\b([^>]*)>/g)) {
@@ -178,7 +180,7 @@ for (const m of html.matchAll(/<input\b([^>]*)>/g)) {
   if (labelSpans.some(([s, e]) => m.index > s && m.index < e)) continue;
   a11y.push(`input without a label: <input${attrs.slice(0, 60)}>`);
 }
-if (a11y.length) fail(`accessibility: ${[...new Set(a11y)].slice(0, 8).join('; ')}`); else pass('skip link, live region, labelled buttons and inputs, hidden decorative SVG, title, lang, help dialog, text size panel, colour palette panel');
+if (a11y.length) fail(`accessibility: ${[...new Set(a11y)].slice(0, 8).join('; ')}`); else pass('skip link, live region, labeled buttons and inputs, hidden decorative SVG, title, lang, help dialog, text size panel, color palette panel, whole file and syntax toggles');
 
 // 10b. palette switch: every swatch button has a palette rule, exactly one default, and the page never references the build-time file
 const swatchNames = [...html.matchAll(/<button\b[^>]*\sdata-palette-btn="([^"]+)"/g)].map((m) => m[1]);
@@ -188,6 +190,31 @@ for (const n of swatchNames) if (n !== 'default' && !html.includes(`:root[data-p
 if (/palettes\.json/.test(html)) paletteProblems.push('page references palettes.json');
 if (paletteProblems.length) fail(`palette switch: ${paletteProblems.join('; ')}`);
 else pass(`palette switch: default plus ${swatchNames.length - 1} named palette(s), no runtime file references`);
+
+// 10c. syntax colors: the page declares data-hl, and when on, the vendor marker lists every block language
+const htmlTag = (html.match(/<html\b[^>]*>/) || [''])[0];
+const hlAttr = (htmlTag.match(/\sdata-hl="(on|off)"/) || [])[1];
+if (!hlAttr) fail('syntax colors: <html> has no data-hl attribute');
+else if (hlAttr === 'on') {
+  const marker = html.match(/\/\* pr-analysis vendor: prism ([\d.]+), languages: ([a-z0-9,-]*) \*\//);
+  const problems = [];
+  if (!marker) problems.push('vendor marker line missing');
+  if (!html.includes('window.Prism = { manual: true')) problems.push('Prism manual stub missing');
+  const ids = new Set(marker ? marker[2].split(',').filter(Boolean) : []);
+  const missing = new Set();
+  if (BLOCKS) for (const b of Object.values(BLOCKS)) if (b.lang && !ids.has(b.lang)) missing.add(b.lang);
+  if (missing.size) problems.push(`block language(s) not bundled: ${[...missing].join(', ')}`);
+  if (problems.length) fail(`syntax colors: ${problems.join('; ')}`);
+  else pass(`syntax colors: prism ${marker[1]}, ${ids.size} grammar(s), every block language bundled`);
+} else {
+  if (/pr-analysis vendor:|window\.Prism/.test(html)) fail('syntax colors off but vendor code is in the page');
+  else pass('syntax colors off, no vendor code in the page');
+}
+
+// 10d. figures: bar values are percentages
+const badPct = [...html.matchAll(/\sdata-pct="([^"]*)"/g)].map((m) => m[1]).filter((v) => !/^\d{1,3}$/.test(v) || Number(v) > 100);
+if (badPct.length) fail(`figure bars: data-pct must be an integer 0 to 100, found ${[...new Set(badPct)].join(', ')}`);
+else pass(html.includes('data-pct="') ? 'figure bar values in range' : 'no figure bars');
 
 // 11. acronym reminder
 const proseText = fragments.map(([, f]) => stripQuoted(f)).join(' ') + ' ' + ((manifest.title || '') + ' ' + (manifest.statTiles || []).map((t) => t.en).join(' '));
