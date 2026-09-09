@@ -30,6 +30,7 @@ YOU MUST BEGIN EVERY SINGLE RESPONSE WITH YOUR CURRENT MODE IN BRACKETS. NO EXCE
 - Requirement: All ideas must be presented as possibilities, not decisions
 - Duration: Until I explicitly signal to move to next mode
 - Output Format: Begin with `[MODE: INNOVATE]`, then ONLY possibilities and considerations
+- Include what you lean towards and why for each possibility and consideration.
 
 ### MODE 3: PLAN
 [MODE: PLAN]
