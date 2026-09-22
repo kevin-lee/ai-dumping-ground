@@ -38,6 +38,7 @@
       --sy-string: #A5D6FF;
       --sy-number: #FFC58B;
       --sy-name: #79C0FF;
+      --sy-type: #7EE787;
       --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
   @end*/
   /*@define cvdLightTokens
@@ -108,6 +109,7 @@
     --sy-string: #0A3069;
     --sy-number: #8A4600;
     --sy-name: #0550AE;
+    --sy-type: #116329;
     --shadow: 0 1px 2px rgba(22,24,30,.06), 0 8px 24px -12px rgba(22,24,30,.18);
     --radius: 6px;
     --content-zoom: 1; /* the text size control sets this to px / 16 */
@@ -775,6 +777,7 @@
   .sy-string { color: var(--sy-string); }
   .sy-number { color: var(--sy-number); }
   .sy-name { color: var(--sy-name); }
+  .sy-type { color: var(--sy-type); }
   html[data-hl="off"] .needs-hl { display: none !important; }
   table.sdiff td.gutter { width: 1px; padding: 0; border-left: 1px solid var(--line); }
   table.sdiff td.side { width: 50%; }
@@ -1247,35 +1250,44 @@
   const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   // ---------- Syntax colors ----------
-  // Prism, when the build inlined it, tokenizes each side of a block once. Token types map onto five roles
+  // highlight.js, when the build inlined it, highlights each side of a block once. Its scopes map onto six roles
   // whose colors are template tokens, so they follow the theme, the CVD palette, and the palette switch.
-  const HL = typeof Prism !== 'undefined' && Prism && Prism.languages ? Prism : null;
+  const HL = typeof hljs !== 'undefined' && hljs && typeof hljs.highlight === 'function' ? hljs : null;
   const ROLE = {};
-  for (const [role, types] of Object.entries({
-    comment: 'comment prolog doctype cdata',
-    keyword: 'keyword boolean important atrule',
-    string: 'string char template-string triple-quoted-string attr-value regex url',
-    number: 'number constant symbol',
-    name: 'function class-name builtin tag selector annotation namespace property attr-name variable entity'
-  })) for (const t of types.split(' ')) ROLE[t] = role;
-  function roleOf(token) {
-    if (ROLE[token.type]) return ROLE[token.type];
-    const aliases = Array.isArray(token.alias) ? token.alias : (token.alias ? [token.alias] : []);
-    for (const a of aliases) if (ROLE[a]) return ROLE[a];
-    return null;
+  for (const [role, scopes] of Object.entries({
+    comment: 'comment doctag quote',
+    keyword: 'keyword literal',
+    string: 'string regexp char link',
+    number: 'number symbol',
+    type: 'type',
+    name: 'built_in attr attribute property variable template-variable name meta selector-tag selector-id selector-class selector-attr selector-pseudo'
+  })) for (const s of scopes.split(' ')) ROLE[s] = role;
+  // Interpolated code, operators, and punctuation stay plain unless a scope inside them has a role.
+  const PLAIN = new Set(['subst', 'operator', 'punctuation']);
+  // One span's role from its classes ("hljs-title class_" gives title and class_) and the nearest class or function scope around it.
+  // Class titles are types, other titles (functions) are names. null lets the span inherit, '' ends inheritance.
+  function roleOf(classes, container) {
+    const [scope, ...subs] = classes;
+    if (PLAIN.has(scope)) return '';
+    if (scope === 'variable' && subs.includes('language_')) return 'keyword';
+    if (scope === 'title') return subs.includes('class_') || subs.includes('inherited__') || container === 'class' ? 'type' : 'name';
+    return ROLE[scope] || null;
   }
-  function flatten(tokens, inherited, out) {
-    for (const t of tokens) {
-      if (typeof t === 'string') out.push([t, inherited]);
-      else if (typeof t.content === 'string') out.push([t.content, roleOf(t) || inherited]);
-      else flatten(Array.isArray(t.content) ? t.content : [t.content], roleOf(t) || inherited, out);
+  function flatten(node, inherited, container, out) {
+    for (const child of node.childNodes) {
+      if (child.nodeType === 3) { out.push([child.nodeValue, inherited]); continue; }
+      const classes = child.className.split(' ').map((c) => c.replace(/^hljs-/, ''));
+      const own = roleOf(classes, container);
+      flatten(child, own === null ? inherited : (own || null), classes[0] === 'class' || classes[0] === 'function' ? classes[0] : container, out);
     }
     return out;
   }
   // Per line, an array of [length, role] segments in order. null when the grammar is not in the page.
   function tokenizeLines(text, lang) {
-    if (!HL || !HL.languages[lang]) return null;
-    const pieces = flatten(HL.tokenize(text, HL.languages[lang]), null, []);
+    if (!HL || !HL.getLanguage(lang)) return null;
+    const tpl = document.createElement('template');
+    tpl.innerHTML = HL.highlight(text, { language: lang, ignoreIllegals: true }).value;
+    const pieces = flatten(tpl.content, null, '', []);
     const lines = [[]];
     for (const [str, role] of pieces) {
       const parts = str.split('\n');

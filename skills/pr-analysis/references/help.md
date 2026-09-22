@@ -64,10 +64,12 @@ URL PARAMETERS THE PAGE UNDERSTANDS
 REQUIREMENTS
   git, gh (authenticated: gh auth status), Node 18 or newer.
   Run from inside the repository the PR belongs to.
-  Network access on the first build per machine: the build downloads the Prism
-  highlighter (1.30.0) into ~/.cache/pr-analysis and reuses it. Without network
-  and cache the report builds without syntax colors. PR_ANALYSIS_CACHE overrides
-  the cache directory, PR_ANALYSIS_VENDOR_BASE points the download at a mirror,
-  --no-highlight on build.mjs skips it.
+  Network access on the first build per machine: the build downloads
+  highlight.js (11.12.0) and the grammars the PR needs into ~/.cache/pr-analysis
+  and reuses them. Terraform (.tf, .hcl) uses the third-party
+  highlightjs-terraform grammar, pinned by commit. Without network and cache the
+  report builds without syntax colors. PR_ANALYSIS_CACHE overrides the cache
+  directory, PR_ANALYSIS_VENDOR_BASE points the download at a mirror that serves
+  jsDelivr paths (npm/... and gh/...), --no-highlight on build.mjs skips it.
   Nothing is committed, pushed, or published. The report is one HTML file.
 ```

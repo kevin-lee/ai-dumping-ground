@@ -196,18 +196,18 @@ const htmlTag = (html.match(/<html\b[^>]*>/) || [''])[0];
 const hlAttr = (htmlTag.match(/\sdata-hl="(on|off)"/) || [])[1];
 if (!hlAttr) fail('syntax colors: <html> has no data-hl attribute');
 else if (hlAttr === 'on') {
-  const marker = html.match(/\/\* pr-analysis vendor: prism ([\d.]+), languages: ([a-z0-9,-]*) \*\//);
+  const marker = html.match(/\/\* pr-analysis vendor: highlight\.js ([\d.]+), languages: ([a-z0-9,-]*) \*\//);
   const problems = [];
   if (!marker) problems.push('vendor marker line missing');
-  if (!html.includes('window.Prism = { manual: true')) problems.push('Prism manual stub missing');
+  if (!html.includes('globalThis.hljs = ')) problems.push('highlight.js core rewrite missing');
   const ids = new Set(marker ? marker[2].split(',').filter(Boolean) : []);
   const missing = new Set();
   if (BLOCKS) for (const b of Object.values(BLOCKS)) if (b.lang && !ids.has(b.lang)) missing.add(b.lang);
   if (missing.size) problems.push(`block language(s) not bundled: ${[...missing].join(', ')}`);
   if (problems.length) fail(`syntax colors: ${problems.join('; ')}`);
-  else pass(`syntax colors: prism ${marker[1]}, ${ids.size} grammar(s), every block language bundled`);
+  else pass(`syntax colors: highlight.js ${marker[1]}, ${ids.size} grammar(s), every block language bundled`);
 } else {
-  if (/pr-analysis vendor:|window\.Prism/.test(html)) fail('syntax colors off but vendor code is in the page');
+  if (/pr-analysis vendor:|globalThis\.hljs|registerLanguage\(/.test(html)) fail('syntax colors off but vendor code is in the page');
   else pass('syntax colors off, no vendor code in the page');
 }
 
@@ -245,7 +245,7 @@ else {
       for (const fg of ['ink', 'ink-2', 'muted']) for (const bg of ['ground', 'surface', 'surface-2']) list.push([fg, t[fg], bg, t[bg]]);
       for (const bg of ['ground', 'surface']) list.push(['accent', t.accent, bg, t[bg]]);
       list.push(['accent-ink', t['accent-ink'], 'accent', t.accent]);
-      for (const fg of ['sy-comment', 'sy-keyword', 'sy-string', 'sy-number', 'sy-name']) {
+      for (const fg of ['sy-comment', 'sy-keyword', 'sy-string', 'sy-number', 'sy-name', 'sy-type']) {
         for (const bg of ['code-bg', 'add-bg', 'del-bg']) list.push([fg, t[fg], bg, t[bg]]);
         list.push([fg, t[fg], 'CVD add-bg', cvd[mode]['add-bg']], [fg, t[fg], 'CVD del-bg', cvd[mode]['del-bg']]);
       }
