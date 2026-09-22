@@ -75,7 +75,7 @@ The build validates the manifest, escapes and embeds the file text, generates th
 
 The build reads `assets/palettes.json` and `assets/themes.json` next to the template and embeds the named palettes and themes in the page for the palette switch. The output never references either file.
 
-The build also downloads the Prism grammars the PR's file types need into `~/.cache/pr-analysis` on first use, verifies them against pinned checksums, and inlines them. When the download fails it prints a WARNING and builds without syntax colors. Keep that warning for the completion message. Never add the library to the skill.
+The build also downloads highlight.js and the grammars the PR's file types need into `~/.cache/pr-analysis` on first use, verifies them against pinned checksums, and inlines them. Terraform files use the third-party `highlightjs-terraform` grammar, pinned by commit. When the download fails it prints a WARNING and builds without syntax colors. Keep that warning for the completion message. Never add the library to the skill.
 
 ## 8. Check
 

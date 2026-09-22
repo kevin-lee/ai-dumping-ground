@@ -10,7 +10,7 @@
       "add-bg": "#E7EFCE", "add-ink": "#475301", "add-mark": "#D1DFA3",
       "del-bg": "#FEE4E0", "del-ink": "#9E030E", "del-mark": "#FEC8C1",
       "hit-ink": "#073642",
-      "sy-comment": "#545B68", "sy-keyword": "#7F3394", "sy-string": "#395F15", "sy-number": "#7B4A11", "sy-name": "#02598F"
+      "sy-comment": "#5D6169", "sy-keyword": "#9F319C", "sy-string": "#147116", "sy-number": "#A93F07", "sy-name": "#2B5BC2", "sy-type": "#7C5C01"
     },
     "dark": {
       "ink": "#D7DAE0", "ink-2": "#ABB2BF", "muted": "#9DA2AD", "accent-ink": "#21252B",
@@ -20,7 +20,7 @@
       "add-bg": "#2F3F23", "add-ink": "#ADD98E", "add-mark": "#3D542B",
       "del-bg": "#502E30", "del-ink": "#FEB4B7", "del-mark": "#6D3B3E",
       "hit-ink": "#21252B",
-      "sy-comment": "#A1A9B7", "sy-keyword": "#D98AF0", "sy-string": "#98C379", "sy-number": "#D59E6A", "sy-name": "#61AFEF"
+      "sy-comment": "#A1A9B7", "sy-keyword": "#D98AF0", "sy-string": "#98C379", "sy-number": "#D59E6A", "sy-name": "#61AFEF", "sy-type": "#E5C07B"
     }
   }
 }

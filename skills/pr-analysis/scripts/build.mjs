@@ -44,7 +44,7 @@ if (!existsSync(themesPath)) fail(`missing ${themesPath}`);
 let THEMES;
 try { THEMES = JSON.parse(readFileSync(themesPath, 'utf8')); } catch (e) { fail(`cannot parse ${themesPath}: ${e.message}`); }
 if (!THEMES || typeof THEMES !== 'object' || Array.isArray(THEMES)) fail(`${themesPath} must be an object`);
-const THEME_TOKENS = ['ink', 'ink-2', 'muted', 'accent-ink', 'ground', 'surface', 'surface-2', 'code-bg', 'ok', 'ok-soft', 'warn', 'warn-soft', 'alert', 'alert-soft', 'nodata', 'nodata-soft', 'add-bg', 'add-ink', 'add-mark', 'del-bg', 'del-ink', 'del-mark', 'hit-ink', 'sy-comment', 'sy-keyword', 'sy-string', 'sy-number', 'sy-name'];
+const THEME_TOKENS = ['ink', 'ink-2', 'muted', 'accent-ink', 'ground', 'surface', 'surface-2', 'code-bg', 'ok', 'ok-soft', 'warn', 'warn-soft', 'alert', 'alert-soft', 'nodata', 'nodata-soft', 'add-bg', 'add-ink', 'add-mark', 'del-bg', 'del-ink', 'del-mark', 'hit-ink', 'sy-comment', 'sy-keyword', 'sy-string', 'sy-number', 'sy-name', 'sy-type'];
 for (const [n, t] of Object.entries(THEMES)) {
   if (!/^[a-z][a-z0-9-]*$/.test(n) || n === 'default') fail(`themes.json key "${n}" must match ^[a-z][a-z0-9-]*$ and cannot be "default"`);
   if (NAMED[n]) fail(`themes.json key "${n}" is also in palettes.json`);
@@ -62,71 +62,78 @@ for (const [n, t] of Object.entries(THEMES)) {
 }
 
 // ---------- Vendor: syntax highlighting ----------
-// Prism is downloaded once per machine into the cache, verified against pinned checksums, and inlined into the page.
+// highlight.js is downloaded once per machine into the cache, verified against pinned checksums, and inlined into the page.
 // The skill never carries the library. Without network and cache the report builds without syntax colors.
-const PRISM_VERSION = '1.30.0';
-const VENDOR_BASES = process.env.PR_ANALYSIS_VENDOR_BASE
-  ? [process.env.PR_ANALYSIS_VENDOR_BASE.replace(/\/?$/, '/')]
-  : [`https://cdn.jsdelivr.net/npm/prismjs@${PRISM_VERSION}/`, `https://unpkg.com/prismjs@${PRISM_VERSION}/`];
+const HLJS_VERSION = '11.12.0';
+const TERRAFORM_COMMIT = 'eb1b9661e143a43dff6b58b391128ce5cdad31d4';
+// Every path is a jsDelivr path. PR_ANALYSIS_VENDOR_BASE replaces https://cdn.jsdelivr.net/ with a mirror that serves the same paths.
+const HLJS_PATH = `npm/@highlightjs/cdn-assets@${HLJS_VERSION}/`;
+const TERRAFORM_PATH = `gh/highlightjs/highlightjs-terraform@${TERRAFORM_COMMIT}/`;
+const SECOND_MIRROR = { [HLJS_PATH]: `https://unpkg.com/@highlightjs/cdn-assets@${HLJS_VERSION}/`, [TERRAFORM_PATH]: `https://raw.githubusercontent.com/highlightjs/highlightjs-terraform/${TERRAFORM_COMMIT}/` };
+function vendorUrls(path) {
+  if (process.env.PR_ANALYSIS_VENDOR_BASE) return [process.env.PR_ANALYSIS_VENDOR_BASE.replace(/\/?$/, '/') + path];
+  const prefix = path.startsWith(HLJS_PATH) ? HLJS_PATH : TERRAFORM_PATH;
+  return ['https://cdn.jsdelivr.net/' + path, SECOND_MIRROR[prefix] + path.slice(prefix.length)];
+}
 const CACHE_DIR = process.env.PR_ANALYSIS_CACHE || join(homedir(), '.cache', 'pr-analysis');
-const vendorDir = join(CACHE_DIR, 'vendor', `prismjs@${PRISM_VERSION}`);
-// Every file is components/prism-<id>.min.js from the prismjs npm package. requires are Prism's own (from components.json).
-const grammar = (sha256, requires) => ({ sha256, requires: requires || [] });
-const PRISM = {
-  core: grammar('6caad316dd991f24f8004e0b9c19c055cb5829ff65e973fbee406f96d81b8e7e'),
-  clike: grammar('c76ba4e240932bdc75546be30e550f5ba5e13815ff71511c76e9e27ac3072444'),
-  c: grammar('9e05cf21207bff46afbf80cb8f43bb58bc4a4a87b68f28bc0470342f69345209', ['clike']),
-  cpp: grammar('12077d9ea67882c149066e94843a6ede9036994b3724bfc45b31d97619328e14', ['c']),
-  csharp: grammar('f4eca14394e584a4a3a747fe6dc0a93ddbc657880f7dbac3f8d119ccb206107e', ['clike']),
-  javascript: grammar('0345ea83e12b7b974e953c79a64dea35a40308309449db70b82020fb688ac321', ['clike']),
-  typescript: grammar('852f5513bb9ca9db247f86ecfce74acc91c541749d34929157240518fef8152a', ['javascript']),
-  jsx: grammar('0c8b80e4d98f6813ef95fd0e7ae2862cc0804ec305e0ad1f99c0a4bb7c28f865', ['markup', 'javascript']),
-  tsx: grammar('752c15ed4ff1d03e042b407b332892e1097d5f5e348861e2e26db20d71b349bf', ['jsx', 'typescript']),
-  java: grammar('4c2dc81dfc9efa51e38a7573938065288c63c64850f01a32f8a7b20a3e24c5a7', ['clike']),
-  kotlin: grammar('68c1ddff0d10147c006688289c310ccbfb5283c8687b4bcb9bf7bc9bbdf9f41c', ['clike']),
-  scala: grammar('2b73d569dc4cd469bce912291cd285819e8798f20c7ca56b16b40e6ffc737a24', ['java']),
-  groovy: grammar('23797a1e79b83c0216c7ca025671b1d8575305b13ce22b64aa3d2a96b4a3b5ef', ['clike']),
-  bash: grammar('6260814110e5182f2956e3bd257429548d9dbf2a9b66a63719b26cf9fac966a7'),
-  sql: grammar('3fc5f8ce69950ec73adc972f061df42aaea78faa4864709134ea2adc083f3a33'),
-  json: grammar('956d86baa5ae7ec4106758f354ac2d140bdcd7fc103dece02f73ed12b8d663e4'),
-  yaml: grammar('719c8e8b8c344dc9de510c729f65ba840b1502a0a8e7e25e2ad19ee715f65c02'),
-  toml: grammar('bc71428fec2670d59cda5ad3359615c91892f914f526cf6bfe316fc2ad55aff2'),
-  ini: grammar('cf1b61f4a67f0101005c5133e22113e2f3a74f1c7917034e084df688f1735381'),
-  properties: grammar('3272abb494806e743c8be4ee9220362c9c06a7282320198ca0bbd365cd8be147'),
-  markdown: grammar('9f1166a087d9a9ffb3a833f2bccbe00920b55b41ade02a0b3054b7ab5fbc70ea', ['markup']),
-  markup: grammar('879fc9d256c352d980e053857fa707330853b8bfb67ce284ea661a24dec5756e'),
-  css: grammar('8c9760dba7f26ea842016919544dd9b73a78a36d5b07a1e9842c333ed18ab6ae'),
-  scss: grammar('149a0fb3381c07a609cd671fd14958d1737c6ec1682deafd0b6d2018df9e5c91', ['css']),
-  python: grammar('ed4385685bcf2d4935c8dbbab4bde16603da1329e092d2bf36c3dadd67e9a85c'),
-  go: grammar('1225b4afb593126d4082da5fd2b131aede39831c2b2a62d6b07ea025acd2bf3f', ['clike']),
-  rust: grammar('8ca261bb964333c717703059de8ff81e80a75d52c637913ef6f982da1ee82acb'),
-  ruby: grammar('2511dcef4c4c79f8be63fcdcd56af9be91406a5ed192065da3713ab45bdb97b2', ['clike']),
-  swift: grammar('69c8a062618949fbc7b69989ab7fb2b7bc111b28ea329e53713c7a2885614b20'),
-  lua: grammar('f6ca280a77564667cc1006e59e31e338b01eee0ef840ae02a9bd5a0fc5ea4553'),
-  makefile: grammar('4c1c05235779d4bff287b9ffc71dfb7dc10157c1a89bc49e0de2adb59d3635ee'),
-  docker: grammar('a6cc0faa5977a40652f62798a692a5ae171e0380480df3ed056e117597ec52dd'),
-  diff: grammar('f16816fb2242a84c6ff6715a48c6d0a3e469e3250912cb9f1b755ca537d02f48'),
-  graphql: grammar('04519bfa04631ce1f85533803a510d594763c2b9ab5c13d209cfeb3b300ef355'),
-  protobuf: grammar('7d1620ec30c379b432c631efa55acc14ddafda724aa4f19cb1993306ccd9b35f', ['clike']),
-  hcl: grammar('6c8bc9ea13f7ad08648eb2ffdda99d5ed674844220b2b4757aeb19d06fc78b18')
+const vendorDir = join(CACHE_DIR, 'vendor', `highlightjs@${HLJS_VERSION}`);
+// core is es/core.min.js, the package's ES module core, rewritten into a plain script after the checksum check.
+// Every other id except terraform is languages/<id>.min.js from @highlightjs/cdn-assets and registers itself on the global hljs.
+// terraform is the third-party highlightjs-terraform grammar (MIT), pinned by commit.
+const grammar = (sha256) => ({ sha256 });
+const HLJS = {
+  core: grammar('67a339aa68880a40c9803def9c8cebb2225dec76230382db86e349370dee70e9'),
+  scala: grammar('2d70612619556e1d39566e9d23bc0e890a75ec027911eca0d6ab7987430b201a'),
+  kotlin: grammar('c5bc30654dd14ba54197e71025ce5e5202dc7e23e98549b28068bc48e9677648'),
+  java: grammar('0760f3462e2ef2a9d117303654d153003ad1d3cb916c7d42bd9a1c8b81d805f5'),
+  groovy: grammar('55b81d783372ed6c8c99d5c3568113845dceb93ea454c54f61582ef8d2970a17'),
+  gradle: grammar('03977cf861c7daafe75bbf9aa5bcb39f428fb5ea113ba282dde61f85fde6fe9e'),
+  javascript: grammar('94778400b0703aa4a67ddc9a263cce6abac02bb30cd71e733c865684bfa0b6fa'),
+  typescript: grammar('fb2773436976b3d6b3f3de2933790445e5112e9060dfabe743e4d2c82603300c'),
+  bash: grammar('fdd88a4d38bc32bde836a5149f04ff88a09f74ae818a3dfa756e3f6e8931f4e3'),
+  sql: grammar('bae9e447435e7820fcbc8ffde82715e526a35e50137da3d469f8c258291f4463'),
+  json: grammar('a98beb4d49349f91cc6af39ef0f358d6707454b97380f367b31cf034e031fffa'),
+  yaml: grammar('99dd6bd8c1745c9ffc2c157687f2ef0218b4537b2a99d630baf7b40cb72b50a0'),
+  ini: grammar('b1c1c938f41e95eddffed1d5774ddce880133b8709f31224132cf07e7c563e68'),
+  properties: grammar('8a987022cc566fa5bfcd79058ec4ba010920d576fff809b92317295827402590'),
+  markdown: grammar('a38ceaa84d1d4ff46a3a69bb992beed808dbc9a2f384d1e63c13ec85147a3597'),
+  xml: grammar('f1dc53af47f2ca9b47045aedaa591b21817306a241dcd97d499d946f35181aa9'),
+  css: grammar('0af9d9ac8eadbe6dd75754fa919f1701796c40e235d30c342280473951b4d5f3'),
+  scss: grammar('c5ca13f254d53dd9efe7807dbce5b4b1af96f6848d2561daca1bfecf1525c1cc'),
+  python: grammar('37f9c9e600b797a156dbba2914dea3a5ff7b04678e973080ee0fe2b093b11061'),
+  go: grammar('9fc6a200a8e1c03d232c1af89a55da4511400573c3bcb087eda2e280adb01ebe'),
+  rust: grammar('a37e2cc8794bbc0851b5c39c2803b0fe1d1526d9230afb6acbfd5f5bc0a7c27a'),
+  ruby: grammar('d942714cfc549c0ebbe91a101abcb7188f0b17f679f5c0f53436535c6893d90f'),
+  swift: grammar('1c9b7035f5f36c01c8d70c5d9fb354dfe290f4b925ffb3c4ebe18e501ea2b4d4'),
+  lua: grammar('09ca892826c095af066879cc3048da3347ee4fdf698f1c94337f28f759c03b2a'),
+  makefile: grammar('ff50c8d0e2e1c53a2c430ad9e83888a2c24c1e24e48d893045d2698aeb8deb66'),
+  dockerfile: grammar('d96f73b077d654d776795097cf49afae5dce3ce453106af022eae013ad2ec8b1'),
+  diff: grammar('98d963277df34538bbd65672890b43a1d94f7f903e21b8bd3f5de47fd3460acc'),
+  graphql: grammar('5f7aaa66d88c0b439b594dbfbe46f114115836ab7dc3889ba56007a0dd80d287'),
+  protobuf: grammar('67f3f53b99c3c6e9b393cf95d164632ccebaf0ec8a7f1f1f896edf259496b784'),
+  c: grammar('1003414c4e1b40beb8ed5c384e043bc3258792778138d7b487c39eb49c96aa4f'),
+  cpp: grammar('cea97c1be97cb8a68ed499075ab7dd39bfa3ccee43130267eada6696b7334da8'),
+  csharp: grammar('dae11de841c15b9dc06d05306216754ed89a51f0885b234fb9bd478f465d0c9c'),
+  terraform: grammar('160e0f509e6c7baa86574ce39c444e9ed1d645f6f7be9236a04903f7eb582469')
 };
-for (const [id, entry] of Object.entries(PRISM)) entry.file = `components/prism-${id}.min.js`;
+for (const [id, entry] of Object.entries(HLJS)) entry.path = id === 'core' ? `${HLJS_PATH}es/core.min.js` : (id === 'terraform' ? `${TERRAFORM_PATH}terraform.js` : `${HLJS_PATH}languages/${id}.min.js`);
 const LANG_BY_EXT = {};
 for (const [id, exts] of Object.entries({
-  scala: 'scala sbt sc', kotlin: 'kt kts', java: 'java', groovy: 'groovy gradle', javascript: 'js mjs cjs', jsx: 'jsx',
-  typescript: 'ts mts cts', tsx: 'tsx', bash: 'sh bash zsh', sql: 'sql', json: 'json webmanifest', yaml: 'yml yaml', toml: 'toml',
-  ini: 'ini cfg', properties: 'properties', markdown: 'md markdown', markup: 'html htm xml svg xhtml', css: 'css', scss: 'scss',
+  scala: 'scala sbt sc', kotlin: 'kt kts', java: 'java', groovy: 'groovy', gradle: 'gradle', javascript: 'js mjs cjs jsx',
+  typescript: 'ts mts cts tsx', bash: 'sh bash zsh', sql: 'sql', json: 'json webmanifest', yaml: 'yml yaml', ini: 'ini cfg toml',
+  properties: 'properties', markdown: 'md markdown', xml: 'html htm xml svg xhtml', css: 'css', scss: 'scss',
   python: 'py', go: 'go', rust: 'rs', ruby: 'rb', swift: 'swift', lua: 'lua', makefile: 'mk', diff: 'diff patch', graphql: 'graphql gql',
-  protobuf: 'proto', hcl: 'tf hcl', c: 'c h', cpp: 'cpp cc cxx hpp hh', csharp: 'cs'
+  protobuf: 'proto', terraform: 'tf hcl', c: 'c h', cpp: 'cpp cc cxx hpp hh', csharp: 'cs'
 })) for (const e of exts.split(' ')) LANG_BY_EXT[e] = id;
-const langByName = (name) => /^Dockerfile(\.|$)/.test(name) ? 'docker' : (name === 'Makefile' || name === 'GNUmakefile' ? 'makefile' : null);
+// Grammars a file type embeds: JSX tags and HTML inside Markdown are colored by xml.
+const SUBLANG_BY_EXT = { jsx: 'xml', tsx: 'xml', md: 'xml', markdown: 'xml' };
+const extOf = (name) => { const dot = name.lastIndexOf('.'); return dot === -1 ? '' : name.slice(dot + 1).toLowerCase(); };
+const langByName = (name) => /^Dockerfile(\.|$)/.test(name) ? 'dockerfile' : (name === 'Makefile' || name === 'GNUmakefile' ? 'makefile' : null);
 function langFor(path) {
   const name = basename(path);
   const byName = langByName(name);
   if (byName) return byName;
-  const dot = name.lastIndexOf('.');
-  if (dot === -1) return null;
-  return LANG_BY_EXT[name.slice(dot + 1).toLowerCase()] || null;
+  return LANG_BY_EXT[extOf(name)] || null;
 }
 const noHighlight = process.argv.includes('--no-highlight');
 
@@ -238,23 +245,28 @@ const kindsCss = Object.entries(kinds).map(([k, v]) => {
 
 // ---------- Vendor resolution: which grammars this PR needs, from the cache or a mirror ----------
 const wanted = new Set();
-for (const b of blocks) { const l = langFor(meta.files[b.fileIndex].path); if (l) wanted.add(l); }
-const needed = ['core'];
-const addNeeded = (id) => { if (needed.includes(id)) return; for (const r of PRISM[id].requires) addNeeded(r); needed.push(id); };
-for (const id of wanted) addNeeded(id);
+for (const b of blocks) {
+  const path = meta.files[b.fileIndex].path;
+  const l = langFor(path);
+  if (l) {
+    wanted.add(l);
+    const sub = SUBLANG_BY_EXT[extOf(basename(path))];
+    if (sub) wanted.add(sub);
+  }
+}
+const needed = ['core', ...wanted];
 let hl = !noHighlight && wanted.size > 0;
 let hlReason = noHighlight ? '--no-highlight' : (wanted.size ? '' : 'no file type with a grammar');
 const sha256 = (text) => createHash('sha256').update(text).digest('hex');
 async function loadVendor(id) {
-  const entry = PRISM[id];
-  const cachePath = join(vendorDir, basename(entry.file));
+  const entry = HLJS[id];
+  const cachePath = join(vendorDir, basename(entry.path));
   if (existsSync(cachePath)) {
     const text = readFileSync(cachePath, 'utf8');
     if (sha256(text) === entry.sha256) return { text, source: 'cached' };
   }
   const reasons = [];
-  for (const base of VENDOR_BASES) {
-    const url = base + entry.file;
+  for (const url of vendorUrls(entry.path)) {
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
       if (!res.ok) { reasons.push(`${url}: HTTP ${res.status}`); continue; }
@@ -269,15 +281,27 @@ async function loadVendor(id) {
   }
   throw new Error(`${id}: ${reasons.join(', ')}`);
 }
+// The core's banner and the Terraform header carry email addresses, which check.mjs rejects. The attribution lines below replace them.
+const stripBanner = (text) => text.replace(/^\s*\/\*[\s\S]*?\*\/\s*/, '');
+function vendorScript(id, text) {
+  if (id === 'core') {
+    const m = text.match(/export\s*\{\s*([\w$]+)\s+as\s+default\s*\}\s*;?\s*$/);
+    if (!m) throw new Error('core: no default export to rewrite');
+    return `(function () {\n'use strict';\n${stripBanner(text.slice(0, m.index))}\nglobalThis.hljs = ${m[1]};\n})();`;
+  }
+  if (id === 'terraform') return `(function () {\n${stripBanner(text)}\nhljs.registerLanguage('terraform', hljsDefineTerraform);\n})();`;
+  return text + '\n;';
+}
 const vendorTexts = [];
 let downloaded = 0, cached = 0;
 if (hl) {
   try {
     for (const id of needed) {
       const r = await loadVendor(id);
-      vendorTexts.push(r.text);
+      vendorTexts.push(vendorScript(id, r.text));
       if (r.source === 'downloaded') downloaded++; else cached++;
     }
+    if (vendorTexts.some((t) => /<\/script/i.test(t))) throw new Error('vendor code contains </script');
   } catch (e) {
     hl = false;
     hlReason = e.message;
@@ -287,10 +311,10 @@ if (hl) {
 const langIds = needed.filter((id) => id !== 'core');
 const vendorJs = hl
   ? [
-    'window.Prism = { manual: true, disableWorkerMessageHandler: true };',
-    `/* pr-analysis vendor: prism ${PRISM_VERSION}, languages: ${langIds.join(',')} */`,
-    `/* Prism ${PRISM_VERSION} (MIT) https://prismjs.com  Copyright (c) 2012 Lea Verou */`,
-    ...vendorTexts.map((t) => t + '\n;')
+    `/* pr-analysis vendor: highlight.js ${HLJS_VERSION}, languages: ${langIds.join(',')} */`,
+    `/* highlight.js ${HLJS_VERSION} (BSD-3-Clause) https://highlightjs.org  Copyright (c) 2006, Ivan Sagalaev */`,
+    ...(langIds.includes('terraform') ? [`/* highlightjs-terraform ${TERRAFORM_COMMIT.slice(0, 7)} (MIT) https://github.com/highlightjs/highlightjs-terraform  Copyright (c) 2020 highlightjs-terraform */`] : []),
+    ...vendorTexts
   ].join('\n')
   : `/* syntax colors off: ${hlReason.replace(/\*\//g, '* /')} */`;
 const hlFlag = hl ? 'on' : 'off';
@@ -624,6 +648,6 @@ if (errors.length) fail('\n  ' + errors.join('\n  '));
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, html);
 process.stdout.write(hl
-  ? `build: syntax colors: prism ${PRISM_VERSION}, ${langIds.length} file(s) (${langIds.join(',')}), ${downloaded} downloaded, ${cached} cached\n`
+  ? `build: syntax colors: highlight.js ${HLJS_VERSION}, ${langIds.length} file(s) (${langIds.join(',')}), ${downloaded} downloaded, ${cached} cached\n`
   : `build: syntax colors: off (${hlReason})\n`);
 process.stdout.write(`build: wrote ${outPath} (${(Buffer.byteLength(html) / 1024).toFixed(0)} KB, ${blocks.length} block(s), ${groups.length} group(s), palette ${defaultName || 'custom'})\n`);
