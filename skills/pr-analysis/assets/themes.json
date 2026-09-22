@@ -10,7 +10,7 @@
       "add-bg": "#E7EFCE", "add-ink": "#475301", "add-mark": "#D1DFA3",
       "del-bg": "#FEE4E0", "del-ink": "#9E030E", "del-mark": "#FEC8C1",
       "hit-ink": "#073642",
-      "sy-comment": "#5C6370", "sy-keyword": "#9246A8", "sy-string": "#4A7129", "sy-number": "#8E5B26", "sy-name": "#146BA7"
+      "sy-comment": "#545B68", "sy-keyword": "#7F3394", "sy-string": "#395F15", "sy-number": "#7B4A11", "sy-name": "#02598F"
     },
     "dark": {
       "ink": "#D7DAE0", "ink-2": "#ABB2BF", "muted": "#9DA2AD", "accent-ink": "#21252B",
