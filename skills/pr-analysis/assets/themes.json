@@ -1,0 +1,26 @@
+{
+  "solarized-one-dark": {
+    "label": "Solarized Light / Atom One Dark",
+    "accentLight": "#1F6FB0", "accentDark": "#61AFEF", "paperLight": "#FDF6E3", "paperDark": "#282C34",
+    "light": {
+      "ink": "#073642", "ink-2": "#3A4F56", "muted": "#556A72", "accent-ink": "#FFFFFF",
+      "ground": "#FDF6E3", "surface": "#FEFBF1", "surface-2": "#EEE8D5", "code-bg": "#FDF6E3",
+      "ok": "#606E01", "ok-soft": "#E4EDC8", "warn": "#826204", "warn-soft": "#FAE6BB",
+      "alert": "#CA1A1E", "alert-soft": "#FFE0DB", "nodata": "#556A72", "nodata-soft": "#EEE8D5",
+      "add-bg": "#E7EFCE", "add-ink": "#475301", "add-mark": "#D1DFA3",
+      "del-bg": "#FEE4E0", "del-ink": "#9E030E", "del-mark": "#FEC8C1",
+      "hit-ink": "#073642",
+      "sy-comment": "#5C6370", "sy-keyword": "#9246A8", "sy-string": "#4A7129", "sy-number": "#8E5B26", "sy-name": "#146BA7"
+    },
+    "dark": {
+      "ink": "#D7DAE0", "ink-2": "#ABB2BF", "muted": "#9DA2AD", "accent-ink": "#21252B",
+      "ground": "#282C34", "surface": "#2C313A", "surface-2": "#323842", "code-bg": "#21252B",
+      "ok": "#98C379", "ok-soft": "#2C3A22", "warn": "#E5C07B", "warn-soft": "#453517",
+      "alert": "#EF7982", "alert-soft": "#4C2A2C", "nodata": "#9DA2AD", "nodata-soft": "#323842",
+      "add-bg": "#2F3F23", "add-ink": "#ADD98E", "add-mark": "#3D542B",
+      "del-bg": "#502E30", "del-ink": "#FEB4B7", "del-mark": "#6D3B3E",
+      "hit-ink": "#21252B",
+      "sy-comment": "#A1A9B7", "sy-keyword": "#D98AF0", "sy-string": "#98C379", "sy-number": "#D59E6A", "sy-name": "#61AFEF"
+    }
+  }
+}

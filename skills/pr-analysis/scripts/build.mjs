@@ -38,6 +38,29 @@ for (const [n, p] of Object.entries(NAMED)) {
   for (const k of COLOR_KEYS) if (!p || !/^#[0-9A-Fa-f]{6}$/.test(p[k] || '')) fail(`palettes.json "${n}".${k} must be a #RRGGBB color`);
 }
 
+// Themes for the switch: the four inputs plus a full token list for light and dark, read next to the template at build time.
+const themesPath = join(dirname(templatePath), 'themes.json');
+if (!existsSync(themesPath)) fail(`missing ${themesPath}`);
+let THEMES;
+try { THEMES = JSON.parse(readFileSync(themesPath, 'utf8')); } catch (e) { fail(`cannot parse ${themesPath}: ${e.message}`); }
+if (!THEMES || typeof THEMES !== 'object' || Array.isArray(THEMES)) fail(`${themesPath} must be an object`);
+const THEME_TOKENS = ['ink', 'ink-2', 'muted', 'accent-ink', 'ground', 'surface', 'surface-2', 'code-bg', 'ok', 'ok-soft', 'warn', 'warn-soft', 'alert', 'alert-soft', 'nodata', 'nodata-soft', 'add-bg', 'add-ink', 'add-mark', 'del-bg', 'del-ink', 'del-mark', 'hit-ink', 'sy-comment', 'sy-keyword', 'sy-string', 'sy-number', 'sy-name'];
+for (const [n, t] of Object.entries(THEMES)) {
+  if (!/^[a-z][a-z0-9-]*$/.test(n) || n === 'default') fail(`themes.json key "${n}" must match ^[a-z][a-z0-9-]*$ and cannot be "default"`);
+  if (NAMED[n]) fail(`themes.json key "${n}" is also in palettes.json`);
+  if (!t || typeof t.label !== 'string' || !t.label.trim()) fail(`themes.json "${n}".label must be a non-empty string`);
+  for (const k of COLOR_KEYS) if (!/^#[0-9A-Fa-f]{6}$/.test(t[k] || '')) fail(`themes.json "${n}".${k} must be a #RRGGBB color`);
+  for (const mode of ['light', 'dark']) {
+    const tokens = t[mode];
+    if (!tokens || typeof tokens !== 'object' || Array.isArray(tokens)) fail(`themes.json "${n}".${mode} must be an object`);
+    const missing = THEME_TOKENS.filter((k) => !(k in tokens));
+    if (missing.length) fail(`themes.json "${n}".${mode} is missing ${missing.join(', ')}`);
+    const unknown = Object.keys(tokens).filter((k) => !THEME_TOKENS.includes(k));
+    if (unknown.length) fail(`themes.json "${n}".${mode} has unknown ${unknown.join(', ')}`);
+    for (const k of THEME_TOKENS) if (!/^#[0-9A-Fa-f]{6}$/.test(tokens[k])) fail(`themes.json "${n}".${mode}.${k} must be a #RRGGBB color`);
+  }
+}
+
 // ---------- Vendor: syntax highlighting ----------
 // Prism is downloaded once per machine into the cache, verified against pinned checksums, and inlined into the page.
 // The skill never carries the library. Without network and cache the report builds without syntax colors.
@@ -468,9 +491,10 @@ const defines = {};
 template = template.replace(/\/\*@define (\w+)\n([\s\S]*?)@end\*\/\n?/g, (m, name, body) => { defines[name] = body.replace(/\n$/, ''); return ''; });
 const palette = { ...(manifest.palette || {}) };
 if (palette.name) {
-  if (!NAMED[palette.name]) fail(`manifest.palette.name "${palette.name}" is not in palettes.json (${Object.keys(NAMED).join(', ')})`);
+  const source = NAMED[palette.name] || THEMES[palette.name];
+  if (!source) fail(`manifest.palette.name "${palette.name}" is not in palettes.json or themes.json (${[...Object.keys(NAMED), ...Object.keys(THEMES)].join(', ')})`);
   if (COLOR_KEYS.some((k) => k in palette)) fail('manifest.palette.name cannot be combined with accentLight, accentDark, paperLight, paperDark');
-  for (const k of COLOR_KEYS) palette[k] = NAMED[palette.name][k];
+  for (const k of COLOR_KEYS) palette[k] = source[k];
 }
 for (const k of ['accentLight', 'accentDark', 'paperLight', 'paperDark', 'fontDisplay', 'fontBody', 'fontMono', 'fontsHref']) {
   if (!palette[k]) fail(`manifest.palette.${k} is required`);
@@ -478,19 +502,47 @@ for (const k of ['accentLight', 'accentDark', 'paperLight', 'paperDark', 'fontDi
 if (!/^https:\/\/fonts\.googleapis\.com\//.test(palette.fontsHref)) fail('palette.fontsHref must be a fonts.googleapis.com URL');
 
 // The report's own palette is the default. A named pastel with the same four values is labeled as the default instead of listed twice.
+// A theme is the default only when the manifest names it: a brief with the same four values asked for less than the full theme.
 const norm = (h) => String(h).toUpperCase();
-const defaultName = Object.keys(NAMED).find((n) => COLOR_KEYS.every((k) => norm(NAMED[n][k]) === norm(palette[k]))) || null;
+const defaultName = palette.name && THEMES[palette.name]
+  ? palette.name
+  : (Object.keys(NAMED).find((n) => COLOR_KEYS.every((k) => norm(NAMED[n][k]) === norm(palette[k]))) || null);
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const swatchRule = (n, p) => `  .swatch[data-palette-btn="${n}"] { --sw-accent-light: ${p.accentLight}; --sw-accent-dark: ${p.accentDark}; --sw-paper-light: ${p.paperLight}; --sw-paper-dark: ${p.paperDark}; }`;
 const namedOthers = Object.keys(NAMED).filter((n) => n !== defaultName);
+const themeOthers = Object.keys(THEMES).filter((n) => n !== defaultName);
+const defaultIsTheme = !!(defaultName && THEMES[defaultName]);
+const decl = (o) => Object.entries(o).map(([k, v]) => `--${k}: ${v};`).join(' ');
+// The default theme applies while no data-palette is set, so it is right before the script runs.
+// Light (0,2,0) beats the base :root, dark (0,3,0) beats the base dark blocks, and the later CVD blocks beat both.
+const themeCss = (n) => {
+  const t = THEMES[n];
+  const isDefault = n === defaultName;
+  const light = isDefault ? ':root:not([data-palette])' : `:root[data-palette="${n}"]`;
+  const dark = isDefault ? ':root[data-theme="dark"]:not([data-palette])' : `:root[data-theme="dark"][data-palette="${n}"]`;
+  return [
+    `  /* theme ${n} light */`,
+    `  ${light} { --accent-light: ${t.accentLight}; --accent-dark: ${t.accentDark}; --paper-light: ${t.paperLight}; --paper-dark: ${t.paperDark}; ${decl(t.light)} }`,
+    `  /* theme ${n} dark */`,
+    `  @media (prefers-color-scheme: dark) { ${light}:not([data-theme="light"]) { ${decl(t.dark)} } }`,
+    `  ${dark} { ${decl(t.dark)} }`
+  ];
+};
 const paletteCss = [
-  '  /* Named palettes for the switch. The report\'s own palette is the default and needs no rule. */',
+  '  /* Named palettes and themes for the switch. The report\'s own palette is the default. A pastel sets the four inputs, a theme also sets its own tokens for light and dark. */',
   ...namedOthers.map((n) => `  :root[data-palette="${n}"] { --accent-light: ${NAMED[n].accentLight}; --accent-dark: ${NAMED[n].accentDark}; --paper-light: ${NAMED[n].paperLight}; --paper-dark: ${NAMED[n].paperDark}; }`),
+  ...Object.keys(THEMES).flatMap(themeCss),
   swatchRule('default', palette),
+  ...themeOthers.map((n) => swatchRule(n, THEMES[n])),
   ...namedOthers.map((n) => swatchRule(n, NAMED[n]))
 ].join('\n');
-const paletteOptions = [['default', defaultName ? `${cap(defaultName)} (default)` : 'Default'], ...namedOthers.map((n) => [n, cap(n)])]
-  .map(([n, label]) => `            <button type="button" class="swatch" data-palette-btn="${n}" aria-pressed="${n === 'default'}"><span class="dot" aria-hidden="true"></span><span class="sw-name">${escHtml(label)}</span></button>`)
+const defaultLabel = defaultIsTheme ? `${THEMES[defaultName].label} (default)` : (defaultName ? `${cap(defaultName)} (default)` : 'Default');
+const paletteOptions = [
+  ['default', defaultLabel, true],
+  ...themeOthers.map((n) => [n, THEMES[n].label, true]),
+  ...namedOthers.map((n) => [n, cap(n), false])
+]
+  .map(([n, label, full]) => `            <button type="button" class="swatch${full ? ' full' : ''}" data-palette-btn="${n}" aria-pressed="${n === 'default'}"><span class="dot" aria-hidden="true"></span><span class="sw-name">${escHtml(label)}</span></button>`)
   .join('\n');
 
 // ---------- Substitution ----------

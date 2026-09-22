@@ -25,7 +25,7 @@ Call `AskUserQuestion` exactly once, before reading any file or running any comm
 
 1. **PR** (only when no PR identifier was given): options "PR of the current branch" (resolved with `gh pr view` and no number) and "Most recently updated open PR in this repository" (`gh pr list --limit 1 --json number`). The user can type a number or URL as Other.
 2. **Issue**: options "Detect from the PR" (branch name, title, and body are scanned for `ABC-123` or `#123`, falling back to `no-ticket`) and "None". Other accepts `ABC-123`, `123`, `#123`, or `issue-123`.
-3. **Color**: option "Pick a pastel for me" (a random palette from `references/design-rules.md`). Other accepts a brief such as "blue controls on a mild solarized-light yellow ground".
+3. **Color**, asked as "Which color palette should the report use?": options "Default (Solarized Light / Atom One Dark)" (the `solarized-one-dark` theme from `assets/themes.json`) and "Pick a pastel for me" (a random pastel from `references/design-rules.md`, never the theme). Other accepts a brief such as "blue controls on a mild solarized-light yellow ground".
 4. **References**: option "None". Other accepts file paths, URLs, repository paths, and notes. These are read during analysis and any question they raise gets its own section.
 
 Do not ask about language or output location. Both are decided by the arguments and the rules below.
@@ -59,7 +59,7 @@ Before embedding anything, scan the changed files for credentials. `references/w
 
 ## 5. Design the content
 
-Follow `references/content-spec.md`. Decide, in this order: the kinds (two to four categories with a tone and a glyph), the findings, the grouping of files into blocks and groups, which optional sections earn their place (mechanism figure, quoted PR figures, extra sections for reference questions) and whether any finding, group, or block earns a figure (read `references/figures.md` only when one does), the verification rows, the follow-ups, and the stat tiles. Then pick the palette (a name from `assets/palettes.json` for a pastel, or four values from a color brief) and the font pairing per `references/design-rules.md`.
+Follow `references/content-spec.md`. Decide, in this order: the kinds (two to four categories with a tone and a glyph), the findings, the grouping of files into blocks and groups, which optional sections earn their place (mechanism figure, quoted PR figures, extra sections for reference questions) and whether any finding, group, or block earns a figure (read `references/figures.md` only when one does), the verification rows, the follow-ups, and the stat tiles. Then pick the palette (`solarized-one-dark` for the default theme, a name from `assets/palettes.json` for a pastel, or four values from a color brief) and the font pairing per `references/design-rules.md`.
 
 ## 6. Write the manifest and fragments
 
@@ -73,7 +73,7 @@ node <skill>/scripts/build.mjs --work <workdir> --template <skill>/assets/templa
 
 The build validates the manifest, escapes and embeds the file text, generates the table of contents, blocks, and commits section, and fills the template. It fails loudly on a missing fragment, an unknown kind, or an anchor without a target.
 
-The build reads `assets/palettes.json` next to the template and embeds the named palettes in the page for the palette switch. The output never references that file.
+The build reads `assets/palettes.json` and `assets/themes.json` next to the template and embeds the named palettes and themes in the page for the palette switch. The output never references either file.
 
 The build also downloads the Prism grammars the PR's file types need into `~/.cache/pr-analysis` on first use, verifies them against pinned checksums, and inlines them. When the download fails it prints a WARNING and builds without syntax colors. Keep that warning for the completion message. Never add the library to the skill.
 
@@ -95,7 +95,7 @@ Report, in this order:
 
 - The absolute output path, a markdown link to it with a relative path (opens in the editor), and a `file://` link (opens in the browser). For hidden bilingual mode add the same `file://` link with `?lang=<code>`.
 - One sentence on what the page contains (blocks, groups, findings, extra sections).
-- Which palette (name, or custom from the brief) and font pairing you used.
+- Which palette (theme or pastel name, or custom from the brief) and font pairing you used.
 - Any warnings: local state from gather, an unknown language code, redactions, syntax colors off and why, WARN lines left standing and why.
 
 Nothing is committed, pushed, or published.

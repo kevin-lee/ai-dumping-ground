@@ -10,7 +10,7 @@ The build reads `<workdir>/content/manifest.json` and the fragment files next to
   "langMode": "single",                          // "single" (English only, or hidden bilingual) or "both"
   "lang2": null,                                 // BCP 47 code such as "ko", or null for English only
   "palette": {
-    "name": "sage",                               // a named pastel from assets/palettes.json. For a custom brief omit name and give accentLight, accentDark, paperLight, paperDark instead, never both
+    "name": "solarized-one-dark",                 // a theme from assets/themes.json (solarized-one-dark is the intake default) or a named pastel from assets/palettes.json. For a custom brief omit name and give accentLight, accentDark, paperLight, paperDark instead, never both
     "fontDisplay": "\"Manrope\", \"Helvetica Neue\", Arial, sans-serif",
     "fontBody": "\"Source Sans 3\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
     "fontMono": "\"JetBrains Mono\", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
@@ -75,7 +75,7 @@ Rules the build enforces:
 - Every fragment named in the manifest exists. Required fragments always exist.
 - `langMode: "single"` with `lang2: null` fails if any fragment contains `class="l2"`.
 - `range` line numbers are 1-based and inclusive. `before` may be `[0, 0]` for an added file, `after` may be `[0, 0]` for a deleted file.
-- `palette.name` must be a key of `assets/palettes.json` and cannot be combined with the four color values. Without `name`, all four color values are required.
+- `palette.name` must be a key of `assets/palettes.json` or `assets/themes.json` and cannot be combined with the four color values. Without `name`, all four color values are required.
 
 ## Fragments
 

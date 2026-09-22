@@ -187,9 +187,9 @@ const swatchNames = [...html.matchAll(/<button\b[^>]*\sdata-palette-btn="([^"]+)
 const paletteProblems = [];
 if (swatchNames.filter((n) => n === 'default').length !== 1) paletteProblems.push('expected exactly one default swatch');
 for (const n of swatchNames) if (n !== 'default' && !html.includes(`:root[data-palette="${n}"]`)) paletteProblems.push(`no palette rule for "${n}"`);
-if (/palettes\.json/.test(html)) paletteProblems.push('page references palettes.json');
+if (/palettes\.json|themes\.json/.test(html)) paletteProblems.push('page references palettes.json or themes.json');
 if (paletteProblems.length) fail(`palette switch: ${paletteProblems.join('; ')}`);
-else pass(`palette switch: default plus ${swatchNames.length - 1} named palette(s), no runtime file references`);
+else pass(`palette switch: default plus ${swatchNames.length - 1} named palette(s) and theme(s), no runtime file references`);
 
 // 10c. syntax colors: the page declares data-hl, and when on, the vendor marker lists every block language
 const htmlTag = (html.match(/<html\b[^>]*>/) || [''])[0];
@@ -215,6 +215,55 @@ else if (hlAttr === 'on') {
 const badPct = [...html.matchAll(/\sdata-pct="([^"]*)"/g)].map((m) => m[1]).filter((v) => !/^\d{1,3}$/.test(v) || Number(v) > 100);
 if (badPct.length) fail(`figure bars: data-pct must be an integer 0 to 100, found ${[...new Set(badPct)].join(', ')}`);
 else pass(html.includes('data-pct="') ? 'figure bar values in range' : 'no figure bars');
+
+// 10e. theme contrast: every text pair of every theme is at 4.5:1 or more in light and dark, syntax colors also on the CVD row tints
+const luminance = (h) => {
+  const c = h.replace('#', '').match(/../g).map((x) => parseInt(x, 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+};
+const contrast = (a, b) => { const x = luminance(a), y = luminance(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+const declsOf = (body) => Object.fromEntries([...body.matchAll(/--([a-z0-9-]+):\s*(#[0-9A-Fa-f]{6})/g)].map((m) => [m[1], m[2]]));
+const themeRules = {};
+for (const m of html.matchAll(/\/\* theme ([a-z][a-z0-9-]*) (light|dark) \*\/\n[^{]*\{(?:[^{}]*\{)?([^{}]*)\}/g)) {
+  themeRules[m[1]] = themeRules[m[1]] || {};
+  themeRules[m[1]][m[2]] = declsOf(m[3]);
+}
+const themeNames = Object.keys(themeRules);
+if (!themeNames.length) pass('theme contrast: no themes in the page');
+else {
+  const cvdLightBlock = html.match(/:root\[data-cvd="on"\] \{([^}]*)\}/);
+  const cvdDarkBlock = html.match(/:root\[data-theme="dark"\]\[data-cvd="on"\] \{([^}]*)\}/);
+  const cvd = { light: cvdLightBlock ? declsOf(cvdLightBlock[1]) : {}, dark: cvdDarkBlock ? declsOf(cvdDarkBlock[1]) : {} };
+  const missing = [], low = [];
+  let pairs = 0, lowest = Infinity;
+  for (const mode of ['light', 'dark']) for (const k of ['add-bg', 'del-bg']) if (!cvd[mode][k]) missing.push(`CVD ${mode} ${k}`);
+  for (const name of themeNames) {
+    for (const mode of ['light', 'dark']) {
+      if (!themeRules[name][mode]) { missing.push(`${name} ${mode} rule`); continue; }
+      const t = { ...themeRules[name][mode], accent: (themeRules[name].light || {})[mode === 'light' ? 'accent-light' : 'accent-dark'] };
+      const list = [];
+      for (const fg of ['ink', 'ink-2', 'muted']) for (const bg of ['ground', 'surface', 'surface-2']) list.push([fg, t[fg], bg, t[bg]]);
+      for (const bg of ['ground', 'surface']) list.push(['accent', t.accent, bg, t[bg]]);
+      list.push(['accent-ink', t['accent-ink'], 'accent', t.accent]);
+      for (const fg of ['sy-comment', 'sy-keyword', 'sy-string', 'sy-number', 'sy-name']) {
+        for (const bg of ['code-bg', 'add-bg', 'del-bg']) list.push([fg, t[fg], bg, t[bg]]);
+        list.push([fg, t[fg], 'CVD add-bg', cvd[mode]['add-bg']], [fg, t[fg], 'CVD del-bg', cvd[mode]['del-bg']]);
+      }
+      list.push(['add-ink', t['add-ink'], 'add-bg', t['add-bg']], ['del-ink', t['del-ink'], 'del-bg', t['del-bg']]);
+      for (const k of ['ok', 'warn', 'alert', 'nodata']) list.push([k, t[k], `${k}-soft`, t[`${k}-soft`]], [k, t[k], 'surface', t.surface]);
+      for (const [fg, fv, bg, bv] of list) {
+        if (!fv || !bv) { missing.push(`${name} ${mode} ${!fv ? fg : bg}`); continue; }
+        const r = contrast(fv, bv);
+        pairs++;
+        lowest = Math.min(lowest, r);
+        if (r < 4.5) low.push(`${mode} ${name} ${fg} on ${bg} ${r.toFixed(2)}`);
+      }
+    }
+  }
+  if (missing.length) fail(`theme contrast: missing ${[...new Set(missing)].slice(0, 8).join(', ')}`);
+  if (low.length) fail(`theme contrast: ${low.slice(0, 8).join('; ')}`);
+  if (!missing.length && !low.length) pass(`theme contrast: ${themeNames.join(', ')}, ${pairs} pairs at 4.5:1 or more in light and dark (lowest ${lowest.toFixed(2)})`);
+}
 
 // 11. acronym reminder
 const proseText = fragments.map(([, f]) => stripQuoted(f)).join(' ') + ' ' + ((manifest.title || '') + ' ' + (manifest.statTiles || []).map((t) => t.en).join(' '));

@@ -13,9 +13,13 @@ Four inputs drive every color on the page. The template derives ground, surfaces
 | `paperLight` | The page ground in light mode. Off-white with a faint tint, never pure white, never a saturated color. The page should feel like paper. |
 | `paperDark` | The page ground in dark mode. Near-black with the same tint direction. |
 
+### Default theme
+
+`assets/themes.json` holds `solarized-one-dark`: Solarized Light for the light theme and Atom One Dark for the dark theme. It is the intake's default choice. Put `solarized-one-dark` in `manifest.palette.name`. A theme carries the four inputs and, for light and dark, its own ink, surfaces, code well, tone colors, diff rows, and syntax colors, so the page looks like the editor themes instead of only taking their tint. Syntax colors use Atom One Dark's hues in both modes (grey comments, purple keywords, green strings, orange numbers, blue names), darkened for the light ground, because Solarized's own accents read too close to its ink. The values are the editor colors moved in lightness, hue kept, until every text pair reaches 4.5:1, and `check.mjs` fails the page if one drops below. The dark page ground is Atom's editor color `#282C34` and the code well is its darker panel color `#21252B`, so the well stays near-black and the row tints keep a lightness step. The build embeds every theme in the page next to the pastels, and the CVD toggle still replaces its tone colors and row tints.
+
 ### Named pastel set
 
-The six named sets live in `assets/palettes.json`: `lavender`, `sage`, `sky`, `peach`, `sand`, `rose`. Each carries the four inputs. Put the name in `manifest.palette.name` instead of copying values, the build resolves it. The build also embeds all six in the page so a reader can switch between them, with the report's own palette as the default.
+The six named sets live in `assets/palettes.json`: `lavender`, `sage`, `sky`, `peach`, `sand`, `rose`. Each carries the four inputs. Put the name in `manifest.palette.name` instead of copying values, the build resolves it. The build also embeds all six and the default theme in the page so a reader can switch between them, with the report's own palette as the default.
 
 Pick one at random when the user says "Pick a pastel for me". State which one you picked in the completion message.
 
@@ -25,6 +29,8 @@ Random pick without thinking about it (`<skill>` is the skill directory, as in S
 node -e 'const p=Object.keys(require("<skill>/assets/palettes.json"));console.log(p[Math.floor(Math.random()*p.length)])'
 ```
 
+It reads `palettes.json` only, so it never picks the theme.
+
 ### From a color brief
 
 When the user describes what they want, translate the words:
@@ -32,6 +38,7 @@ When the user describes what they want, translate the words:
 - Color words name the accent. Pick a mid-tone for light (`blue` `#2F6FB5`, `green` `#3E7F58`, `teal` `#0F766E`, `purple` `#5B3FA3`, `orange` `#B85F3A`, `red` `#A63A3A`, `pink` `#A64D6E`, `brown` `#7A5A3A`, `grey` `#5B6170`) and a lighter tint of the same hue for dark.
 - Ground words name the paper. "Solarized light" is `#FDF6E3` with dark `#002B36`. "Cream" or "warm" is `#FBF7EE` with dark `#1B1712`. "Cool" or "blue-grey" is `#F5F7FA` with dark `#13161C`. "Paper" or "neutral" is `#FAFAF7` with dark `#161616`.
 - Solarized light worked example: paper `#FDF6E3`, dark paper `#002B36`, accent `#268BD2` light and `#83C2F0` dark. Note that Solarized blue on Solarized paper is just under 4.5:1, so darken the light accent to `#1F6FB0` unless the user asked for the exact Solarized values.
+- For the full Solarized Light / Atom One Dark look (ink, code well, diff rows, syntax colors), use the default theme instead of a brief. A brief changes only the four inputs.
 - If the brief names a controls color and a ground color separately, that is exactly the accent and paper split.
 - A brief palette goes into the manifest as the four values. It stays the page's default and the switch offers the six named sets next to it. `paperDark` must be near-black (the named sets are between `#13171D` and `#1B1614`), because the dark diff row tints are fixed values chosen against a near-black well. The Solarized example's `#002B36` is at the limit: rows still differ by hue but barely by lightness.
 
@@ -85,13 +92,13 @@ Each kind also carries a glyph from `◆ ▲ ● ■ ✚ ✦ ⬟ ✱`. The glyph
 
 - Every color comes from a token. Fragments never contain hex values or `style=` colors.
 - Both themes are designed, not one. If you add an SVG, color it with the `.figure` classes so it follows the theme and the CVD toggle.
-- Running text stays near 65 characters wide. The `p` and `li` rules already cap width.
+- Running text is capped by the `--measure` token: 80ch in normal width and 96ch in wide width. The `p`, `ul`, and `ol` rules, the lede, callouts, and quotes read it, so new text rules use `var(--measure)` instead of a fixed `ch` value.
 - Digits that line up use `font-variant-numeric: tabular-nums`, which the stat tiles and diff counts already have.
 - Structure encodes meaning. Numbered lists only for real sequences. Section eyebrows only when they say something true.
 - Wide content (tables, code, diagrams) sits inside a container with `overflow-x: auto`. Use `.table-scroll` around tables.
 - The page must read at rest. No content hidden until scroll or hover.
 - The content column (page header, sections, footer) scales with the text size control through `zoom`. The sidebar and the top bar keep their sizes, so new chrome must not assume the content size, and new content rules keep using the template's units.
 - Reading surfaces are neutral. `--surface-2` (chips, table headers, control tracks, the diff head) and `--code-bg` (diff wells, `pre` blocks, the effect key column) derive from ink and paper, never from the accent, and mix in oklab because near-grey colors have no hue and an oklch mix turns their leftover chroma red. The accent lives in links, controls, kind chips, the callout tint, and the page ground.
-- The palette switch changes only the four inputs. Anything new takes its color from the derived tokens so it follows the switch, the theme, and the CVD toggle.
-- Syntax colors come from five tokens (`--sy-comment`, `--sy-keyword`, `--sy-string`, `--sy-number`, `--sy-name`) defined for light and dark and checked at 4.5:1 or more on the diff well and on every row tint, so they need no CVD copy. Fragments never use them.
+- A pastel or a brief changes only the four inputs. A theme also sets its token list for light and dark, and the CVD blocks still override its tone colors and row tints. Anything new takes its color from the tokens so it follows the switch, the theme, and the CVD toggle.
+- Syntax colors come from five tokens (`--sy-comment`, `--sy-keyword`, `--sy-string`, `--sy-number`, `--sy-name`) defined for light and dark and checked at 4.5:1 or more on the diff well and on every row tint, so they need no CVD copy. Fragments never use them. A theme carries its own five, and `check.mjs` verifies them against the theme's well, its row tints, and the CVD row tints.
 - Figures take their colors from the tone classes listed in `references/figures.md` (`fill-ok`, `fill-warn`, `fill-alert`, `fill-accent`, `fill-muted`, and the `li`/`.bar` tone classes), so they follow the theme, the CVD toggle, and the palette switch.
