@@ -44,3 +44,21 @@ What it does:
 - If `settings.json` is a symlink, keeps the symlink and updates the file it points to.
 
 If Claude Code is running and the status line does not appear, restart Claude Code.
+
+#### Tests
+
+[test-setup-statusline.sh](scripts/config/claude/test-setup-statusline.sh) runs `setup-statusline.sh` against throwaway config folders in a temporary folder and checks the results. It never touches your real Claude Code config. It needs `bash` and `jq`, and no network access.
+
+```
+bash scripts/config/claude/test-setup-statusline.sh
+```
+
+Each check prints `PASS`, `FAIL` or `SKIP`, and the script exits with 1 if any check fails. Set `KEEP_TEST_DIR=1` to keep the temporary folder for inspection, or `BASH_UNDER_TEST` to run the installer with a different `bash` (default: `/bin/bash`).
+
+[test-setup-statusline-linux.sh](scripts/config/claude/test-setup-statusline-linux.sh) runs the same tests on Linux in Debian 12, Debian 13 and Alpine containers, using Podman or Docker:
+
+```
+bash scripts/config/claude/test-setup-statusline-linux.sh
+```
+
+To test other images, pass their names, for example `bash scripts/config/claude/test-setup-statusline-linux.sh debian:bookworm-slim`. This needs network access to pull the images and install `jq` in them.
