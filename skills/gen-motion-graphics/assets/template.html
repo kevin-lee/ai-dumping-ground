@@ -199,7 +199,7 @@ __SCENES_HTML__
   <button id="cc" aria-pressed="true">CC</button>
   <button id="fs">Fullscreen</button>
 </div>
-<audio id="aud" preload="__AUDIO_PRELOAD__" src="__AUDIO_SRC__"></audio>
+<audio id="aud" preload="__AUDIO_PRELOAD__" data-src="__AUDIO_SRC__"></audio>
 
 <script>
 "use strict";
@@ -522,7 +522,12 @@ function fit() {
 
 /* ---------- player ---------- */
 function player() {
+  /* The audio source is attached only here, so the renderer (?capture) never loads it. Each headless Chrome
+     that loads audio opens a macOS audio stream even without playing, and many renderer instances opening
+     and closing streams at once have hung coreaudiod (no sound on the whole Mac until it restarts). */
   const aud = $("aud");
+  aud.src = aud.dataset.src;
+  aud.removeAttribute("data-src");
   const POSTER = VIDEO.poster ?? Math.min(DUR, NARR_START + 3);
   let lastAud = -1, lastPerf = 0;
   const clock = () => {
