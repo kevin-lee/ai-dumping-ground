@@ -134,14 +134,18 @@ __SCENES_CSS__
 #play[data-state="playing"] .pl, #play:not([data-state="playing"]) .pa { display: none; }
 #vol .x { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 #vol[data-level="mute"] :is(.w1, .w2), #vol[data-level="low"] .w2, #vol:not([data-level="mute"]) .x { display: none; }
-/* The volume bar opens when the pointer is over the speaker button or the bar, or when either has focus. */
-#volume { flex: none; display: flex; align-items: center; }
-#volbar { --p: 100%; -webkit-appearance: none; appearance: none; width: 0; height: 24px; margin: 0; padding: 0; background: transparent; cursor: pointer; opacity: 0; pointer-events: none; transition: width .2s, margin .2s, opacity .2s; }
-#volume:hover #volbar, #volume:focus-within #volbar { width: 88px; margin: 0 4px 0 12px; opacity: 1; pointer-events: auto; }
-#volbar::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--accent) var(--p), rgba(255,255,255,.25) var(--p)); }
-#volbar::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -5px; border: 0; border-radius: 50%; background: #fff; }
-#volbar::-moz-range-track { height: 4px; border-radius: 2px; background: rgba(255,255,255,.25); }
-#volbar::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--accent); }
+/* The vertical volume bar opens in a panel above the speaker button when the pointer is over either, or when
+   either has keyboard focus. The transparent padding under the panel joins it to the button, so the pointer
+   can move up to the bar without closing it. */
+#volume { flex: none; position: relative; }
+#volpop { position: absolute; left: 50%; bottom: 100%; z-index: 1; padding-bottom: 8px; transform: translate(-50%, 6px); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+#volume:hover #volpop, #volume:has(:focus-visible) #volpop { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+#volpanel { width: 44px; padding: 14px 0; display: grid; place-items: center; border-radius: 22px; background: rgba(12,14,24,.88); border: 1px solid rgba(255,255,255,.2); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+#volbar { --p: 100%; -webkit-appearance: none; appearance: none; writing-mode: vertical-lr; direction: rtl; width: 24px; height: 110px; margin: 0; padding: 0; background: transparent; cursor: pointer; }
+#volbar::-webkit-slider-runnable-track { width: 4px; border-radius: 2px; background: linear-gradient(to top, var(--accent) var(--p), rgba(255,255,255,.25) var(--p)); }
+#volbar::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-left: -5px; border: 0; border-radius: 50%; background: #fff; }
+#volbar::-moz-range-track { width: 4px; border-radius: 2px; background: rgba(255,255,255,.25); }
+#volbar::-moz-range-progress { width: 4px; border-radius: 2px; background: var(--accent); }
 #volbar::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: #fff; }
 #bar { flex: 1; height: 8px; border-radius: 4px; background: rgba(255,255,255,.18); cursor: pointer; position: relative; }
 #fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--accent); width: 0; }
@@ -152,7 +156,7 @@ body.idle { cursor: none; }
 #start button { font: 700 22px/1 system-ui, sans-serif; padding: 18px 36px; border-radius: 999px; background: var(--accent); color: var(--ink); border: 0; box-shadow: 0 10px 40px color-mix(in srgb, var(--accent) 40%, transparent); }
 body.capture #ui, body.capture #start { display: none; }
 /* Touch screens have no hover and have volume keys, so only the mute button shows. */
-@media (hover: none) { #volbar { display: none; } }
+@media (hover: none) { #volpop { display: none; } }
 @media (max-width: 560px) {
   #ui { gap: 8px; padding: 10px; font-size: 12px; }
   #ui button { padding: 6px 9px; }
@@ -188,7 +192,7 @@ __SCENES_HTML__
     <button id="vol" class="ico" aria-label="Mute" title="Mute (m)" data-level="high">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path class="w1" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/><path class="w2" d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/><path class="x" d="M15.5 9l6 6m0-6l-6 6"/></svg>
     </button>
-    <input id="volbar" type="range" min="0" max="1" step="0.05" value="1" aria-label="Volume">
+    <div id="volpop"><div id="volpanel"><input id="volbar" type="range" min="0" max="1" step="0.05" value="1" aria-label="Volume"></div></div>
   </div>
   <div id="bar"><div id="fill"></div></div>
   <span id="time">0:00 / 0:00</span>
@@ -544,6 +548,7 @@ function player() {
   const run = () => { if (!running) { running = true; requestAnimationFrame(tick); } };
   const toggle = () => {
     $("start").style.display = "none";
+    run();
     if (aud.ended || aud.currentTime >= DUR - .05) aud.currentTime = 0;
     aud.paused ? aud.play() : aud.pause();
   };
@@ -575,10 +580,10 @@ function player() {
   };
   const play = () => { const starting = aud.paused; toggle(); if (touch && starting) setFs(true); };
 
-  /* Volume. The speaker button mutes and unmutes, and the bar next to it sets the level. Moving the bar
-     to 0 mutes. Unmuting goes back to the level where the last change stopped above 0: the end of a drag,
-     not each step on the way down. iPhone and iPad Safari do not let a page set the volume (it stays
-     at 1), so there only the button shows. */
+  /* Volume. The speaker button mutes and unmutes, and the vertical bar above it sets the level. Moving
+     the bar to 0 mutes. Unmuting goes back to the level where the last change stopped above 0: the end
+     of a drag, not each step on the way down. iPhone and iPad Safari do not let a page set the volume
+     (it stays at 1), so there only the button shows. */
   const volbar = $("volbar");
   let lastVol = 1;
   const level = () => aud.muted ? 0 : aud.volume;
@@ -594,12 +599,12 @@ function player() {
   };
   const probe = new Audio();
   probe.volume = .5;
-  volbar.hidden = probe.volume !== .5;
+  $("volpop").hidden = probe.volume !== .5;
 
   renderAt(POSTER);
   document.fonts.ready.then(() => renderAt(POSTER));
   $("time").textContent = `0:00 / ${fmt(DUR)}`;
-  $("startBtn").onclick = () => { aud.currentTime = 0; play(); run(); };
+  $("startBtn").onclick = () => { aud.currentTime = 0; play(); };
   $("play").onclick = play;
   for (const ev of ["play", "pause", "ended"]) aud.addEventListener(ev, showPlay);
   showPlay();
