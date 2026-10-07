@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="__LANG__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+__FONT_FACES__
+:root {
+  --ink: #0c0e1a;
+  --panel: #151a31;
+  --panel2: #10132a;
+  --line: #2a3052;
+  --fg: #f4f1ea;
+  --dim: #8f96b8;
+  --peach: #ffb38a;
+  --lav: #b8a1ff;
+  --mint: #7ee0c3;
+  --sun: #ffd36e;
+  --rose: #ff7a90;
+  --green: #6fdc8c;
+  --sky: #86adff;
+  --accent: var(--peach);
+  --accent2: var(--lav);
+  --accent3: var(--mint);
+  --page-bg: #05060c;
+  --stage-bg: var(--ink);
+  --blob-a: rgba(255,179,138,.30);
+  --blob-b: rgba(184,161,255,.30);
+  --blob-c: rgba(126,224,195,.16);
+  --grid-dot: rgba(255,255,255,.10);
+  --grain: .05;
+  --vignette: rgba(0,0,0,.55);
+  --flash: #fff7ee;
+  --cap-bg: rgba(8,10,20,.62);
+  --cap-fg: var(--fg);
+  --cap-hi: var(--accent);
+  --cap-hi-fg: var(--ink);
+  --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, Menlo, Consolas, monospace;
+  --font-display: var(--font-ui);
+__FONT_VARS__
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--page-bg); overflow: hidden; }
+body { font-family: var(--font-ui); color: var(--fg); -webkit-font-smoothing: antialiased; }
+#stage {
+  position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px;
+  transform: translate(-50%, -50%) scale(var(--k, 1)); transform-origin: 50% 50%;
+  overflow: hidden; background: var(--stage-bg);
+}
+/* .a is an anchor: left/top place its centre, S() moves it from there. */
+.a { position: absolute; width: max-content; white-space: nowrap; transform-origin: 50% 50%; transform: translate(-50%, -50%); }
+.scene { position: absolute; left: 960px; top: 540px; width: 1920px; height: 1080px; display: none; transform-origin: 50% 50%; }
+.full { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; pointer-events: none; }
+.mono, .term, code { font-family: var(--font-mono); }
+.display { font-family: var(--font-display); }
+.dim { color: var(--dim); }
+.pe { color: var(--peach); }
+.lv { color: var(--lav); }
+.mi { color: var(--mint); }
+.su { color: var(--sun); }
+.ro { color: var(--rose); }
+.gr { color: var(--green); }
+.sk { color: var(--sky); }
+.ac { color: var(--accent); }
+.inl, .w { display: inline-block; transform-origin: 50% 70%; }
+
+/* background */
+#bg { position: absolute; inset: 0; }
+.blob { position: absolute; left: 0; top: 0; width: 1300px; height: 1300px; border-radius: 50%; }
+#blobA { background: radial-gradient(circle, var(--blob-a), transparent 62%); }
+#blobB { background: radial-gradient(circle, var(--blob-b), transparent 62%); }
+#blobC { width: 900px; height: 900px; background: radial-gradient(circle, var(--blob-c), transparent 62%); }
+#grid {
+  position: absolute; left: -96px; top: -96px; width: 2112px; height: 1272px;
+  background-image: radial-gradient(var(--grid-dot) 1.6px, transparent 1.8px);
+  background-size: 48px 48px;
+}
+#vig { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 55%, var(--vignette) 100%); pointer-events: none; }
+#grain { position: absolute; inset: 0; opacity: var(--grain); pointer-events: none; background-size: 256px 256px; }
+#fade { position: absolute; inset: 0; background: #000; pointer-events: none; }
+#flash { position: absolute; inset: 0; background: var(--flash); opacity: 0; pointer-events: none; }
+#ring { position: absolute; left: 0; top: 0; width: 400px; height: 400px; border-radius: 50%; border: 6px solid var(--accent); opacity: 0; }
+.band { position: absolute; left: 0; top: 0; height: 1480px; transform-origin: 50% 50%; opacity: 0; }
+#bandA { width: 300px; background: var(--accent); }
+#bandB { width: 120px; background: var(--accent2); }
+
+/* kit: generic pieces scenes can use */
+.headline { font-family: var(--font-display); font-size: 80px; font-weight: 800; letter-spacing: -2px; }
+.kicker { font-size: 32px; font-weight: 700; letter-spacing: 10px; text-transform: uppercase; color: var(--dim); }
+.bigmsg { font-family: var(--font-display); font-size: 74px; font-weight: 800; letter-spacing: -2px; text-align: center; line-height: 1.15; }
+.chip { padding: 12px 22px; border-radius: 14px; background: var(--panel); border: 1.5px solid var(--line); font-size: 26px; font-weight: 500; box-shadow: 0 12px 30px rgba(0,0,0,.35); }
+.pill { padding: 22px 40px; border-radius: 999px; background: var(--panel); border: 2px solid var(--line); font-size: 40px; font-weight: 700; box-shadow: 0 16px 40px rgba(0,0,0,.4); }
+.card { padding: 28px 32px; border-radius: 26px; background: var(--panel); border: 1.5px solid var(--line); box-shadow: 0 22px 50px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06); white-space: normal; }
+.stamp { font-size: 58px; font-weight: 800; color: var(--rose); border: 6px solid var(--rose); border-radius: 16px; padding: 6px 26px; letter-spacing: 2px; background: rgba(12,14,26,.75); }
+.term { background: var(--panel2); border: 1.5px solid var(--line); border-radius: 22px; box-shadow: 0 30px 80px rgba(0,0,0,.55); overflow: hidden; white-space: normal; }
+.term .bar { height: 52px; background: color-mix(in srgb, var(--panel) 70%, var(--panel2)); display: flex; align-items: center; padding: 0 22px; gap: 10px; border-bottom: 1.5px solid var(--line); }
+.term .bar i { width: 15px; height: 15px; border-radius: 50%; display: block; }
+.term .bar i:nth-child(1) { background: var(--rose); }
+.term .bar i:nth-child(2) { background: var(--sun); }
+.term .bar i:nth-child(3) { background: var(--green); }
+.term .bar span { margin-left: 16px; color: var(--dim); font-size: 22px; }
+.term .body { position: relative; padding: 26px 36px; font-size: 30px; line-height: 1.6; white-space: pre; }
+.car { color: var(--accent); }
+.flow { fill: none; stroke-width: 3; stroke-dasharray: 10 12; }
+
+/* captions */
+#cap { position: absolute; left: 0; right: 0; bottom: 64px; text-align: center; }
+.chunk { display: inline-block; padding: 14px 28px; border-radius: 18px; background: var(--cap-bg); color: var(--cap-fg); font-size: 40px; font-weight: 650; letter-spacing: -.5px; visibility: hidden; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); white-space: nowrap; }
+.chunk span { display: inline-block; padding: 0 6px; border-radius: 8px; }
+.chunk span.p { opacity: .38; }
+.chunk span.on { background: var(--cap-hi); color: var(--cap-hi-fg); }
+
+/* chapter hud */
+#chap { position: absolute; right: 56px; top: 34px; font-size: 26px; font-weight: 700; letter-spacing: 2px; opacity: 0; }
+#chap .n { color: var(--accent); margin-right: 12px; }
+
+/* debug timecode, shown with ?debug */
+#dbg { position: absolute; left: 16px; top: 12px; font: 600 22px/1.3 var(--font-mono); color: #fff; background: rgba(0,0,0,.6); padding: 6px 12px; border-radius: 8px; display: none; white-space: pre; }
+body.debug #dbg { display: block; }
+
+/* scenes */
+__SCENES_CSS__
+
+/* player */
+#ui { position: fixed; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: linear-gradient(transparent, rgba(0,0,0,.75)); transition: opacity .3s; font: 14px/1.2 system-ui, sans-serif; color: #e8e6f0; }
+#ui button, #start button { font: inherit; color: inherit; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+#ui button:hover { background: rgba(255,255,255,.2); }
+#ui button[aria-pressed="false"] { opacity: .5; }
+#bar { flex: 1; height: 8px; border-radius: 4px; background: rgba(255,255,255,.18); cursor: pointer; position: relative; }
+#fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--accent); width: 0; }
+#time { font-variant-numeric: tabular-nums; min-width: 92px; text-align: center; }
+body.idle #ui { opacity: 0; }
+body.idle { cursor: none; }
+#start { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(5,6,12,.35); }
+#start button { font: 700 22px/1 system-ui, sans-serif; padding: 18px 36px; border-radius: 999px; background: var(--accent); color: var(--ink); border: 0; box-shadow: 0 10px 40px color-mix(in srgb, var(--accent) 40%, transparent); }
+body.capture #ui, body.capture #start { display: none; }
+@media (max-width: 560px) {
+  #ui { gap: 8px; padding: 10px; font-size: 12px; }
+  #ui button { padding: 6px 9px; }
+  #time { display: none; }
+}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bg"><div id="blobA" class="blob"></div><div id="blobB" class="blob"></div><div id="blobC" class="blob"></div><div id="grid"></div></div>
+  <div id="scenes">
+__SCENES_HTML__
+  </div>
+  <div id="chap"><span class="n"></span><span class="l"></span></div>
+  <div id="cap"></div>
+  <div id="ring"></div>
+  <div class="band" id="bandA"></div><div class="band" id="bandB"></div>
+  <div id="flash"></div>
+  <div id="vig"></div>
+  <div id="grain"></div>
+  <div id="fade"></div>
+  <div id="dbg"></div>
+</div>
+
+<div id="start"><button id="startBtn">▶ Play</button></div>
+<div id="ui">
+  <button id="play">Play</button>
+  <div id="bar"><div id="fill"></div></div>
+  <span id="time">0:00 / 0:00</span>
+  <button id="cc" aria-pressed="true">CC</button>
+  <button id="fs">Fullscreen</button>
+</div>
+<audio id="aud" preload="__AUDIO_PRELOAD__" src="__AUDIO_SRC__"></audio>
+
+<script>
+"use strict";
+/* ================= engine: everything a frame needs is a pure function of t ================= */
+const VIDEO = __VIDEO__;
+const TIMINGS = __TIMINGS__;
+const DUR = VIDEO.duration;
+window.__errors = [];
+addEventListener("error", e => window.__errors.push(String(e.message || e)));
+
+/* ---------- math and easing ---------- */
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, u) => a + (b - a) * u;
+// Progress of t through [a, a + d], clamped to 0..1.
+const P = (t, a, d = .4) => clamp((t - a) / d);
+const eOut = u => 1 - Math.pow(1 - u, 3);
+const eIn = u => u * u * u;
+const eInOut = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+const eBack = u => { const c = 1.9, c3 = c + 1; return 1 + c3 * Math.pow(u - 1, 3) + c * Math.pow(u - 1, 2); };
+const eElastic = u => u <= 0 ? 0 : u >= 1 ? 1 : Math.pow(2, -10 * u) * Math.sin((u * 10 - .75) * (2 * Math.PI) / 3) + 1;
+const bump = u => Math.sin(Math.PI * clamp(u));
+const mix = (a, b, u) => ({ x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u), s: lerp(a.s ?? 1, b.s ?? 1, u), r: lerp(a.r || 0, b.r || 0, u) });
+// Deterministic pseudo-random number in [0, 1) for an integer seed. Never use Math.random().
+const rand = n => { let x = Math.imul((n | 0) ^ 0x9e3779b9, 2654435761) >>> 0; x = Math.imul(x ^ (x >>> 15), 2246822519) >>> 0; return ((x ^ (x >>> 13)) >>> 0) / 4294967296; };
+
+/* ---------- DOM ---------- */
+const $ = id => { const el = document.getElementById(id); if (!el) throw new Error(`#${id} not found`); return el; };
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// Set a pose: x, y (px offset from the anchor), s (scale), sx, sy, r (deg), o (opacity), b (blur px).
+// center=true keeps the .a anchor centring. Writes the DOM only when a value changes.
+function S(el, p, center = true) {
+  const x = p.x || 0, y = p.y || 0, s = p.s ?? 1, r = p.r || 0, o = clamp(p.o ?? 1), b = p.b || 0;
+  const k = (center ? "translate(-50%,-50%) " : "") + `translate(${x.toFixed(2)}px,${y.toFixed(2)}px) rotate(${r.toFixed(2)}deg) scale(${(p.sx ?? s).toFixed(4)},${(p.sy ?? s).toFixed(4)})`;
+  if (el._t !== k) { el.style.transform = k; el._t = k; }
+  const oo = o.toFixed(3);
+  if (el._o !== oo) { el.style.opacity = oo; el.style.visibility = o <= .001 ? "hidden" : "visible"; el._o = oo; }
+  const f = b > .05 ? `blur(${b.toFixed(1)}px)` : "none";
+  if (el._f !== f) { el.style.filter = f; el._f = f; }
+}
+function H(el, h) { if (el._h !== h) { el.innerHTML = h; el._h = h; } }
+
+/* ---------- motion building blocks ---------- */
+// Pop in at `at` over d seconds: fade, rise by dy px, scale from s0 with overshoot.
+function pop(t, at, d = .5, dy = 36, s0 = .8) {
+  const u = P(t, at, d), e = eBack(u);
+  return { o: clamp(u * 2.5), y: (1 - e) * dy, s: s0 + (1 - s0) * e };
+}
+// Leave at `at` over d seconds: fade, drift up by dy px, shrink slightly.
+function out(t, at, d = .3, dy = -30) {
+  const u = eIn(P(t, at, d));
+  return { o: 1 - u, y: dy * u, s: 1 - .08 * u };
+}
+// Combine an entrance and an exit pose (multiplies opacity and scale, adds offsets).
+const both = (a, b) => ({ ...a, x: (a.x || 0) + (b.x || 0), y: (a.y || 0) + (b.y || 0), s: (a.s ?? 1) * (b.s ?? 1), o: (a.o ?? 1) * (b.o ?? 1) });
+const caret = t => Math.floor(t * 2.4) % 2 === 0 ? "▌" : " ";
+// Typed text over coloured segments: segs is a list of lines, each a list of [text, class].
+function typeSegs(segs, n, t, showCaret = true) {
+  let html = "", left = n, done = true;
+  for (let li = 0; li < segs.length; li++) {
+    if (li > 0) { if (left <= 0) { done = false; break; } html += "\n"; left--; }
+    for (const [txt, cls] of segs[li]) {
+      if (left <= 0) { done = false; break; }
+      const part = txt.slice(0, left);
+      left -= part.length;
+      html += cls ? `<span class="${cls}">${esc(part)}</span>` : esc(part);
+      if (part.length < txt.length) { done = false; break; }
+    }
+    if (!done) break;
+  }
+  return html + (showCaret ? `<span class="car">${caret(t)}</span>` : "");
+}
+const segLen = segs => segs.reduce((a, l) => a + l.reduce((b, [x]) => b + x.length, 0), 0) + segs.length - 1;
+// Type segs from `at` over `dur` seconds, caret blinking until caretUntil.
+const typed = (segs, t, at, dur, caretUntil = Infinity) => typeSegs(segs, Math.floor(segLen(segs) * P(t, at, dur)), t, t < caretUntil);
+// Draw an SVG path that has pathLength="1": u = 0 hidden, 1 fully drawn.
+function drawPath(path, u) {
+  const v = (1 - clamp(u)).toFixed(4);
+  if (path._d !== v) { path.setAttribute("stroke-dasharray", "1"); path.setAttribute("stroke-dashoffset", v); path._d = v; }
+}
+// Number counting from a to b between `at` and `at + d`.
+const countUp = (t, at, d, a, b, decimals = 0) => lerp(a, b, eOut(P(t, at, d))).toFixed(decimals);
+// Camera-style shake offset with amplitude amp px.
+const shake = (t, amp, seed = 0) => ({ x: amp * Math.sin(t * 53 + seed * 1.7), y: amp * Math.cos(t * 47 + seed * 2.3) });
+
+/* ---------- narration cues: time things to words, never to hard-coded seconds ---------- */
+const norm = s => String(s).toLowerCase().normalize("NFKC").replace(/[^\p{L}\p{N}]+/gu, "");
+const TW = TIMINGS.map(w => norm(w.w));
+function cueIndex(phrase, after = 0) {
+  const want = String(phrase).split(/\s+/).map(norm).filter(Boolean);
+  if (!want.length) throw new Error(`empty cue "${phrase}"`);
+  for (let i = 0; i + want.length <= TIMINGS.length; i++) {
+    if (TIMINGS[i].s < after - 1e-6) continue;
+    let ok = true;
+    for (let k = 0; k < want.length && ok; k++) ok = TW[i + k] === want[k];
+    if (ok) return i;
+  }
+  throw new Error(`cue not found: "${phrase}" at or after ${after}s`);
+}
+// Start time of the first occurrence of phrase at or after `after` seconds.
+const cue = (phrase, after = 0) => TIMINGS[cueIndex(phrase, after)].s;
+// End time of the last word of that occurrence.
+const cueEnd = (phrase, after = 0) => {
+  const i = cueIndex(phrase, after), n = String(phrase).split(/\s+/).map(norm).filter(Boolean).length;
+  return TIMINGS[i + n - 1].e;
+};
+// Words spoken inside [a, b).
+const wordsIn = (a, b) => TIMINGS.filter(w => w.s >= a && w.s < b);
+const NARR_START = TIMINGS.length ? TIMINGS[0].s : 0;
+const NARR_END = TIMINGS.length ? TIMINGS[TIMINGS.length - 1].e : DUR;
+
+/* ---------- music: beat grid and drum activity from mix.json ---------- */
+const MUSIC = VIDEO.music || null;
+const BPM = MUSIC ? MUSIC.bpm : 0;
+const BEAT = MUSIC ? 60 / MUSIC.bpm : 0;
+// Time of beat k (k = 0 is the first drum downbeat; 4 beats to a bar).
+const beat = k => MUSIC ? MUSIC.downbeat + k * BEAT : 0;
+// Nearest beat time to t, or the next one with dir = 1, the previous one with dir = -1.
+function snapBeat(t, dir = 0) {
+  if (!MUSIC) return t;
+  const k = (t - MUSIC.downbeat) / BEAT;
+  return beat(dir > 0 ? Math.ceil(k - 1e-6) : dir < 0 ? Math.floor(k + 1e-6) : Math.round(k));
+}
+// Where to cut into a scene whose first word starts at w: on a beat at most 0.4 s before the word, else on a half
+// beat there, else 0.2 s before it. Never after the word, so the cut does not chop the previous sentence's visual.
+function cutAt(w) {
+  if (MUSIC) for (const step of [1, .5]) {
+    const d = BEAT * step, t = MUSIC.downbeat + Math.round((w - .15 - MUSIC.downbeat) / d) * d;
+    if (t >= w - .4 && t <= w) return t;
+  }
+  return w - .2;
+}
+// 0..1: how much the drums are playing at t (measured from the music, so breaks are quiet).
+function drums(t) {
+  if (!MUSIC) return 0;
+  const d = MUSIC.drums;
+  if (!d || !d.length) return 1;
+  const i = t * MUSIC.drumsRate, i0 = Math.floor(i);
+  if (i0 < 0) return d[0];
+  if (i0 >= d.length - 1) return d[d.length - 1];
+  return lerp(d[i0], d[i0 + 1], i - i0);
+}
+// 0..1 kick on every beat, stronger on the downbeat, decaying within the beat.
+function pulse(t) {
+  if (!MUSIC) return 0;
+  const k = (t - MUSIC.downbeat) / BEAT, ph = k - Math.floor(k);
+  const down = ((Math.floor(k + 1e-6) % 4) + 4) % 4 === 0 ? 1 : .6;
+  return drums(t) * down * Math.exp(-ph * BEAT * 9);
+}
+
+/* ---------- registries filled by scenes.js ---------- */
+const SCENES = [], LAYERS = [], CUTS = [], RINGS = [], FLASHES = [], CHAPTERS = [], SFX = [];
+let HUD_END = Infinity;
+// A scene is a <section class="scene" id="..."> shown only in [from, to). draw(t) runs every frame it is shown.
+// exit: "zoom" (default, blur-zoom out over the last .28 s), "fade", or "none".
+function scene(id, o) {
+  if (!(o && typeof o.draw === "function")) throw new Error(`scene ${id}: draw(t) is required`);
+  if (!(o.to > o.from)) throw new Error(`scene ${id}: to (${o.to}) must be after from (${o.from})`);
+  SCENES.push({ id, from: o.from, to: o.to, init: o.init, draw: o.draw, exit: o.exit ?? "zoom", el: null });
+}
+// A layer runs every frame for the whole video (logos, recurring characters). It controls its own visibility.
+function layer(draw, o = {}) { LAYERS.push({ draw, init: o.init }); }
+const cut = t => { CUTS.push(t); };                         // colour bands sweep across at t
+const ring = (t, x = 960, y = 540) => { RINGS.push([t, x, y]); };  // expanding ring from (x, y)
+const flash = (t, a = .2) => { FLASHES.push([t, a]); };     // white flash of strength a (keep a <= .4)
+const chapter = (t, n, label) => { CHAPTERS.push([t, n, label]); };  // corner HUD: "01 install"
+const chaptersEnd = t => { HUD_END = t; };
+// A sound effect that lands at t, mixed into the audio by mix_audio.py --sfx (render_video.py --export-sfx lists them).
+// kind: whoosh, swipe, pop, tick, type ({dur}: ticks over dur), impact, riser ({dur}: rises into t), ding.
+// cut() adds a whoosh, flash() an impact and ring() a pop by themselves unless VIDEO.sfx.auto is false.
+const sfx = (t, kind, o = {}) => { SFX.push({ t, kind, gain: o.gain ?? 1, ...(o.dur ? { dur: o.dur } : {}) }); };
+
+/* ---------- overlays ---------- */
+function drawOverlays(t) {
+  let band = null;
+  for (const c of CUTS) if (Math.abs(t - c) < .32) band = c;
+  if (band !== null) {
+    const u = (t - band + .32) / .64;
+    S($("bandA"), { x: lerp(-500, 2400, eInOut(u)), y: 540, r: 14 });
+    S($("bandB"), { x: lerp(-700, 2300, eInOut(clamp(u * 1.1 - .1))), y: 540, r: 14 });
+  } else { S($("bandA"), { o: 0 }); S($("bandB"), { o: 0 }); }
+  let rg = null;
+  for (const r of RINGS) if (t >= r[0] && t < r[0] + .8) rg = r;
+  if (rg) { const u = P(t, rg[0], .8); S($("ring"), { x: rg[1] - 200, y: rg[2] - 200, s: .2 + 3.4 * eOut(u), o: .9 * (1 - u) }, false); }
+  else S($("ring"), { o: 0 }, false);
+  let fl = 0;
+  for (const [ft, a] of FLASHES) if (t >= ft) fl = Math.max(fl, a * (1 - P(t, ft, .3)));
+  $("flash").style.opacity = fl.toFixed(3);
+  const fo = VIDEO.fadeOut ?? 1.5;
+  $("fade").style.opacity = Math.max(1 - P(t, 0, .35), P(t, DUR - fo, Math.max(.1, fo - .1))).toFixed(3);
+
+  let ch = null;
+  for (const c of CHAPTERS) if (t >= c[0]) ch = c;
+  const chap = $("chap");
+  if (ch) { H(chap.children[0], esc(ch[1])); H(chap.children[1], esc(ch[2])); }   // also while it fades after chaptersEnd
+  if (ch && t < HUD_END) {
+    const u = P(t, ch[0] + .1, .35);
+    S(chap, { o: eOut(u), y: (1 - eOut(u)) * -16 }, false);
+  } else S(chap, { o: ch ? Math.max(0, 1 - P(t, HUD_END, .3)) : 0 }, false);
+}
+
+/* ---------- captions: word timings, chunked into short phrases ---------- */
+const CAP = Object.assign({ maxWords: 6, maxChars: 42, commaMin: 3 }, VIDEO.captions || {});
+let CHUNKS = [], capOn = VIDEO.captions?.enabled !== false, curChunk = -1;
+function initCaptions() {
+  let cur = [], chars = 0;
+  for (const w of TIMINGS) {
+    cur.push(w); chars += w.w.length + 1;
+    const end = /[.?!。！？]["'”’)]*$/.test(w.w), comma = /[,;:，、]["'”’)]*$/.test(w.w);
+    if (end || (comma && cur.length >= CAP.commaMin) || cur.length >= CAP.maxWords || chars >= CAP.maxChars) { CHUNKS.push(cur); cur = []; chars = 0; }
+  }
+  if (cur.length) CHUNKS.push(cur);
+  $("cap").innerHTML = CHUNKS.map((c, i) => `<div class="chunk" id="ck${i}">${c.map(w => `<span>${esc(w.w)}</span>`).join(" ")}</div>`).join("");
+}
+function drawCaptions(t) {
+  let ci = -1;
+  for (let k = 0; k < CHUNKS.length; k++) if (t >= CHUNKS[k][0].s - .08) ci = k;
+  if (ci >= 0) { const c = CHUNKS[ci], next = CHUNKS[ci + 1]; if (t > c[c.length - 1].e + .5 && (!next || t < next[0].s - .08)) ci = -1; }
+  if (!capOn) ci = -1;
+  if (ci !== curChunk) {
+    if (curChunk >= 0) $("ck" + curChunk).style.visibility = "hidden";
+    if (ci >= 0) $("ck" + ci).style.visibility = "visible";
+    curChunk = ci;
+  }
+  if (ci < 0) return;
+  const c = CHUNKS[ci], el = $("ck" + ci), u = eOut(P(t, c[0].s - .08, .22));
+  el.style.transform = `translateX(-50%) translateY(${((1 - u) * 14).toFixed(1)}px)`;
+  el.style.opacity = u.toFixed(3);
+  let active = -1;
+  c.forEach((w, i) => { if (t >= w.s) active = i; });
+  [...el.children].forEach((sp, i) => {
+    const cls = i === active ? "on" : i > active ? "p" : "";
+    if (sp.className !== cls) sp.className = cls;
+  });
+}
+
+/* ---------- background: drifting blobs, dot grid on the beat, film grain ---------- */
+let GRAIN = [];
+function initGrain() {
+  for (let g = 0; g < 4; g++) {
+    const c = document.createElement("canvas"); c.width = c.height = 256;
+    const x = c.getContext("2d"), d = x.createImageData(256, 256);
+    let s = 1234567 + g * 7919;
+    for (let i = 0; i < d.data.length; i += 4) { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; const v = s >>> 24; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+    x.putImageData(d, 0, 0); GRAIN.push(`url(${c.toDataURL()})`);
+  }
+}
+function drawBg(t) {
+  const pl = pulse(t);
+  S($("blobA"), { x: -230 + 140 * Math.sin(t * .23), y: -350 + 90 * Math.cos(t * .19), s: 1 + .06 * pl }, false);
+  S($("blobB"), { x: 900 + 120 * Math.cos(t * .17), y: 200 + 100 * Math.sin(t * .21), s: 1 + .05 * pl }, false);
+  S($("blobC"), { x: 1150 + 160 * Math.sin(t * .13 + 1), y: -300 + 80 * Math.sin(t * .29), s: 1 }, false);
+  S($("grid"), { y: (t * 16) % 48, o: .7 + .3 * pl }, false);
+  const k = Math.floor(t * 12), g = $("grain");
+  const bgi = GRAIN[k % 4], pos = `${(k * 97) % 256}px ${(k * 61) % 256}px`;
+  if (g._g !== bgi) { g.style.backgroundImage = bgi; g._g = bgi; }
+  g.style.backgroundPosition = pos;
+}
+
+/* ---------- frame ---------- */
+let DEBUG = false;
+function renderAt(t) {
+  t = clamp(t, 0, DUR);
+  drawBg(t);
+  const shown = [];
+  for (const sc of SCENES) {
+    const on = t >= sc.from && t < sc.to;
+    if (!on) { if (sc.el._on !== false) { sc.el.style.display = "none"; sc.el._on = false; } continue; }
+    if (sc.el._on !== true) { sc.el.style.display = "block"; sc.el._on = true; }
+    const q = sc.exit === "none" || sc.to >= DUR ? 0 : eIn(P(t, sc.to - .28, .28));
+    if (sc.exit === "fade") S(sc.el, { o: 1 - q }); else S(sc.el, { s: 1 + .06 * q, o: 1 - q, b: 10 * q });
+    sc.draw(t);
+    shown.push(sc.id);
+  }
+  for (const ly of LAYERS) ly.draw(t);
+  drawOverlays(t);
+  drawCaptions(t);
+  if (DEBUG) {
+    const w = TIMINGS.filter(x => x.s <= t).pop();
+    H($("dbg"), esc(`${t.toFixed(2)}s  ${shown.join(",") || "-"}\n${w ? w.w : ""}`));
+  }
+}
+
+/* ---------- boot: called after scenes.js has registered everything ---------- */
+function boot() {
+  const q = new URLSearchParams(location.search);
+  const capture = q.has("capture");
+  DEBUG = q.has("debug");
+  if (capture) document.body.classList.add("capture");
+  if (DEBUG) document.body.classList.add("debug");
+  if (q.get("captions") === "0") capOn = false;
+  for (const sc of SCENES) sc.el = $(sc.id);
+  for (const c of [...CUTS, ...RINGS.map(r => r[0]), ...FLASHES.map(f => f[0]), ...CHAPTERS.map(c => c[0])]) {
+    if (!(c >= 0 && c <= DUR)) throw new Error(`overlay time ${c} is outside 0..${DUR}`);
+  }
+  initGrain();
+  initCaptions();
+  SCENES.forEach(s => s.init && s.init());
+  LAYERS.forEach(l => l.init && l.init());
+  window.renderAt = renderAt;
+  window.VIDEO = VIDEO;
+  window.SCENE_LIST = SCENES.map(s => ({ id: s.id, from: s.from, to: s.to }));
+  window.CUT_LIST = [...CUTS].sort((a, b) => a - b);
+  const events = [...SFX];
+  if (VIDEO.sfx?.auto !== false) {
+    for (const c of CUTS) events.push({ t: c, kind: "whoosh", gain: 1, auto: true });
+    for (const [t] of FLASHES) events.push({ t, kind: "impact", gain: 1, auto: true });
+    for (const [t] of RINGS) if (!FLASHES.some(f => Math.abs(f[0] - t) < .06)) events.push({ t, kind: "pop", gain: 1, auto: true });
+  }
+  window.SFX_LIST = events.filter(e => e.t >= 0 && e.t <= DUR).sort((a, b) => a.t - b.t);
+  fit();
+  addEventListener("resize", fit);
+  if (capture) { renderAt(0); return; }
+  player();
+}
+function fit() {
+  const k = Math.min(innerWidth / 1920, innerHeight / 1080);
+  $("stage").style.setProperty("--k", k.toFixed(4));
+}
+
+/* ---------- player ---------- */
+function player() {
+  const aud = $("aud");
+  const POSTER = VIDEO.poster ?? Math.min(DUR, NARR_START + 3);
+  let lastAud = -1, lastPerf = 0;
+  const clock = () => {
+    const a = aud.currentTime, now = performance.now();
+    if (a !== lastAud) { lastAud = a; lastPerf = now; }
+    return aud.paused ? a : Math.min(a + (now - lastPerf) / 1000, a + .12);
+  };
+  const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  const tick = () => {
+    const t = clock();
+    renderAt(t);
+    $("fill").style.width = (100 * t / DUR).toFixed(2) + "%";
+    $("time").textContent = `${fmt(t)} / ${fmt(DUR)}`;
+    $("play").textContent = aud.paused ? "Play" : "Pause";
+    requestAnimationFrame(tick);
+  };
+  let running = false;
+  const run = () => { if (!running) { running = true; requestAnimationFrame(tick); } };
+  const toggle = () => {
+    $("start").style.display = "none";
+    if (aud.ended || aud.currentTime >= DUR - .05) aud.currentTime = 0;
+    aud.paused ? aud.play() : aud.pause();
+  };
+
+  /* Fullscreen. Desktop, Android and iPad browsers have the Fullscreen API. iPhone Safari has none for
+     pages, so inside an iframe the player asks the host page through postMessage to expand the iframe
+     over the viewport; a host that supports this answers with its state. On touch screens, Play goes
+     fullscreen and the end of the video leaves it. */
+  const MSG = "gen-motion-graphics";
+  const embedded = window.parent !== window;
+  const touch = matchMedia("(hover: none) and (pointer: coarse)").matches;
+  const fsApi = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+  let hostFs = null;
+  const isFs = () => fsApi ? !!(document.fullscreenElement || document.webkitFullscreenElement) : hostFs === true;
+  const setFs = on => {
+    if (on === isFs()) return;
+    if (fsApi) {
+      const el = document.documentElement;
+      const call = on ? (el.requestFullscreen || el.webkitRequestFullscreen).bind(el)
+                      : (document.exitFullscreen || document.webkitExitFullscreen).bind(document);
+      new Promise(res => res(call())).then(() => on && touch && screen.orientation.lock("landscape")).catch(() => {});
+    } else if (hostFs !== null) {
+      parent.postMessage({ type: MSG, fullscreen: on }, "*");
+    }
+  };
+  const showFs = () => {
+    $("fs").hidden = !fsApi && hostFs === null;
+    $("fs").textContent = isFs() ? "Exit fullscreen" : "Fullscreen";
+  };
+  const play = () => { const starting = aud.paused; toggle(); if (touch && starting) setFs(true); };
+
+  renderAt(POSTER);
+  document.fonts.ready.then(() => renderAt(POSTER));
+  $("time").textContent = `0:00 / ${fmt(DUR)}`;
+  $("startBtn").onclick = () => { aud.currentTime = 0; play(); run(); };
+  $("play").onclick = play;
+  $("cc").setAttribute("aria-pressed", String(capOn));
+  $("cc").onclick = () => { capOn = !capOn; $("cc").setAttribute("aria-pressed", String(capOn)); };
+  $("fs").onclick = () => setFs(!isFs());
+  $("bar").onclick = e => { const r = $("bar").getBoundingClientRect(); aud.currentTime = DUR * clamp((e.clientX - r.left) / r.width); $("start").style.display = "none"; run(); };
+  /* At the end, the centre button comes back as Replay; it restarts from 0 like Play does. */
+  aud.addEventListener("ended", () => {
+    if (touch) setFs(false);
+    $("startBtn").textContent = "↻ Replay";
+    $("start").style.display = "";
+  });
+  for (const ev of ["fullscreenchange", "webkitfullscreenchange"]) {
+    document.addEventListener(ev, () => { showFs(); if (!isFs()) try { screen.orientation.unlock(); } catch (_) { /* not supported */ } });
+  }
+  addEventListener("message", e => {
+    if (embedded && e.source === parent && e.data && e.data.type === MSG) { hostFs = !!e.data.fullscreen; showFs(); }
+  });
+  if (embedded) parent.postMessage({ type: MSG }, "*");
+  showFs();
+  addEventListener("keydown", e => {
+    if (e.code === "Space") { e.preventDefault(); if ($("start").style.display !== "none") $("startBtn").click(); else toggle(); }
+    if (e.code === "ArrowRight") aud.currentTime = Math.min(DUR, aud.currentTime + 5);
+    if (e.code === "ArrowLeft") aud.currentTime = Math.max(0, aud.currentTime - 5);
+    if (e.key === "c") $("cc").click();
+    if (e.key === "f") $("fs").click();
+    if (e.key === "Escape") setFs(false);
+  });
+  let idle;
+  const wake = () => { document.body.classList.remove("idle"); clearTimeout(idle); idle = setTimeout(() => !aud.paused && document.body.classList.add("idle"), 2000); };
+  addEventListener("mousemove", wake);
+  addEventListener("touchstart", wake, { passive: true });
+}
+</script>
+<script>
+"use strict";
+/* ================= scenes ================= */
+__SCENES_JS__
+</script>
+<script>
+"use strict";
+boot();
+</script>
+</body>
+</html>
