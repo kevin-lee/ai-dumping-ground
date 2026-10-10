@@ -74,3 +74,7 @@ hs_err_pid*
 
 # IntelliJ
 out/
+
+### Python
+__pycache__/
+*.py[cod]

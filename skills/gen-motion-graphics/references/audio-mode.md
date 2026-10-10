@@ -1,6 +1,6 @@
 # AUDIO MODE
 
-Turn the narration text into speech on this machine, in the voice and at the speeds the user picks. The text must never leave the machine (see "Privacy" in SKILL.md): every command that reads the text or the audio runs through `scripts/offline.sh`.
+Turn the narration text into speech on this machine, in the voice and at the speeds the user picks. The text must never reach a third-party service (see "Privacy" in SKILL.md). So every command that runs a model on the text or the audio (speech, samples, the phoneme check and the speech check) runs through `scripts/offline.sh`. `trim_silence.py` in step 9 runs without it, because it only measures the audio and has no network code.
 
 ## 1. Input
 
@@ -60,7 +60,7 @@ Run `--phonemes` again with `--lexicon` to confirm. It prints "spoken as ..." fo
 {"nginx": {"say": "engine x"}, "Vite": {"say": "veet"}}
 ```
 
-Ask the user only when you do not know how a name is said (a person's name, a brand, a made-up word).
+Ask the user only when you do not know how a name is said (a person's name, a brand, a made-up word). For an internal name, look up only an ordinary or public word inside it, alone ("atlas" from `atlas-billing-us-2`), never the whole name (see "Privacy" in SKILL.md). When you are not sure the word is public, ask the user whether you may look it up. If they say no, ask them how it is said.
 
 **Qwen3-TTS** has no phoneme view. For names it may misread, add `"say"` respellings, often in Hangul (`{"Git": {"say": "깃"}}`). Writing English names in Hangul also helps the model with mixed Korean and English text. The speech check in step 8 shows whether it worked, and the user should still listen for them.
 

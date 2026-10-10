@@ -77,13 +77,17 @@ Each video gets one folder, decided by the first mode that writes a file and reu
 
 Copy files the user provides into `sources/` (never move or modify their originals), so the folder is complete on its own. Do not delete or overwrite the user's own files. When regenerating something you made earlier in the same video folder, overwriting your own output is fine.
 
-## Privacy: the narration stays on this machine
+## Privacy: nothing confidential goes to a third party
 
-In an earlier session the user said they do not want the narration text sent to any third-party service on the Internet. So:
+The narration can hold confidential information on purpose, to explain it. The user does not want it, or anything made from it, sent to a third-party service. Anthropic, which runs this conversation, is not a third party, and neither are the organization's own tools (below). Internal names and addresses may be shown and spoken in the video. This rule is only about where they are sent. So:
 
 - Generate speech and transcribe audio only with the local models in this skill, and run those steps through `<skill>/scripts/offline.sh`. It blocks all network access for the command (with `sandbox-exec` on macOS, `unshare` or `firejail` on Linux). If it cannot block the network on this system, ask the user before running without it.
 - The network is used only to download packages and models once (the `--setup` steps, which never include the text), to read sources the user points to, and to find and download music and fonts.
-- Never paste the narration, or long parts of it, into a web search, a web fetch, or any external API.
+- Never paste the narration, or long parts of it, into a web search, a web fetch, or any other third-party service.
+- Never put a key, password, token, internal name, internal host name or internal URL into a web search, a web fetch of a site outside the organization, Claude in Chrome, or a Model Context Protocol (MCP) server of a third-party service such as context7. Internal names are project, product, team, system and customer names that are not public. If you do not know whether a name is public, treat it as internal. One word is enough to leak it.
+- One exception, for pronunciation: you may look up how to say one ordinary or public word that is part of an internal name, alone. For `atlas-billing-us-2`, look up "atlas", never `atlas-billing-us-2`. Never look up a word that only the organization uses. When you are not sure, ask the user whether you may look the word up. If they say no, ask them how it is said.
+- The organization's own MCP servers, for example Jira, Slack, Notion, and GitHub for the organization's repositories, may receive the narration, internal names, internal host names and internal URLs, for example to read the ticket or the page that the video explains. Never write any of it where people outside the organization can read it: a public repository or issue, a channel shared with another company, or an email to someone outside. If you do not know whether a server belongs to the organization, ask the user.
+- Never write a key, password or token into any MCP server, the organization's own included. A secret in a ticket, a message or a page spreads to everyone who can read it.
 
 ## Modes in brief
 
@@ -108,4 +112,4 @@ In an earlier session the user said they do not want the narration text sent to 
 | `mix_audio.py` | Beat-aligned music edit, a generated beat locked to a found track, ducking, synthesized sound effects, ending, mastering, `mix.json` |
 | `fetch_font.py` | Downloads and subsets a Google Fonts family for embedding |
 | `build_html.py` | Assembles the standalone page from `assets/template.html` and the scenes |
-| `render_video.py` | `--check` lint, `--stills` for review, `--export-sfx` sound-effect list, parallel MP4 render |
+| `render_video.py` | `--check` lint and secret scan, `--stills` for review, `--export-sfx` sound-effect list, parallel MP4 render |

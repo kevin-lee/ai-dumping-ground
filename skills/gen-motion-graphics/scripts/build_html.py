@@ -39,7 +39,13 @@ FALLBACK = {
     "mono": "ui-monospace, Menlo, Consolas, monospace",
     "display": "var(--font-ui)",
 }
-EXTERNAL = re.compile(r"""(<link\b|@import\b|\bsrc\s*=\s*["']?(?:https?:)?//|url\(\s*["']?(?:https?:)?//)""", re.I)
+# The template's Content Security Policy blocks every request the page makes. This check stops such references at
+# build time, and it also catches what the policy cannot block: leaving the page for another address.
+EXTERNAL = re.compile(
+    r"""(<link\b|<meta\b|@import\b|\b(?:src|href)\s*=\s*["']?(?:https?:)?//|url\(\s*["']?(?:https?:)?//"""
+    r"""|\blocation\s*(?:\.href\s*)?=(?!=)|\blocation\.(?:assign|replace)\s*\(|\bwindow\.open\s*\()""",
+    re.I,
+)
 
 
 def b64(path: Path) -> str:
@@ -113,8 +119,8 @@ def main() -> None:
     if re.search(r"</script", scenes["js"], re.I):
         sys.exit("scenes.js contains '</script'; write it as '<\\/script' so the page does not break")
     for name, text in scenes.items():
-        if EXTERNAL.search(text):
-            sys.exit(f"scenes.{name} references an external resource ({EXTERNAL.search(text).group(0)}); inline it instead")
+        if m := EXTERNAL.search(text):
+            sys.exit(f"scenes.{name} loads or opens something outside the page ({m.group(0)}); inline resources as data: URLs and never leave the page")
 
     config = {k: v for k, v in video.items() if k not in ("fonts",)}
     config["duration"] = video.get("duration", mix["duration"])
