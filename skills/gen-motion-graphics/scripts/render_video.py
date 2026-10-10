@@ -11,7 +11,9 @@ own H.264 segment; the segments are joined without re-encoding and the audio is 
 Check (seconds, no screenshots): runs renderAt over the whole timeline and reports script errors,
 text that overflows its box, and visible elements that collide with the captions or the frame edge.
 It also measures the motion: how many elements enter per second, and the longest stretch in which
-nothing new appears (no element entering, no text changing, no cut, ring or flash).
+nothing new appears (no element entering, no text changing, no cut, ring or flash). And it lists text that
+looks like a key, password or token, on screen, in the captions or anywhere in the page source (then it
+exits with 1).
   uv run --script render_video.py page.html --check
 Stills for review (auto = the middle of every scene plus just after every cut), with contact sheets of
 four stills each (sheet-01.png, ...), so a review needs a quarter of the image views:
@@ -31,6 +33,7 @@ import base64
 import json
 import multiprocessing as mp
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -101,6 +104,70 @@ SEEN_JS = r"""
 }
 """
 
+# The text a viewer can read at t: visible scene text, with inline runs joined so a token split across coloured
+# spans stays whole, and the caption phrase on screen (all of it, its dimmed words too).
+TEXT_JS = r"""
+(t) => {
+  renderAt(t);
+  const stage = document.getElementById('stage'), op = new Map();
+  const eff = el => {
+    if (!el || el === stage) return 1;
+    if (!op.has(el)) {
+      const cs = getComputedStyle(el);
+      op.set(el, cs.display === 'none' || cs.visibility === 'hidden' ? 0 : parseFloat(cs.opacity) * eff(el.parentElement));
+    }
+    return op.get(el);
+  };
+  const block = el => { while (el && getComputedStyle(el).display.startsWith('inline')) el = el.parentElement; return el; };
+  let out = '', last = null;
+  const walk = document.createTreeWalker(document.getElementById('scenes'), NodeFilter.SHOW_TEXT);
+  for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+    if (!n.textContent.trim() || eff(n.parentElement) < .5) continue;
+    const b = block(n.parentElement);
+    out += (b === last ? '' : '\n') + n.textContent;
+    last = b;
+  }
+  const cap = document.querySelector('#cap .chunk[style*="visible"]');
+  return out + (cap ? '\n' + cap.textContent : '');
+}
+"""
+
+# Text that looks like a key, password or token: well-known formats, and a long value after a word such as "password:".
+SECRETS = [(name, re.compile(rx)) for name, rx in [
+    ("private key", r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
+    ("AWS access key", r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b"),
+    ("GitHub token", r"\b(?:gh[pousr]_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{40,})"),
+    ("Slack token", r"\bxox[abposr]-[A-Za-z0-9-]{10,}"),
+    ("Slack webhook", r"hooks\.slack\.com/services/[A-Za-z0-9/]{20,}"),
+    ("Google API key", r"\bAIza[0-9A-Za-z_-]{35}"),
+    ("Atlassian API token", r"\bATATT[A-Za-z0-9_=-]{20,}"),
+    ("API key", r"\bsk-(?=[A-Za-z0-9_-]*\d)[A-Za-z0-9_-]{32,}"),
+    ("Stripe key", r"\b[rs]k_(?:live|test)_[0-9A-Za-z]{16,}"),
+    ("npm token", r"\bnpm_[A-Za-z0-9]{36}\b"),
+    ("JSON Web Token", r"\beyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}"),
+    ("password in a URL", r"://[^/\s:@]+:([^/\s@]+)@"),
+    ("credential", r"(?i)(?<![a-z])(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|client[_-]?secret)"
+                   r"[\"']?\s*[:=]\s*[\"']?([A-Za-z0-9._~+/=-]{12,})"),
+    ("bearer token", r"(?i)\bbearer\s+([A-Za-z0-9._~+/=-]{16,})"),
+]]
+# A placeholder, an example or a variable, not a real value.
+FAKE = re.compile(r"(?i)example|placeholder|redacted|dummy|your[-_]|xxxx|\*\*\*|0000|1234|abcd|\.env\b|environ|getenv|secrets\.")
+
+
+def secrets(text: str) -> set[str]:
+    """Text that looks like a key, password or token, described without printing it in full."""
+    found, spans = set(), []
+    for name, rx in SECRETS:
+        for m in rx.finditer(text):
+            g = m.lastindex or 0
+            v = m.group(g)
+            if any(a < m.end(g) and m.start(g) < b for a, b in spans):
+                continue  # already reported in a more exact format above
+            if name == "private key" or (len(set(v)) >= 8 and not FAKE.search(v)):
+                spans.append(m.span(g))
+                found.add(f'{name} "{v[:4] if len(v) >= 20 else v[:2]}…" ({len(v)} characters)')
+    return found
+
 
 def launch(p, scale: float):
     args = ["--force-color-profile=srgb", "--hide-scrollbars", "--disable-lcd-text"]
@@ -146,6 +213,7 @@ def check(html: Path, step: float) -> None:
         t, n = 0.0, 0
         shown: dict[str, str] = {}
         entrances, fresh = 0, []                 # fresh: (time, whether something new appeared since the last frame)
+        texts: dict[str, list[float]] = {}       # what a viewer can read, with the times it is on screen
         while t <= dur:
             before = len(errors)
             try:
@@ -158,6 +226,7 @@ def check(html: Path, step: float) -> None:
                 marked = any(t - step < m <= t for m in marks)
                 fresh.append((t, bool(n) and (bool(entered) or changed or marked)))
                 shown = {k: text for k, (_, text) in now.items()}
+                texts.setdefault(page.evaluate(TEXT_JS, t), []).append(round(t, 2))
             except Exception as e:  # a script error at this time
                 errors.append(str(e).splitlines()[0])
             for e in errors[before:]:
@@ -186,7 +255,18 @@ def check(html: Path, step: float) -> None:
         if kind != "overflow" and span < 0.6:   # brief contact while moving in or out is fine
             continue
         print(f"  {kind:8s} {label} at {ts[0]:.2f}-{ts[-1]:.2f}s")
-    if problems:
+    # Secrets on screen, in the captions, or anywhere in the page source (comments in scenes.js ship in the page too).
+    # The page source is read without its base64 fonts and audio.
+    found: dict[str, list[float]] = {}
+    for text, ts in texts.items():
+        for s in secrets(text):
+            found.setdefault(s, []).extend(ts)
+    for s in secrets(re.sub(r"data:[^,\s\"')]*;base64,[A-Za-z0-9+/=]+", "data:", html.read_text(encoding="utf-8"))):
+        found.setdefault(s, [])
+    for label, ts in sorted(found.items(), key=lambda kv: min(kv[1], default=1e9)):
+        where = f"on screen at {min(ts):.2f}-{max(ts):.2f}s" if ts else "in the page source only, not on screen"
+        print(f"  secret   {label} {where}")
+    if problems or found:
         sys.exit(1)
 
 

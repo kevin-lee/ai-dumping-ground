@@ -100,6 +100,8 @@ Aim for a scene change every 4 to 7 s at the turns in the narration, and somethi
 
 On-screen text must be as true as the narration. Take commands, URLs, file names, numbers and names from the script, the user's sources or the project itself. When a detail is unknown (an install command, a URL), show what is known ("Homebrew") or a plainly generic placeholder, and list every invented illustration (example file names, sample data) in the final report, so the user can check them.
 
+Never show a key, password, token or other secret, on screen or in the captions, even when a source shows one. Use a placeholder that is plainly fake, such as `<API_TOKEN>` or `••••••••`. If the narration itself reads out a secret, tell the user: only a new narration (ENTER SCRIPT MODE) takes it out of the voice. Step 9 checks for secrets. Internal names, internal host names and internal URLs may be shown and spoken in the video. The privacy rule in SKILL.md is only about where they are sent.
+
 ## 7. Scenes, video settings, fonts
 
 Read `references/engine-api.md`. Write `sources/build/scenes/scenes.html`, `scenes.css` and `scenes.js`, and `sources/build/video.json`. Then fetch the fonts. Re-run this whenever the text on screen changes, because only the characters used are kept:
@@ -118,7 +120,7 @@ python3 $S/build_html.py --video sources/build/video.json --mix sources/build/mi
     --audio sources/build/master.mp3 --scenes sources/build/scenes --out output/<slug>.html
 ```
 
-The builder refuses to write a page that would load anything from outside.
+The page's Content Security Policy blocks every request to another address, so nothing from the video can leave through the page, also not while `render_video.py` runs it in Chrome. The builder also refuses scene files that load something from outside or leave the page for another address.
 
 **Sound effects** (unless the user chose none) take one more round, because the scenes say where they go. The engine adds a whoosh for every `cut()`, an impact for every `flash()` and a pop for every lone `ring()`, and scenes add others with `sfx()` (see `engine-api.md`). Export them from the built page, mix again with them, and build again:
 
@@ -138,6 +140,8 @@ uv run --script $S/render_video.py output/<slug>.html --stills auto --out-dir so
 ```
 
 `--check` runs every frame at 0.25 s steps in a few seconds. Fix every ERROR. Also fix the `captions`, `edge` and `overflow` notes unless an element is meant to sit there (it ignores brief contact while things fly in or out). Its `motion` line gives the elements entering per second and the longest stretch with nothing new. The intro the user approved measured 3.5 per second and 1.25 s. Under about 2 per second, or a stretch over 2 s, means adding beats to the storyboard there.
+
+`--check` also lists every `secret`: text that looks like a key, password or token, on screen, in the captions or anywhere in the page source, comments in `scenes.js` included. It never prints a secret in full. A secret makes it exit with 1: replace it with a placeholder. Only the user can decide that a match is not a secret.
 
 `--stills auto` saves the middle of every scene and the moment just after every cut, and contact sheets of four stills each at half size (`sheet-01.png`, ...). `--debug` prints the time, scene and current word in the corner. Look at every sheet with the Read tool, open a single still where something needs a closer look, and fix what you see. A session can view only so many images: when a view comes back as "[media removed: request limit]", wait and view it again. Never change the layout on a guess about a frame you did not see:
 

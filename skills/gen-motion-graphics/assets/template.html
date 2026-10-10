@@ -3,6 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Fonts, images and audio are data: URLs, so this policy blocks every request to another address, also one a scene
+     makes by mistake. Nothing from the video can leave through the page. 'self' in media-src is for build_html.py
+     --audio-url, which puts the audio next to the page. eval stays allowed: Chrome allows it while render_video.py
+     drives the page, so blocking it would break only the player. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; font-src data:; img-src data:; media-src data: 'self'; base-uri 'none'; form-action 'none'">
 <title>__TITLE__</title>
 <style>
 __FONT_FACES__

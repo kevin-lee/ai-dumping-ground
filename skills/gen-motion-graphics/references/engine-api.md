@@ -8,6 +8,8 @@
 | `scenes.css` | Styles for that markup. May override the `:root` tokens (palette, fonts, grain, caption colours) |
 | `scenes.js` | Registers scenes, layers and overlays with the functions below. It runs after the engine and before boot. Never write `</script>` in it |
 
+The page has a Content Security Policy that blocks every request to another address. Draw icons and logos as inline SVG, or put images in as `data:` URLs. `build_html.py` refuses a scene file that loads something from another address or leaves the page, and `render_video.py --check` reports a request the policy blocked as an ERROR.
+
 ## The one rule: every frame is a pure function of time
 
 The renderer jumps to arbitrary times, in parallel processes, and the player seeks. So `draw(t)` must set everything that depends on time from `t` alone:
