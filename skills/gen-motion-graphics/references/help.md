@@ -63,8 +63,9 @@ The skill stays in a mode until you say the next phrase, so you can revise freel
 
 | Where you run it | Folder |
 |---|---|
-| In a Git repository | `.ai/video/<short-summary>/output/` for the HTML page and the MP4, and `.ai/video/<short-summary>/sources/` for the script, audio, samples, music, license proof and build files |
-| Elsewhere | `video/<short-summary>/output/` and `video/<short-summary>/sources/` |
+| Anywhere | `~/.ai/<project>/video/<short-summary>/output/` for the HTML page and the MP4, and `~/.ai/<project>/video/<short-summary>/sources/` for the script, audio, samples, music, license proof and build files |
+
+`<project>` is `<host>/<owner>/<repo>` from the Git remote, or `local/<path>` when there is no remote or no Git repository. Set `AI_AGENT_OUTPUT_DIR` to use a root other than `~/.ai`.
 
 Name a folder in your prompt to use it instead.
 

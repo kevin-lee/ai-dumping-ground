@@ -49,7 +49,11 @@ Write the references answer to `<workdir>/references.txt` so the check script ca
 - Nothing: folder `no-ticket`.
 - Anything else typed: keep it after replacing characters outside `[A-Za-z0-9._-]` with `-`.
 
-Output path, always: `.ai/docs/pr/<folder>/pr-<N>-report.html` relative to the repository root. Say the resolved path before continuing.
+Output path, always: `<output>/docs/pr/<folder>/pr-<N>-report.html`. `<output>` is the AI output folder that `sh <skill>/scripts/ai-output-dir.sh` prints when run from the repository root. Say the resolved absolute path before continuing.
+
+The AI output folder is `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<absolute repository path>` when there is no remote. Do not calculate it yourself. If the script exits with an error, show the message and stop. If a sandbox blocks the write, tell the user to allow writes to the root folder (`sh <skill>/scripts/ai-output-dir.sh --root` prints it).
+
+Old reports: run `sh <skill>/scripts/migrate-ai-output.sh --check docs/pr`. If it prints a folder, tell the user one time that old reports exist in the repository's `.ai/docs/pr/`, and offer migration. A dry run is `sh <skill>/scripts/migrate-ai-output.sh docs/pr`. Run it with `--apply` only after the user explicitly agrees. Never delete files or folders.
 
 ## 4. Read the change
 
@@ -93,7 +97,7 @@ If `open` or a headless Chrome is available, render the page once and glance at 
 
 Report, in this order:
 
-- The absolute output path, a markdown link to it with a relative path (opens in the editor), and a `file://` link (opens in the browser). For hidden bilingual mode add the same `file://` link with `?lang=<code>`.
+- The absolute output path, a markdown link to it with the absolute path (opens in the editor), and a `file://` link (opens in the browser). For hidden bilingual mode add the same `file://` link with `?lang=<code>`.
 - One sentence on what the page contains (blocks, groups, findings, extra sections).
 - Which palette (theme or pastel name, or custom from the brief) and font pairing you used.
 - Any warnings: local state from gather, an unknown language code, redactions, syntax colors off and why, WARN lines left standing and why.

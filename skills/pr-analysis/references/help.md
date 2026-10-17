@@ -32,9 +32,11 @@ INTAKE (asked once, before any analysis)
                         considered while explaining the PR.
 
 OUTPUT LOCATION (decided by the skill)
-  With a Jira style key      .ai/docs/pr/ABC-123/pr-<N>-report.html
-  With a GitHub issue        .ai/docs/pr/issue-123/pr-<N>-report.html
-  Without a ticket           .ai/docs/pr/no-ticket/pr-<N>-report.html
+  With a Jira style key      ~/.ai/<project>/docs/pr/ABC-123/pr-<N>-report.html
+  With a GitHub issue        ~/.ai/<project>/docs/pr/issue-123/pr-<N>-report.html
+  Without a ticket           ~/.ai/<project>/docs/pr/no-ticket/pr-<N>-report.html
+  <project> is <host>/<owner>/<repo> from the Git remote, or local/<path>.
+  Set AI_AGENT_OUTPUT_DIR to use a root other than ~/.ai.
   The completion message gives the absolute path and a file:// link.
 
 WHAT THE PAGE CONTAINS

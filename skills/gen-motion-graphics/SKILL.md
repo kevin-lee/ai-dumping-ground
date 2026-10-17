@@ -34,7 +34,7 @@ With no argument, call `AskUserQuestion` once with one question, "How do you wan
 3. "I have an audio file": the user gives an audio file (and optionally its script), then VIDEO MODE.
 4. "Help": reply with the help text as for `help` above, and stop.
 
-When a required file is missing, ask for its path. Offer any candidates found under `.ai/video/*/sources/` or `video/*/sources/` (newest first), and let the user type a path as "Other".
+When a required file is missing, ask for its path. Offer any candidates found under `<output>/video/*/sources/`, and also under the old project folders `.ai/video/*/sources/` and `video/*/sources/` (newest first), and let the user type a path as "Other".
 
 ## Modes
 
@@ -56,9 +56,10 @@ Read the reference for a mode when you enter it, not before:
 
 Each video gets one folder, decided by the first mode that writes a file and reused by the later modes:
 
-- In a Git repository (`git rev-parse --show-toplevel` succeeds): `<repo root>/.ai/video/<slug>/`
-- Otherwise: `./video/<slug>/`
+- `<output>/video/<slug>/`, where `<output>` is the AI output folder that `sh <skill>/scripts/ai-output-dir.sh` prints when run from the current folder. It is `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<absolute path>` when there is no remote or no Git repository. Do not calculate it yourself. If the script exits with an error, show the message and stop. If a sandbox blocks the write, tell the user to allow writes to the root folder (`sh <skill>/scripts/ai-output-dir.sh --root` prints it).
 - If the user names a location, it replaces that folder and keeps the same layout inside.
+
+Old videos: when the first mode is about to write a file, run `sh <skill>/scripts/migrate-ai-output.sh --check video`, and outside a Git repository also `sh <skill>/scripts/migrate-ai-output.sh --check --from "$PWD" video`. If one prints a folder, tell the user one time that old videos exist in the project, and offer migration. A dry run is the same command without `--check`. Run it with `--apply` only after the user explicitly agrees. Never delete files or folders.
 
 `<slug>` is a short kebab-case summary of the video's content, for example `ai-skills-intro` or `sourdough-basics-explainer`. When starting from an audio file without a script, transcribe it first (VIDEO MODE does this anyway) and name the folder after its content. If the folder already exists for a different video, add `-2`, `-3`, and so on. If it holds the same video from an earlier session, reuse it and tell the user.
 

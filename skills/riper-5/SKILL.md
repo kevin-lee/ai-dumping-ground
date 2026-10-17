@@ -51,10 +51,10 @@ YOU MUST BEGIN EVERY SINGLE RESPONSE WITH YOUR CURRENT MODE IN BRACKETS. NO EXCE
   ```
 - Duration: Until I explicitly approve plan and signal to move to next mode
 - Output Format: Begin with `[MODE: PLAN]`, then ONLY specifications and implementation details
-- Once the plan is ready, the content should be stored in a markdown file in the `.ai` folder of the current project. Create the folder if it does not exist. The content of the plan file should remain unchanged from the original plan, without removing anything (e.g. the checklist, metadata for the AI agent's PLAN mode, etc.). This MUST be done before asking me to signal "ENTER EXECUTE MODE", so I can review the plan file and edit it if needed before execution.
+- Once the plan is ready, the content should be stored in a markdown file in the AI output folder of the current project (see AI OUTPUT FOLDER below). Create the folder if it does not exist. The content of the plan file should remain unchanged from the original plan, without removing anything (e.g. the checklist, metadata for the AI agent's PLAN mode, etc.). This MUST be done before asking me to signal "ENTER EXECUTE MODE", so I can review the plan file and edit it if needed before execution.
 - Plan File Naming: Store the plan file under a `plans/{yyyy-MM}` subfolder, named as follows:
-  - With an issue ID: `.ai/plans/{yyyy-MM}/{yyyy-MM-dd}-{HHmm}-issue-{id}-{short-summary}.md`, where `{HHmm}` is the current local time in 24-hour format (e.g. `.ai/plans/2026-07/2026-07-13-1405-issue-123-improve-ux.md`)
-  - Without an issue ID: `.ai/plans/{yyyy-MM}/{yyyy-MM-dd}-{HHmm}-{short-summary}.md`, where `{HHmm}` is the current local time in 24-hour format (e.g. `.ai/plans/2026-07/2026-07-13-1432-improve-ux.md`)
+  - With an issue ID: `<output>/plans/{yyyy-MM}/{yyyy-MM-dd}-{HHmm}-issue-{id}-{short-summary}.md`, where `{HHmm}` is the current local time in 24-hour format (e.g. `<output>/plans/2026-07/2026-07-13-1405-issue-123-improve-ux.md`)
+  - Without an issue ID: `<output>/plans/{yyyy-MM}/{yyyy-MM-dd}-{HHmm}-{short-summary}.md`, where `{HHmm}` is the current local time in 24-hour format (e.g. `<output>/plans/2026-07/2026-07-13-1432-improve-ux.md`)
   - `{short-summary}` is a brief kebab-case summary of the plan (e.g. `improve-ux`)
   - Use the issue ID provided by me. If none was provided, use the time-based format — do not guess an issue ID.
 
@@ -79,9 +79,16 @@ YOU MUST BEGIN EVERY SINGLE RESPONSE WITH YOUR CURRENT MODE IN BRACKETS. NO EXCE
 - Reporting: Must report whether implementation is IDENTICAL to plan or NOT
 - Conclusion Format: "✅ IMPLEMENTATION MATCHES PLAN EXACTLY" or "❌ IMPLEMENTATION DEVIATES FROM PLAN"
 - Output Format: Begin with `[MODE: REVIEW]`, then systematic comparison and explicit verdict
-- Once the review is complete, move the plan doc file to `.ai/done/` folder (create it if absent) with the same date-based subfolder structure as the original plan file.
-  - e.g.) If the file is at `.ai/plans/2026-07/2026-07-13-1405-issue-123-improve-ux.md`, move it to `.ai/done/2026-07/2026-07-13-1405-issue-123-improve-ux.md`.
-  - If the doc file has references in other docs that need to be updated because of this move, update those references accordingly.
+- Once the review is complete, move the plan doc file to `<output>/done/` folder (create it if absent) with the same date-based subfolder structure as the original plan file.
+  - e.g.) If the file is at `<output>/plans/2026-07/2026-07-13-1405-issue-123-improve-ux.md`, move it to `<output>/done/2026-07/2026-07-13-1405-issue-123-improve-ux.md`.
+  - If other docs refer to the moved file, update those references. Write references as paths relative to `<output>`, for example `done/2026-07/2026-07-13-1405-issue-123-improve-ux.md`, never as absolute paths.
+
+## AI OUTPUT FOLDER
+- `<skill>` is this skill's directory. `<output>` is the AI output folder of the current project. Get it with `sh <skill>/scripts/ai-output-dir.sh`, run from the project folder, before the first plan file of the session is written. Use the printed absolute path. Do not calculate it yourself.
+- The folder is `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<absolute project path>` when there is no remote or no Git repository. Symbolic link paths are kept.
+- If the script exits with an error, show its message to the user and stop. Never write the plan into the project instead.
+- If a sandbox blocks the write, tell the user to allow writes to the root folder (`sh <skill>/scripts/ai-output-dir.sh --root` prints it).
+- Old plans: after `<output>` is resolved, run `sh <skill>/scripts/migrate-ai-output.sh --check plans done`. If it prints a folder, tell the user one time in the session that old RIPER-5 files exist in the project's `.ai/` folder, and offer to migrate them. If the user wants it, run `sh <skill>/scripts/migrate-ai-output.sh plans done` (dry run) and show the result. Run it with `--apply` only after the user explicitly agrees. Never delete files or folders. Migration is allowed in any mode and does not change the mode.
 
 ## CRITICAL PROTOCOL GUIDELINES
 1. You CANNOT transition between modes without my explicit permission
