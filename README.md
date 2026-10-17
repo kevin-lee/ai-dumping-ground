@@ -38,13 +38,24 @@ sh <skill>/scripts/migrate-ai-output.sh plans done            # riper-5, dry run
 sh <skill>/scripts/migrate-ai-output.sh docs/pr               # pr-analysis, dry run
 sh <skill>/scripts/migrate-ai-output.sh video                 # gen-motion-graphics, dry run
 sh <skill>/scripts/migrate-ai-output.sh --from "$PWD" video   # gen-motion-graphics, old ./video outside Git
+sh <skill>/scripts/migrate-ai-output.sh --all                 # everything in .ai/, dry run
 ```
 
-Without an option, the script only shows what it would do. Add `--apply` to move the files. It never deletes and never overwrites a file. A file whose destination exists stays in place and is reported. Other content, for example `.ai/examples`, is not touched. At the end it lists what is left, so you can decide what to do with it.
+Without an option, the script only shows what it would do. Add `--apply` to move the files. It never deletes and never overwrites a file. A file whose destination exists stays in place and is reported. With item names, other content, for example `.ai/examples`, is not touched. `--all` moves every entry in `.ai/`, files at the top level included. At the end it lists what is left, so you can decide what to do with it.
+
+### centralize-ai-output
+
+The `centralize-ai-output` skill moves a whole project to the central folder and makes agents use it by default. Run `/centralize-ai-output` in the project. It shows the state, then offers these steps. Each step starts with a dry run and changes something only after you agree.
+
+- `migrate`: move everything in `.ai/` to the output folder (`migrate-ai-output.sh --all`).
+- `link`: replace the empty `.ai/` with a symbolic link to the output folder (`link-ai-folder.sh`). Then any agent or tool that writes `.ai/...` writes into the output folder. This step removes only `.DS_Store` files and empty folders, and it refuses when other files are still in `.ai/`.
+- `install-rule`: add a rule that tells agents to write their outputs into the output folder unless you name another location (`install-rule.sh`). For Claude it writes `~/.claude/rules/Centralize-AI-Output.md`. For Codex and Gemini it adds a marked block to `~/.codex/AGENTS.md` and `~/.gemini/GEMINI.md`, with a backup of each changed file. For Cursor it prints the text to paste into Cursor Settings > Rules > User Rules.
+
+A gitignore pattern `.ai/` matches only a folder, so Git does not ignore the `.ai` symbolic link. Use `.ai` (no slash) in your global gitignore or in the project's `.gitignore`. The `link` step warns when `.ai` is not ignored.
 
 ### Tests
 
-[test-ai-output-scripts.sh](scripts/skills/test-ai-output-scripts.sh) runs `ai-output-dir.sh` and `migrate-ai-output.sh` against throwaway Git repositories and folders in a temporary folder and checks the results. It also checks that the copies in the three skills are identical. It never touches your real output folder. It needs `bash` and `git`, and no network access.
+[test-ai-output-scripts.sh](scripts/skills/test-ai-output-scripts.sh) runs `ai-output-dir.sh` and `migrate-ai-output.sh` against throwaway Git repositories and folders in a temporary folder and checks the results. It also tests `link-ai-folder.sh` and `install-rule.sh`, and checks that the copies in the four skills are identical. It never touches your real output folder. It needs `bash` and `git`, and no network access.
 
 ```
 bash scripts/skills/test-ai-output-scripts.sh

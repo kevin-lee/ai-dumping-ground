@@ -4,16 +4,19 @@
 #
 # Usage:
 #   sh migrate-ai-output.sh [--check | --apply] [--from <legacy folder>] <item>...
+#   sh migrate-ai-output.sh [--check | --apply] [--from <legacy folder>] --all
 #
-#   <item>        a subfolder of the legacy folder, for example plans, done, docs/pr or video
+#   <item>        a subfolder or a file of the legacy folder, for example plans, done, docs/pr or video
+#   --all         every entry directly inside the legacy folder, except .DS_Store
 #   --from <dir>  the legacy folder. Default: <repository root>/.ai in a Git repository, else ./.ai
 #   no option     dry run. Print what would move and change nothing
-#   --check       print each item folder that has files to move. Change nothing
+#   --check       print each item that has files to move. Change nothing
 #   --apply       move the files
 #
 # The script never deletes a file or a folder, and never overwrites a file. A file whose destination exists stays in
 # place: "same" when the two files are identical, "conflict" when they are different. .DS_Store files are ignored.
 # Content outside the given items, for example .ai/examples, is never touched.
+# When the legacy folder is already a symbolic link to the output folder, there is nothing to migrate.
 # File names that contain a newline are not supported.
 #
 # Exit codes: 0 success (with --check: there are files to move), 1 nothing to move (--check only) or a move failed,
@@ -42,8 +45,9 @@ phys_of() { # folder. Prints its path with every symbolic link resolved.
 
 HERE=$(cd -- "$(dirname -- "$0")" && pwd) || exit 1
 
-usage="usage: sh $me [--check | --apply] [--from <legacy folder>] <item>..."
+usage="usage: sh $me [--check | --apply] [--from <legacy folder>] (<item>... | --all)"
 mode=dry
+all=false
 from=
 from_given=false
 items=
@@ -54,6 +58,8 @@ while [ $# -gt 0 ]; do
     --check | --apply)
       [ "$mode" = dry ] || die 2 "--check and --apply cannot be used together. $usage"
       mode=${1#--} ;;
+    --all)
+      all=true ;;
     --from)
       [ $# -ge 2 ] || die 2 "$usage"
       from=$2
@@ -73,7 +79,11 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-[ -n "$items" ] || die 2 "$usage"
+if $all; then
+  [ -z "$items" ] || die 2 "--all cannot be used with items. $usage"
+else
+  [ -n "$items" ] || die 2 "$usage"
+fi
 
 if $from_given; then
   [ -d "$from" ] || die 2 "--from is not a folder: $from"
@@ -105,6 +115,30 @@ fi
 dest=$(sh "$HERE/ai-output-dir.sh" --print-only) || exit $?
 dest_phys=$(phys_of "$dest") || dest_phys=
 
+# The legacy folder is already a symbolic link to the output folder.
+from_phys=$(phys_of "$from") || from_phys=
+if [ -n "$from_phys" ] && [ "$from_phys" = "$dest_phys" ]; then
+  [ "$mode" = check ] && exit 1
+  printf '%s is already linked to %s. Nothing to migrate.\n' "$from" "$dest"
+  exit 0
+fi
+
+if $all; then
+  if [ -d "$from" ]; then
+    entries=$(find "$from" -mindepth 1 -maxdepth 1 ! -name .DS_Store 2>/dev/null | LC_ALL=C sort)
+    old_ifs=$IFS
+    IFS=$nl
+    set -f
+    for e in $entries; do items=$items${e##*/}$nl; done
+    IFS=$old_ifs
+  fi
+  if [ -z "$items" ]; then
+    [ "$mode" = check ] && exit 1
+    printf 'nothing to migrate: %s\n' "$from"
+    exit 0
+  fi
+fi
+
 old_ifs=$IFS
 set -f
 IFS=$nl
@@ -132,7 +166,10 @@ if [ "$mode" = check ]; then
   IFS=$nl
   for item in $items; do
     src=$from/$item
-    if [ -d "$src" ] && [ ! -L "$src" ] && [ -n "$(list_files "$src")" ]; then
+    if [ -L "$src" ] || [ -f "$src" ]; then
+      printf '%s\n' "$src"
+      any=true
+    elif [ -d "$src" ] && [ -n "$(list_files "$src")" ]; then
       printf '%s\n' "$src"
       any=true
     fi
@@ -153,15 +190,20 @@ failures=0
 IFS=$nl
 for item in $items; do
   src=$from/$item
-  [ -d "$src" ] || continue
-  if [ -L "$src" ]; then
-    printf 'skip %s (symbolic link)\n' "$src"
+  # A file or a symbolic link item moves as one entry.
+  if [ -L "$src" ] || [ -f "$src" ]; then
+    files=$src
+  elif [ -d "$src" ]; then
+    files=$(list_files "$src")
+  else
     continue
   fi
-  files=$(list_files "$src")
   for f in $files; do
-    rel=${f#"$src"/}
-    dst=$dest/$item/$rel
+    if [ "$f" = "$src" ]; then
+      dst=$dest/$item
+    else
+      dst=$dest/$item/${f#"$src"/}
+    fi
     if [ -e "$dst" ] || [ -L "$dst" ]; then
       if [ -f "$f" ] && [ -f "$dst" ] && cmp -s "$f" "$dst"; then
         printf 'same %s (identical file exists: %s)\n' "$f" "$dst"

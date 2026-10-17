@@ -18,6 +18,7 @@ set -u
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO=$(cd "$HERE/../.." && pwd)
 S="$REPO/skills/riper-5/scripts"
+C="$REPO/skills/centralize-ai-output/scripts"
 SH_UNDER_TEST="${SH_UNDER_TEST:-/bin/sh}"
 
 # Color only for a terminal. NO_COLOR turns it off, FORCE_COLOR turns it on for a pipe or a file.
@@ -76,6 +77,14 @@ run() {
     "$SH_UNDER_TEST" "$S/$script" ${1+"$@"} >"$WORK/out" 2>"$WORK/err"; echo $? >"$WORK/rc")
 }
 
+# Runs a centralize-ai-output script: the same arguments as run.
+runc() {
+  local saved="$S"
+  S="$C"
+  run "$@"
+  S="$saved"
+}
+
 out() { cat "$WORK/out"; }
 rc() { cat "$WORK/rc"; }
 
@@ -115,14 +124,19 @@ echo "${DIM}Work folder: $WORK${RESET}"
 
 # 1. Copies
 for f in ai-output-dir.sh migrate-ai-output.sh; do
-  for s in pr-analysis gen-motion-graphics; do
+  for s in pr-analysis gen-motion-graphics centralize-ai-output; do
     cmp -s "$REPO/skills/riper-5/scripts/$f" "$REPO/skills/$s/scripts/$f"
     check "copy: skills/$s/scripts/$f is identical to the riper-5 copy" $?
   done
-  for s in riper-5 pr-analysis gen-motion-graphics; do
+  for s in riper-5 pr-analysis gen-motion-graphics centralize-ai-output; do
     [ -x "$REPO/skills/$s/scripts/$f" ]
     check "copy: skills/$s/scripts/$f is executable" $?
   done
+done
+
+for f in link-ai-folder.sh install-rule.sh; do
+  [ -x "$C/$f" ]
+  check "copy: skills/centralize-ai-output/scripts/$f is executable" $?
 done
 
 # 2. Root
@@ -359,6 +373,150 @@ check "migrate: --check with --apply exits 2" $?
 run "$WORK/mig2" migrate-ai-output.sh
 [ "$(rc)" = 2 ]
 check "migrate: no item exits 2" $?
+
+# 11. Migration of everything
+mkrepo all https://github.com/o/all
+DA="$R/github.com/o/all"
+mkdir -p "$WORK/all/.ai/plans/2026-10" "$WORK/all/.ai/examples"
+echo p > "$WORK/all/.ai/plans/2026-10/p.md"
+echo x > "$WORK/all/.ai/examples/x.html"
+echo n > "$WORK/all/.ai/notes.md"
+echo ds > "$WORK/all/.ai/.DS_Store"
+run "$WORK/all" migrate-ai-output.sh --check --all
+[ "$(rc)" = 0 ] && [ "$(out)" = "$WORK/all/.ai/examples
+$WORK/all/.ai/notes.md
+$WORK/all/.ai/plans" ]
+check "migrate --all: --check lists every entry, the top-level file too" $?
+before_src=$(snap "$WORK/all"); before_dst=$(snap "$R")
+run "$WORK/all" migrate-ai-output.sh --all
+[ "$(rc)" = 0 ] && [ "$before_src" = "$(snap "$WORK/all")" ] && [ "$before_dst" = "$(snap "$R")" ] &&
+  grep -qxF "move $WORK/all/.ai/notes.md -> $DA/notes.md" "$WORK/out"
+check "migrate --all: a dry run changes nothing and lists the top-level file" $?
+run "$WORK/all" migrate-ai-output.sh --apply --all
+[ "$(rc)" = 0 ] && [ -f "$DA/plans/2026-10/p.md" ] && [ -f "$DA/examples/x.html" ] && [ -f "$DA/notes.md" ] &&
+  [ ! -e "$WORK/all/.ai/notes.md" ]
+check "migrate --all: --apply moves every entry" $?
+[ -f "$WORK/all/.ai/.DS_Store" ] && [ -d "$WORK/all/.ai/plans/2026-10" ] && [ ! -e "$DA/.DS_Store" ]
+check "migrate --all: .DS_Store and the empty folders stay" $?
+run "$WORK/all" migrate-ai-output.sh --all plans
+[ "$(rc)" = 2 ]
+check "migrate --all: --all with an item exits 2" $?
+mkrepo all-none https://github.com/o/all-none
+run "$WORK/all-none" migrate-ai-output.sh --check --all
+[ "$(rc)" = 1 ] && [ -z "$(out)" ]
+check "migrate --all: --check without .ai exits 1" $?
+run "$WORK/all-none" migrate-ai-output.sh --apply --all
+[ "$(rc)" = 0 ] && grep -q '^nothing to migrate: ' "$WORK/out" && [ ! -e "$R/github.com/o/all-none" ]
+check "migrate --all: --apply without .ai has nothing to migrate and creates nothing" $?
+
+# 12. Link
+runc "$WORK/all" link-ai-folder.sh
+[ "$(rc)" = 0 ] && grep -qxF "remove $WORK/all/.ai/.DS_Store" "$WORK/out" &&
+  grep -qxF "rmdir $WORK/all/.ai/plans/2026-10" "$WORK/out" && grep -qxF "link $WORK/all/.ai -> $DA" "$WORK/out" &&
+  [ -d "$WORK/all/.ai" ] && [ ! -L "$WORK/all/.ai" ]
+check "link: a dry run lists the .DS_Store files and the empty folders, and changes nothing" $?
+runc "$WORK/all" link-ai-folder.sh --apply
+[ "$(rc)" = 0 ] && [ -L "$WORK/all/.ai" ] && [ "$(readlink "$WORK/all/.ai")" = "$DA" ] && [ -f "$DA/notes.md" ]
+check "link: --apply removes them and links .ai to the output folder" $?
+runc "$WORK/all" link-ai-folder.sh
+[ "$(rc)" = 0 ] && grep -qxF "already linked: $WORK/all/.ai -> $DA" "$WORK/out"
+check "link: a second run reports already linked" $?
+run "$WORK/all" migrate-ai-output.sh --check --all
+[ "$(rc)" = 1 ]
+check "migrate: --check on a linked .ai exits 1" $?
+run "$WORK/all" migrate-ai-output.sh --all
+[ "$(rc)" = 0 ] && grep -q 'is already linked to' "$WORK/out"
+check "migrate: a dry run on a linked .ai has nothing to migrate" $?
+
+mkrepo lfiles https://github.com/o/lfiles
+mkdir -p "$WORK/lfiles/.ai/plans"
+echo k > "$WORK/lfiles/.ai/plans/keep.md"
+runc "$WORK/lfiles" link-ai-folder.sh --apply
+[ "$(rc)" = 4 ] && [ -f "$WORK/lfiles/.ai/plans/keep.md" ] && [ ! -L "$WORK/lfiles/.ai" ] && grep -q keep.md "$WORK/err"
+check "link: files in .ai exit 4 and nothing changes" $?
+
+mkrepo labsent https://github.com/o/labsent
+runc "$WORK/labsent" link-ai-folder.sh --apply
+[ "$(rc)" = 0 ] && [ "$(readlink "$WORK/labsent/.ai")" = "$R/github.com/o/labsent" ] && [ -d "$R/github.com/o/labsent" ]
+check "link: without .ai, --apply creates the link" $?
+
+mkrepo ltracked https://github.com/o/ltracked
+mkdir -p "$WORK/ltracked/.ai"
+: > "$WORK/ltracked/.ai/.DS_Store"
+g "$WORK/ltracked" add -f .ai/.DS_Store
+runc "$WORK/ltracked" link-ai-folder.sh --apply
+[ "$(rc)" = 4 ] && [ ! -L "$WORK/ltracked/.ai" ]
+check "link: a .ai tracked by Git exits 4" $?
+
+mkrepo lother https://github.com/o/lother
+mkdir -p "$WORK/elsewhere"
+ln -s "$WORK/elsewhere" "$WORK/lother/.ai"
+runc "$WORK/lother" link-ai-folder.sh --apply
+[ "$(rc)" = 4 ] && [ "$(readlink "$WORK/lother/.ai")" = "$WORK/elsewhere" ]
+check "link: a link to another place exits 4 and stays" $?
+
+mkrepo lslash https://github.com/o/lslash
+printf '.ai/\n' > "$WORK/lslash/.gitignore"
+runc "$WORK/lslash" link-ai-folder.sh --apply
+[ "$(rc)" = 0 ] && grep -q '^warning: .ai is not ignored by Git' "$WORK/out"
+check "link: a .ai/ gitignore pattern gives the warning" $?
+mkrepo lnoslash https://github.com/o/lnoslash
+printf '.ai\n' > "$WORK/lnoslash/.gitignore"
+runc "$WORK/lnoslash" link-ai-folder.sh --apply
+[ "$(rc)" = 0 ] && ! grep -q '^warning:' "$WORK/out"
+check "link: a .ai gitignore pattern gives no warning" $?
+
+# 13. Install the rule
+IH="$WORK/rule-home"
+mkdir -p "$IH/claude" "$IH/codex"
+printf 'old line 1\nold line 2' > "$IH/codex/AGENTS.md"
+RULE_ENV=(HOME="$IH" CLAUDE_CONFIG_DIR="$IH/claude" CODEX_HOME="$IH/codex")
+runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh --print
+grep -qF "sh $C/ai-output-dir.sh" "$WORK/out" && ! grep -qF '{{SCRIPT}}' "$WORK/out"
+check "rule: --print has the absolute script path and no placeholder" $?
+before=$(snap "$IH")
+runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh
+[ "$(rc)" = 0 ] && [ "$before" = "$(snap "$IH")" ] &&
+  grep -qxF "create $IH/claude/rules/Centralize-AI-Output.md" "$WORK/out" &&
+  grep -qxF "update $IH/codex/AGENTS.md" "$WORK/out" && ! grep -q 'gemini' "$WORK/out" &&
+  grep -q '^Cursor: ' "$WORK/out"
+check "rule: a dry run lists the targets with a folder, skips gemini, and changes nothing" $?
+runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh --target gemini
+grep -qxF "skip gemini (no folder $IH/.gemini)" "$WORK/out"
+check "rule: a named target without its folder is skipped" $?
+runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh --apply
+[ "$(rc)" = 0 ] && grep -qxF '# Centralize AI Output' "$IH/claude/rules/Centralize-AI-Output.md" &&
+  [ "$(head -n 2 "$IH/codex/AGENTS.md")" = "old line 1
+old line 2" ] && [ "$(grep -cxF '<!-- centralize-ai-output:start -->' "$IH/codex/AGENTS.md")" = 1 ] &&
+  [ "$(find "$IH/codex" -name 'AGENTS.md.bak.*' | wc -l | tr -d ' ')" = 1 ]
+check "rule: --apply writes the rule file and adds one block, and keeps the old lines with a backup" $?
+runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh --apply
+[ "$(rc)" = 0 ] && grep -qxF "unchanged $IH/codex/AGENTS.md" "$WORK/out" &&
+  grep -qxF "unchanged $IH/claude/rules/Centralize-AI-Output.md" "$WORK/out" &&
+  [ "$(find "$IH" -name '*.bak.*' | wc -l | tr -d ' ')" = 1 ]
+check "rule: a second --apply changes nothing and makes no backup" $?
+sed 's/^# Centralize AI Output$/# Old title/' "$IH/codex/AGENTS.md" > "$WORK/agents.tmp" && cat "$WORK/agents.tmp" > "$IH/codex/AGENTS.md"
+printf 'last line\n' >> "$IH/codex/AGENTS.md"
+runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh --apply --target codex
+[ "$(rc)" = 0 ] && [ "$(grep -cxF '<!-- centralize-ai-output:start -->' "$IH/codex/AGENTS.md")" = 1 ] &&
+  ! grep -qxF '# Old title' "$IH/codex/AGENTS.md" && grep -qxF 'last line' "$IH/codex/AGENTS.md" &&
+  [ "$(find "$IH/codex" -name 'AGENTS.md.bak.*' | wc -l | tr -d ' ')" -ge 2 ]
+check "rule: a changed block is replaced, the content after it stays, and a backup is made" $?
+mkdir -p "$IH/real" "$IH/codex2"
+printf 'linked file\n' > "$IH/real/AGENTS.md"
+ln -s "$IH/real/AGENTS.md" "$IH/codex2/AGENTS.md"
+runc "$WORK/plain" HOME="$IH" CODEX_HOME="$IH/codex2" install-rule.sh --apply --target codex
+[ "$(rc)" = 0 ] && [ -L "$IH/codex2/AGENTS.md" ] && grep -qxF '<!-- centralize-ai-output:end -->' "$IH/real/AGENTS.md"
+check "rule: a symbolic link AGENTS.md stays a link, and its file gets the block" $?
+mkdir -p "$IH/codex3"
+printf 'x\n<!-- centralize-ai-output:start -->\nno end\n' > "$IH/codex3/AGENTS.md"
+cp "$IH/codex3/AGENTS.md" "$WORK/broken.md"
+runc "$WORK/plain" HOME="$IH" CODEX_HOME="$IH/codex3" install-rule.sh --apply --target codex
+[ "$(rc)" = 1 ] && cmp -s "$WORK/broken.md" "$IH/codex3/AGENTS.md"
+check "rule: broken markers exit 1 and change nothing" $?
+runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh --target cursor
+[ "$(rc)" = 2 ]
+check "rule: --target cursor exits 2" $?
 
 echo
 if [ "$FAILS" -eq 0 ]; then SUMMARY_COLOR="$GREEN"; else SUMMARY_COLOR="$RED"; fi
