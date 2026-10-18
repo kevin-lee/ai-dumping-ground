@@ -8,7 +8,7 @@ aiskills install kevin-lee/ai-dumping-ground
 
 ## Skill output folder
 
-`riper-5`, `pr-analysis` and `gen-motion-graphics` write their outputs to one central folder, `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project>/`, not into the project. Thus the outputs of all projects are in one location, and they cannot be committed by accident.
+`riper-5` and `pr-analysis` write their outputs to one central folder, `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project>/`, not into the project, and `gen-motion-graphics` can write there too. Thus the outputs of all projects are in one location, and they cannot be committed by accident.
 
 `gen-motion-graphics` asks at the start whether to store a video in the current folder, in the central folder (with its exact path) or in another folder.
 

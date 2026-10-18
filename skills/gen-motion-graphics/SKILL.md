@@ -38,7 +38,7 @@ With no argument, call `AskUserQuestion` once with two questions. The first is "
 
 The second is the location question in "Where files go". If the user picks "Help", ignore the second answer.
 
-When a required file is missing, ask for its path. Offer any candidates found under `<output>/video/*/sources/`, and also under the old project folders `.ai/video/*/sources/` and `video/*/sources/` (newest first), and let the user type a path as "Other".
+When a required file is missing, ask for its path. Offer any candidates found under `<base>/*/sources/` when `<base>` is already chosen, else under `./video/*/sources/`, `<output>/video/*/sources/` and `.ai/video/*/sources/` (newest first), and let the user type a path as "Other".
 
 ## Modes
 
