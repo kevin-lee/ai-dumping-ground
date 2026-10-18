@@ -8,7 +8,7 @@ aiskills install kevin-lee/ai-dumping-ground
 
 ## Skill output folder
 
-`riper-5` and `pr-analysis` write their outputs to one central folder, `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project>/`, not into the project, and `gen-motion-graphics` can write there too. Thus the outputs of all projects are in one location, and they cannot be committed by accident.
+`riper-5` and `pr-analysis` write their outputs to one central folder, `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project>/`, not into the project, and `gen-motion-graphics` can write there too. Outputs in the central folder are in one location for all projects, and they cannot be committed by accident.
 
 `gen-motion-graphics` asks at the start whether to store a video in the current folder, in the central folder (with its exact path) or in another folder.
 
@@ -33,7 +33,7 @@ Layout:
 
 ### Migration from the old `.ai/` folder
 
-Before this change, the skills wrote to `.ai/` in each project. When a skill finds old outputs there, it offers to move them. You can also run the migration yourself from the project folder, with `<skill>` as the installed skill folder:
+Before this change, the skills wrote to `.ai/` in each project. When `riper-5` or `pr-analysis` finds old outputs there, it offers to move them. `gen-motion-graphics` does not, because it can also store videos in the project. You can also run the migration yourself from the project folder, with `<skill>` as the installed skill folder:
 
 ```
 sh <skill>/scripts/migrate-ai-output.sh plans done            # riper-5, dry run
