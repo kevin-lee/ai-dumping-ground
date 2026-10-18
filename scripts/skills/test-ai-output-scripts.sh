@@ -114,6 +114,14 @@ has_line() { # file, line
   grep -qxF -e "$2" "$1" 2>/dev/null
 }
 
+lkey() { # absolute path. Prints the expected local key: local/<name>-<hash>
+  local n="${1##*/}" c
+  while [[ "$n" == .* ]]; do n="${n#.}"; done
+  [ -n "$n" ] || n=root
+  c=$(printf '%s' "$1" | cksum)
+  printf 'local/%s-%08x\n' "$n" "${c%% *}"
+}
+
 if ! command -v git >/dev/null 2>&1; then
   echo "${ERR_RED}error: git is required${ERR_RESET}" >&2
   exit 1
@@ -170,7 +178,7 @@ run "$WORK/plain" "AI_AGENT_OUTPUT_DIR=$WORK/abs/x//" ai-output-dir.sh --root
 check "root: trailing slashes are removed" $?
 
 run "$WORK/plain" 'AI_AGENT_OUTPUT_DIR=~/x' ai-output-dir.sh
-[ "$(rc)" = 0 ] && [ -d "$H/x/local$WORK/plain" ] && [ ! -e "$WORK/plain/~" ]
+[ "$(rc)" = 0 ] && [ -d "$H/x/$(lkey "$WORK/plain")" ] && [ ! -e "$WORK/plain/~" ]
 check "root: ~/x creates the folder under \$HOME, not a ~ folder" $?
 
 run "$WORK/plain" AI_AGENT_OUTPUT_DIR=x ai-output-dir.sh
@@ -196,9 +204,9 @@ expect_key r-scp 'git@github.com:Kevin-Lee/Repo.git' github.com/kevin-lee/repo
 expect_key r-https 'https://github.com/o/r.git' github.com/o/r
 expect_key r-ssh-port 'ssh://git@host.example:2222/o/r.git' host.example/o/r
 expect_key r-nested 'https://gitlab.example/group/sub/r.git/' gitlab.example/group/sub/r
-expect_key r-file 'file:///srv/r.git' "local$WORK/r-file"
-expect_key r-abs '/srv/r.git' "local$WORK/r-abs"
-expect_key r-rel '../r' "local$WORK/r-rel"
+expect_key r-file 'file:///srv/r.git' "$(lkey "$WORK/r-file")"
+expect_key r-abs '/srv/r.git' "$(lkey "$WORK/r-abs")"
+expect_key r-rel '../r' "$(lkey "$WORK/r-rel")"
 
 mkrepo r-cred 'https://user:secret-token@github.com/o/cred'
 run "$WORK/r-cred" ai-output-dir.sh
@@ -226,25 +234,25 @@ check "remote choice: without origin, alpha wins over beta" $?
 mkrepo norem
 mkdir -p "$WORK/norem/sub/deep"
 run "$WORK/norem" ai-output-dir.sh --print-only
-[ "$(out)" = "$R/local$WORK/norem" ]
-check "no remote: local/<repository root>" $?
+[ "$(out)" = "$R/$(lkey "$WORK/norem")" ]
+check "no remote: local/<name>-<hash> of the repository root" $?
 run "$WORK/norem/sub/deep" ai-output-dir.sh --print-only
-[ "$(out)" = "$R/local$WORK/norem" ]
+[ "$(out)" = "$R/$(lkey "$WORK/norem")" ]
 check "no remote: the same folder from a subfolder" $?
 
 # 6. Symbolic links
 ln -s "$WORK/norem" "$WORK/link-norem"
 run "$WORK/link-norem/sub" ai-output-dir.sh
-[ "$(rc)" = 0 ] && [ "$(out)" = "$R/local$WORK/link-norem" ]
+[ "$(rc)" = 0 ] && [ "$(out)" = "$R/$(lkey "$WORK/link-norem")" ]
 check "symlink: a repository opened through a symbolic link keeps the link path" $?
-has_line "$R/local$WORK/link-norem/.project-info" "path=$WORK/link-norem" &&
-  has_line "$R/local$WORK/link-norem/.project-info" "canonical=$WORK/norem"
+has_line "$R/$(lkey "$WORK/link-norem")/.project-info" "path=$WORK/link-norem" &&
+  has_line "$R/$(lkey "$WORK/link-norem")/.project-info" "canonical=$WORK/norem"
 check "symlink: .project-info has the link path and the canonical path" $?
 
 ln -s "$WORK/plain" "$WORK/link-plain"
 run "$WORK/link-plain" ai-output-dir.sh
-[ "$(out)" = "$R/local$WORK/link-plain" ] &&
-  has_line "$R/local$WORK/link-plain/.project-info" "canonical=$WORK/plain"
+[ "$(out)" = "$R/$(lkey "$WORK/link-plain")" ] &&
+  has_line "$R/$(lkey "$WORK/link-plain")/.project-info" "canonical=$WORK/plain"
 check "symlink: a non-Git folder keeps the link path" $?
 
 # 7. Worktrees
@@ -265,14 +273,16 @@ ln -s "$WORK/wtn" "$WORK/link-wtn"
 g "$WORK/wtn" worktree add -q "$WORK/wtn-wt"
 if [ -d "$WORK/wtn-wt" ]; then
   run "$WORK/wtn-wt" ai-output-dir.sh --print-only
-  [ "$(out)" = "$R/local$WORK/wtn" ]
-  check "worktree: without a remote and without a prior run, local/<canonical main path>" $?
+  [ "$(out)" = "$R/$(lkey "$WORK/wtn")" ]
+  check "worktree: without a remote and without a prior run, local/<name>-<hash> of the canonical main path" $?
   run "$WORK/link-wtn" ai-output-dir.sh
-  [ "$(out)" = "$R/local$WORK/link-wtn" ]
+  [ "$(out)" = "$R/$(lkey "$WORK/link-wtn")" ]
   check "worktree: the main worktree through a symbolic link keeps the link path" $?
   run "$WORK/wtn-wt" ai-output-dir.sh
-  [ "$(out)" = "$R/local$WORK/link-wtn" ]
+  [ "$(out)" = "$R/$(lkey "$WORK/link-wtn")" ]
   check "worktree: without a remote, the linked worktree finds the main worktree folder" $?
+  [[ "$(out)" != *wtn-wt* ]]
+  check "worktree: a linked worktree does not get its own folder" $?
 else
   skip "worktree: linked worktrees without a remote" "git worktree add failed"
 fi
@@ -280,8 +290,44 @@ fi
 # 8. Not Git
 mkdir -p "$WORK/notgit"
 run "$WORK/notgit" ai-output-dir.sh --print-only
-[ "$(out)" = "$R/local$WORK/notgit" ]
-check "not Git: local/<folder>" $?
+[ "$(out)" = "$R/$(lkey "$WORK/notgit")" ]
+check "not Git: local/<name>-<hash> of the folder" $?
+
+[ "$(lkey /Users/me/work/notes)" = local/notes-995faa70 ]
+check "local key: /Users/me/work/notes gives local/notes-995faa70" $?
+
+mkdir -p "$WORK/deep/a/b/c/proj"
+run "$WORK/deep/a/b/c/proj" ai-output-dir.sh --print-only
+[ "$(out)" = "$R/$(lkey "$WORK/deep/a/b/c/proj")" ] && [[ "$(out)" != "$R/local/"*/* ]]
+check "not Git: a deep path gives one folder level under local/" $?
+
+mkdir -p "$WORK/p1/same" "$WORK/p2/same"
+run "$WORK/p1/same" ai-output-dir.sh --print-only
+SAME1=$(out)
+run "$WORK/p2/same" ai-output-dir.sh --print-only
+SAME2=$(out)
+[[ "$SAME1" == "$R/local/same-"* ]] && [[ "$SAME2" == "$R/local/same-"* ]] && [ "$SAME1" != "$SAME2" ]
+check "not Git: two folders with the same name get different folders" $?
+
+mkdir -p "$WORK/.dotproj"
+run "$WORK/.dotproj" ai-output-dir.sh --print-only
+[ "$(out)" = "$R/$(lkey "$WORK/.dotproj")" ] && [[ "$(out)" == "$R/local/dotproj-"* ]]
+check "not Git: leading dots are removed from the name" $?
+
+if [ "$(git -C / rev-parse --is-inside-work-tree 2>/dev/null)" != true ]; then
+  run / ai-output-dir.sh --print-only
+  [ "$(out)" = "$R/local/root-661ae946" ]
+  check "not Git: / gives local/root-<hash>" $?
+else
+  skip "not Git: / gives local/root-<hash>" "/ is inside a Git work tree"
+fi
+
+mkdir -p "$WORK/badbin" "$WORK/notgit2"
+printf '#!/bin/sh\nexit 1\n' > "$WORK/badbin/cksum"
+chmod +x "$WORK/badbin/cksum"
+run "$WORK/notgit2" "PATH=$WORK/badbin:$PATH" ai-output-dir.sh
+[ "$(rc)" = 1 ] && [ -s "$WORK/err" ] && [ -z "$(out)" ] && [ ! -e "$R/.project-info" ]
+check "not Git: a failed cksum exits 1 and writes nothing" $?
 
 # 9. .project-info
 mkrepo info https://github.com/o/info
@@ -358,7 +404,7 @@ run "$WORK/vid" migrate-ai-output.sh --check --from "$WORK/vid" video
 [ "$(rc)" = 0 ]
 check "migrate: --check --from finds ./video outside Git" $?
 run "$WORK/vid" migrate-ai-output.sh --apply --from "$WORK/vid" video
-[ "$(rc)" = 0 ] && [ -f "$R/local$WORK/vid/video/x/sources/s.txt" ]
+[ "$(rc)" = 0 ] && [ -f "$R/$(lkey "$WORK/vid")/video/x/sources/s.txt" ]
 check "migrate: --apply --from moves ./video outside Git" $?
 
 run "$WORK/mig2" migrate-ai-output.sh /x

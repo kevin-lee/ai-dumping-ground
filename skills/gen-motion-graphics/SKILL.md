@@ -60,7 +60,7 @@ Read the reference for a mode when you enter it, not before:
 
 Each video gets one folder, `<base>/<slug>/`. The user chooses `<base>` once, at the start, and the later modes reuse it.
 
-Get the central folder first: `sh <skill>/scripts/ai-output-dir.sh --print-only` prints `<output>`, the AI output folder of the current project. It is `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<absolute path>` when there is no remote or no Git repository. Do not calculate it yourself. If the script exits with an error, show the message and leave out option 2 below.
+Get the central folder first: `sh <skill>/scripts/ai-output-dir.sh --print-only` prints `<output>`, the AI output folder of the current project. It is `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<folder name>-<hash of the absolute path>` when there is no remote or no Git repository. Do not calculate it yourself. If the script exits with an error, show the message and leave out option 2 below.
 
 Ask "Where should the video files be stored?" with these options, each with the absolute path that it gives:
 

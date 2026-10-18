@@ -90,7 +90,7 @@ Choose `<output>` once per session, before the first file is written:
 
 1. If the user's prompt names a location, use it and do not ask.
 2. Else run `sh <skill>/scripts/ai-output-choices.sh` from the project folder. Do not check the folders yourself. It prints `key=value` lines:
-   - `central` is the central folder, `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<absolute project path>` when there is no remote or no Git repository. `project` is `.ai` in the project root.
+   - `central` is the central folder, `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<project folder name>-<hash of the absolute project path>` when there is no remote or no Git repository. `project` is `.ai` in the project root.
    - `ask=no` means that `.ai` is a symbolic link to the central folder. Use `use` and do not ask.
    - If `central_error` is set, show it to the user. The central folder is not an option then.
 3. Else ask "Where should the RIPER-5 plan files be stored?", with a choice prompt if the agent has one. Show the options in the `order` from the script: `central`, `project` and `other` ("Other": a folder that the user types). Each option shows its absolute path, and says whether the folder exists already (`central_exists`, `project_exists`). Mark the option named by `recommended` with "(Recommended)". When `recommended=none`, mark none. For "Other", expand a leading `~`, a relative path is relative to the current folder, and say the resulting absolute path.

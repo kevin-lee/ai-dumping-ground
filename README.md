@@ -15,7 +15,7 @@ Each skill asks where to store its outputs. `riper-5` and `pr-analysis` offer th
 `<project>` identifies the project:
 
 - In a Git repository with a remote: `<host>/<owner>/<repo>` from the `origin` remote, or from the first remote by name when there is no `origin`. The user, the credentials, the port and the `.git` suffix are removed, and the key is in lowercase. All clones and worktrees of one repository share one folder. For example, `git@github.com:kevin-lee/ai-dumping-ground.git` gives `~/.ai/github.com/kevin-lee/ai-dumping-ground/`.
-- In a Git repository with no remote or with a local-path remote, and outside Git: `local/<absolute path>`. For example, `/Users/me/work/notes` gives `~/.ai/local/Users/me/work/notes/`.
+- In a Git repository with no remote or with a local-path remote, and outside Git: `local/<name>-<hash>`. `<name>` is the folder name without leading dots, and `<hash>` is 8 hexadecimal digits of the `cksum` value of the absolute path, so the folder is one level under `local/`. All worktrees of one repository share one folder. For example, `/Users/me/work/notes` gives `~/.ai/local/notes-995faa70/`. Its `.project-info` file has the full path.
 - A path with a symbolic link keeps the symbolic link, as `$PWD` shows it.
 
 Layout:

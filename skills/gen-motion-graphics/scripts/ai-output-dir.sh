@@ -12,7 +12,9 @@
 #         because settings files do not expand it. A ~user path or a relative path is an error.
 #   key   <host>/<path> of the Git remote (origin, else the first remote by name), without the user, the credentials,
 #         the port and the .git suffix, in lowercase.
-#         local/<absolute path> when there is no remote, when the remote is a local path, or outside a Git repository.
+#         local/<name>-<hash> when there is no remote, when the remote is a local path, or outside a Git repository.
+#         <name> is the last part of the absolute path without leading dots (root for /), and <hash> is the cksum CRC of
+#         the absolute path as 8 lowercase hexadecimal digits. All worktrees of one repository share one folder.
 #         The path keeps symbolic links as $PWD shows them. If the agent starts its shell in the resolved path, $PWD has
 #         no symbolic link to keep, and the resolved path is used.
 #         A linked worktree without a remote uses the folder whose .project-info has canonical=<main worktree path>.
@@ -38,6 +40,20 @@ strip_slashes() { # path. Prints it without trailing slashes. "/" stays "/".
 
 phys_of() { # folder. Prints its path with every symbolic link resolved.
   (cd -P -- "$1" 2>/dev/null && pwd -P)
+}
+
+local_key() { # absolute path. Prints local/<name>-<hash>.
+  l_n=${1##*/}
+  while :; do
+    case $l_n in
+      .*) l_n=${l_n#.} ;;
+      *) break ;;
+    esac
+  done
+  [ -n "$l_n" ] || l_n=root
+  l_c=$(printf '%s' "$1" | cksum) || return 1
+  l_c=${l_c%% *}
+  printf 'local/%s-%08x\n' "$l_n" "$l_c"
 }
 
 normalize_remote() { # remote URL. Prints <host>/<path>, or nothing for a local path.
@@ -194,10 +210,12 @@ if $in_git; then
     out=$base/$rkey
   elif ! $linked; then
     kind=local
-    out=$base/local$top_logical
+    lkey=$(local_key "$top_logical") || die 1 "cannot calculate the local key of $top_logical"
+    out=$base/$lkey
   else
     kind=local
-    out=$base/local$main_canonical
+    lkey=$(local_key "$main_canonical") || die 1 "cannot calculate the local key of $main_canonical"
+    out=$base/$lkey
     if [ -d "$base/local" ]; then
       found=$(find "$base/local" -name .project-info -type f 2>/dev/null | LC_ALL=C sort | while IFS= read -r f; do
         if grep -qxF -e "canonical=$main_canonical" "$f" 2>/dev/null; then
@@ -210,7 +228,8 @@ if $in_git; then
   fi
 else
   kind=local
-  out=$base/local$logical
+  lkey=$(local_key "$logical") || die 1 "cannot calculate the local key of $logical"
+  out=$base/$lkey
   path_line=$logical
   canonical_line=$phys
 fi

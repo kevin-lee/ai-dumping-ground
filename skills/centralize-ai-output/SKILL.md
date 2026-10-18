@@ -12,7 +12,7 @@ AI agents write plans, reports, notes, videos and other outputs. This skill keep
 ## Rules
 
 - The folder is `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project>`. `sh <skill>/scripts/ai-output-dir.sh` prints it. Do not calculate it yourself.
-- `<project>` is `<host>/<owner>/<repo>` of the Git remote (`origin`, else the first remote by name), without the user, the credentials, the port and `.git`, in lowercase. All clones and worktrees of one repository share one folder. Without a remote, or outside Git, it is `local/<absolute path>`, and the path keeps symbolic links.
+- `<project>` is `<host>/<owner>/<repo>` of the Git remote (`origin`, else the first remote by name), without the user, the credentials, the port and `.git`, in lowercase. All clones and worktrees of one repository share one folder. Without a remote, or outside Git, it is `local/<name>-<hash>`: the folder name and 8 hexadecimal digits of the `cksum` value of the absolute path. The path keeps symbolic links, and all worktrees share one folder.
 - `AI_AGENT_OUTPUT_DIR` can be an absolute path, `~`, or a path that starts with `~/`, `$HOME/` or `${HOME}/`.
 - Each project folder has a hidden `.project-info` file with the remote and every path that used the folder.
 - Every step starts with a dry run. Run a step with `--apply` only after the user explicitly agrees to that step. Never delete or overwrite a file, except what the `link` step lists and the user accepts.

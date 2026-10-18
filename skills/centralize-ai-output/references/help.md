@@ -15,9 +15,10 @@ STEPS
 
 OUTPUT FOLDER
   ${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project>
-  <project> is <host>/<owner>/<repo> from the Git remote, or local/<path> when there
-  is no remote or no Git repository. Clones and worktrees of one repository share
-  one folder. Symbolic links in the project path are kept.
+  <project> is <host>/<owner>/<repo> from the Git remote, or local/<name>-<hash>
+  (folder name and a hash of the path) when there is no remote or no Git repository.
+  Clones and worktrees of one repository share one folder. Symbolic links in the
+  project path are kept.
   AI_AGENT_OUTPUT_DIR can be an absolute path, ~, or a path that starts with ~/,
   $HOME/ or ${HOME}/.
 

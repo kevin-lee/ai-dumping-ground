@@ -38,7 +38,7 @@ OUTPUT LOCATION (asked after the intake)
   With a Jira style key      <folder>/docs/pr/ABC-123/pr-<N>-report.html
   With a GitHub issue        <folder>/docs/pr/issue-123/pr-<N>-report.html
   Without a ticket           <folder>/docs/pr/no-ticket/pr-<N>-report.html
-  <project> is <host>/<owner>/<repo> from the Git remote, or local/<path>.
+  <project> is <host>/<owner>/<repo> from the Git remote, or local/<name>-<hash>.
   Set AI_AGENT_OUTPUT_DIR to use a root other than ~/.ai.
   The completion message gives the absolute path and a file:// link.
 

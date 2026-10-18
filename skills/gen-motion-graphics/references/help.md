@@ -69,7 +69,7 @@ At the start, choose where the files go. Each video gets a `<short-summary>` fol
 | Central AI output folder | `~/.ai/<project>/video/<short-summary>/` (the exact path is shown when it asks) |
 | Other | The folder you type |
 
-`<project>` is `<host>/<owner>/<repo>` from the Git remote, or `local/<path>` when there is no remote or no Git repository. Set `AI_AGENT_OUTPUT_DIR` to use a root other than `~/.ai`.
+`<project>` is `<host>/<owner>/<repo>` from the Git remote, or `local/<name>-<hash>` when there is no remote or no Git repository. Set `AI_AGENT_OUTPUT_DIR` to use a root other than `~/.ai`.
 
 Name a folder in your prompt to use it instead.
 
