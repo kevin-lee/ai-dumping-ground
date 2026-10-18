@@ -27,12 +27,16 @@ The text after `/gen-motion-graphics` selects the starting point. A shorthand wo
 
 A message that says "ENTER SCRIPT MODE" (or AUDIO, VIDEO) also starts the skill, in that mode.
 
-With no argument, call `AskUserQuestion` once with one question, "How do you want to start?", and these options:
+With an argument or a mode phrase, ask the location question alone, before the first file is written, unless "Where files go" says to skip it.
+
+With no argument, call `AskUserQuestion` once with two questions. The first is "How do you want to start?" with these options:
 
 1. "Write a script (SCRIPT MODE)": a narration from a topic and a target duration.
 2. "I have a script": the user gives a text file, then AUDIO MODE.
 3. "I have an audio file": the user gives an audio file (and optionally its script), then VIDEO MODE.
 4. "Help": reply with the help text as for `help` above, and stop.
+
+The second is the location question in "Where files go". If the user picks "Help", ignore the second answer.
 
 When a required file is missing, ask for its path. Offer any candidates found under `<output>/video/*/sources/`, and also under the old project folders `.ai/video/*/sources/` and `video/*/sources/` (newest first), and let the user type a path as "Other".
 
@@ -54,12 +58,24 @@ Read the reference for a mode when you enter it, not before:
 
 ## Where files go
 
-Each video gets one folder, decided by the first mode that writes a file and reused by the later modes:
+Each video gets one folder, `<base>/<slug>/`. The user chooses `<base>` once, at the start, and the later modes reuse it.
 
-- `<output>/video/<slug>/`, where `<output>` is the AI output folder that `sh <skill>/scripts/ai-output-dir.sh` prints when run from the current folder. It is `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<absolute path>` when there is no remote or no Git repository. Do not calculate it yourself. If the script exits with an error, show the message and stop. If a sandbox blocks the write, tell the user to allow writes to the root folder (`sh <skill>/scripts/ai-output-dir.sh --root` prints it).
-- If the user names a location, it replaces that folder and keeps the same layout inside.
+Get the central folder first: `sh <skill>/scripts/ai-output-dir.sh --print-only` prints `<output>`, the AI output folder of the current project. It is `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<absolute path>` when there is no remote or no Git repository. Do not calculate it yourself. If the script exits with an error, show the message and leave out option 2 below.
 
-Old videos: when the first mode is about to write a file, run `sh <skill>/scripts/migrate-ai-output.sh --check video`, and outside a Git repository also `sh <skill>/scripts/migrate-ai-output.sh --check --from "$PWD" video`. If one prints a folder, tell the user one time that old videos exist in the project, and offer migration. A dry run is the same command without `--check`. Run it with `--apply` only after the user explicitly agrees. Never delete files or folders.
+Ask "Where should the video files be stored?" with these options, each with the absolute path that it gives:
+
+1. "Current folder": `<base>` is `<absolute current folder>/video`. In a Git repository, add to the description that the files can be committed by accident unless `video/` is ignored.
+2. "Central AI output folder": `<base>` is `<output>/video`. Show the full path, for example `/Users/me/.ai/github.com/owner/repo/video/<slug>/`, and say that `<slug>` comes from the video's content.
+3. "Other": the user types a folder. `<base>` is that folder. Expand a leading `~`. A relative path is relative to the current folder. Say the resulting absolute path.
+
+Do not ask, and tell the user which folder is used, when:
+
+- The user's prompt names a location. That location is `<base>`.
+- An input file is inside an existing video folder (a folder with `sources/` and `output/`, under a folder named `video`). Use that video folder again.
+
+Ask again only if the user asks to change the location. When the first file is written for the central folder, run `sh <skill>/scripts/ai-output-dir.sh` once to create it. If a sandbox blocks a write, tell the user to allow writes to that folder (`sh <skill>/scripts/ai-output-dir.sh --root` prints the central root).
+
+Video folders in the project are an expected place, not old files. Never offer to move them to the central folder.
 
 `<slug>` is a short kebab-case summary of the video's content, for example `ai-skills-intro` or `sourdough-basics-explainer`. When starting from an audio file without a script, transcribe it first (VIDEO MODE does this anyway) and name the folder after its content. If the folder already exists for a different video, add `-2`, `-3`, and so on. If it holds the same video from an earlier session, reuse it and tell the user.
 

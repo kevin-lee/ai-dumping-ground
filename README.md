@@ -10,6 +10,8 @@ aiskills install kevin-lee/ai-dumping-ground
 
 `riper-5`, `pr-analysis` and `gen-motion-graphics` write their outputs to one central folder, `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project>/`, not into the project. Thus the outputs of all projects are in one location, and they cannot be committed by accident.
 
+`gen-motion-graphics` asks at the start whether to store a video in the current folder, in the central folder (with its exact path) or in another folder.
+
 `<project>` identifies the project:
 
 - In a Git repository with a remote: `<host>/<owner>/<repo>` from the `origin` remote, or from the first remote by name when there is no `origin`. The user, the credentials, the port and the `.git` suffix are removed, and the key is in lowercase. All clones and worktrees of one repository share one folder. For example, `git@github.com:kevin-lee/ai-dumping-ground.git` gives `~/.ai/github.com/kevin-lee/ai-dumping-ground/`.
