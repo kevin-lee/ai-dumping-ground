@@ -518,6 +518,71 @@ runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh --target cursor
 [ "$(rc)" = 2 ]
 check "rule: --target cursor exits 2" $?
 
+# 14. Output choices
+cmp -s "$S/ai-output-choices.sh" "$REPO/skills/pr-analysis/scripts/ai-output-choices.sh"
+check "choices: skills/pr-analysis/scripts/ai-output-choices.sh is identical to the riper-5 copy" $?
+[ -x "$S/ai-output-choices.sh" ] && [ -x "$REPO/skills/pr-analysis/scripts/ai-output-choices.sh" ]
+check "choices: both copies are executable" $?
+
+kv() { # key. Prints its value from the last output.
+  sed -n "s/^$1=//p" "$WORK/out"
+}
+
+mkrepo ch https://github.com/o/ch
+CH="$R/github.com/o/ch"
+before=$(snap "$H")
+run "$WORK/ch" ai-output-choices.sh
+[ "$(rc)" = 0 ] && [ "$(kv central)" = "$CH" ] && [ "$(kv central_exists)" = no ] &&
+  [ "$(kv project)" = "$WORK/ch/.ai" ] && [ "$(kv project_exists)" = no ] && [ "$(kv ask)" = yes ] &&
+  [ "$(kv recommended)" = central ] && [ "$(kv order)" = "central project other" ]
+check "choices: neither exists gives central (Recommended), project, other" $?
+[ "$before" = "$(snap "$H")" ] && [ ! -e "$WORK/ch/.ai" ]
+check "choices: the script creates nothing" $?
+
+mkdir -p "$WORK/ch/.ai"
+run "$WORK/ch" ai-output-choices.sh
+[ "$(kv project_exists)" = yes ] && [ "$(kv recommended)" = project ] && [ "$(kv order)" = "project central other" ]
+check "choices: only .ai exists gives project (Recommended), central, other" $?
+
+mkdir -p "$CH"
+run "$WORK/ch" ai-output-choices.sh
+[ "$(kv central_exists)" = yes ] && [ "$(kv project_exists)" = yes ] && [ "$(kv recommended)" = none ] &&
+  [ "$(kv order)" = "central project other" ] && [ "$(kv ask)" = yes ]
+check "choices: both exist gives central, project, other with no recommendation" $?
+
+mkrepo ch2 https://github.com/o/ch2
+mkdir -p "$R/github.com/o/ch2"
+run "$WORK/ch2" ai-output-choices.sh
+[ "$(kv central_exists)" = yes ] && [ "$(kv project_exists)" = no ] && [ "$(kv recommended)" = central ] &&
+  [ "$(kv order)" = "central project other" ]
+check "choices: only the central folder exists gives central (Recommended), project, other" $?
+
+ln -s "$R/github.com/o/ch2" "$WORK/ch2/.ai"
+run "$WORK/ch2" ai-output-choices.sh
+[ "$(kv ask)" = no ] && [ "$(kv use)" = "$R/github.com/o/ch2" ] && [ "$(kv project_exists)" = yes ]
+check "choices: .ai linked to the central folder gives ask=no and use=<central>" $?
+
+run "$WORK/ch" 'AI_AGENT_OUTPUT_DIR=~/custom' ai-output-choices.sh
+[ "$(kv central)" = "$H/custom/github.com/o/ch" ]
+check "choices: AI_AGENT_OUTPUT_DIR=~/custom moves the central folder under \$HOME/custom" $?
+
+run "$WORK/ch" AI_AGENT_OUTPUT_DIR=relative ai-output-choices.sh
+[ "$(rc)" = 0 ] && [ -z "$(kv central)" ] && [ -n "$(kv central_error)" ] && [ "$(kv order)" = "project other" ] &&
+  [ "$(kv recommended)" = project ]
+check "choices: a bad AI_AGENT_OUTPUT_DIR gives central_error and no central option, exit 0" $?
+
+mkdir -p "$WORK/ch/sub/deep"
+run "$WORK/ch/sub/deep" ai-output-choices.sh
+[ "$(kv project)" = "$WORK/ch/.ai" ]
+check "choices: from a subfolder, project is .ai in the repository root" $?
+
+[ "$(kv migrate)" = "sh $S/migrate-ai-output.sh --all" ]
+check "choices: migrate is the dry run with the absolute script path" $?
+
+run "$WORK/ch" ai-output-choices.sh --x
+[ "$(rc)" = 2 ]
+check "choices: an argument exits 2" $?
+
 echo
 if [ "$FAILS" -eq 0 ]; then SUMMARY_COLOR="$GREEN"; else SUMMARY_COLOR="$RED"; fi
 echo "${BOLD}${SUMMARY_COLOR}$PASSES passed, $FAILS failed, $SKIPS skipped${RESET}"

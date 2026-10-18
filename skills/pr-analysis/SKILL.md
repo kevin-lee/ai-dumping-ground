@@ -28,7 +28,7 @@ Call `AskUserQuestion` exactly once, before reading any file or running any comm
 3. **Color**, asked as "Which color palette should the report use?": options "Default (Solarized Light / Atom One Dark)" (the `solarized-one-dark` theme from `assets/themes.json`) and "Pick a pastel for me" (a random pastel from `references/design-rules.md`, never the theme). Other accepts a brief such as "blue controls on a mild solarized-light yellow ground".
 4. **References**: option "None". Other accepts file paths, URLs, repository paths, and notes. These are read during analysis and any question they raise gets its own section.
 
-Do not ask about language or output location. Both are decided by the arguments and the rules below.
+Do not ask about language. The arguments decide it. The output location is the only later question, in step 3.
 
 ## 2. Gather
 
@@ -49,11 +49,18 @@ Write the references answer to `<workdir>/references.txt` so the check script ca
 - Nothing: folder `no-ticket`.
 - Anything else typed: keep it after replacing characters outside `[A-Za-z0-9._-]` with `-`.
 
-Output path, always: `<output>/docs/pr/<folder>/pr-<N>-report.html`. `<output>` is the AI output folder that `sh <skill>/scripts/ai-output-dir.sh` prints when run from the repository root. Say the resolved absolute path before continuing.
+Output path, always: `<output>/docs/pr/<folder>/pr-<N>-report.html`. `<skill>` is this skill's directory. Say the resolved absolute path before continuing.
 
-The AI output folder is `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<absolute repository path>` when there is no remote. Do not calculate it yourself. If the script exits with an error, show the message and stop. If a sandbox blocks the write, tell the user to allow writes to the root folder (`sh <skill>/scripts/ai-output-dir.sh --root` prints it).
+Choose `<output>` once per session, before the first file is written:
 
-Old reports: run `sh <skill>/scripts/migrate-ai-output.sh --check docs/pr`. If it prints a folder, tell the user one time that old reports exist in the repository's `.ai/docs/pr/`, and offer migration. A dry run is `sh <skill>/scripts/migrate-ai-output.sh docs/pr`. Run it with `--apply` only after the user explicitly agrees. Never delete files or folders.
+1. If the user's prompt names a location, use it and do not ask.
+2. Else run `sh <skill>/scripts/ai-output-choices.sh` from the project folder. Do not check the folders yourself. It prints `key=value` lines:
+   - `central` is the central folder, `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<absolute project path>` when there is no remote or no Git repository. `project` is `.ai` in the project root.
+   - `ask=no` means that `.ai` is a symbolic link to the central folder. Use `use` and do not ask.
+   - If `central_error` is set, show it to the user. The central folder is not an option then.
+3. Else ask "Where should the PR report be stored?", with a choice prompt if the agent has one. Show the options in the `order` from the script: `central`, `project` and `other` ("Other": a folder that the user types). Each option shows its absolute path, and says whether the folder exists already (`central_exists`, `project_exists`). Mark the option named by `recommended` with "(Recommended)". When `recommended=none`, mark none. For "Other", expand a leading `~`, a relative path is relative to the current folder, and say the resulting absolute path.
+4. If the user chooses `project`, tell the user how to move it to the central folder later: run `/centralize-ai-output` if that skill is installed, or run the `migrate` command from the project root (a dry run) and then the same command with `--apply`. Do not run them yourself, and do not offer the migration again.
+5. When `central` is chosen, run `sh <skill>/scripts/ai-output-dir.sh` once before the first write. It creates the folder and its `.project-info`. If a sandbox blocks a write, tell the user to allow writes to that folder (`sh <skill>/scripts/ai-output-dir.sh --root` prints the central root).
 
 ## 4. Read the change
 

@@ -8,9 +8,9 @@ aiskills install kevin-lee/ai-dumping-ground
 
 ## Skill output folder
 
-`riper-5` and `pr-analysis` write their outputs to one central folder, `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project>/`, not into the project, and `gen-motion-graphics` can write there too. Outputs in the central folder are in one location for all projects, and they cannot be committed by accident.
+`riper-5`, `pr-analysis` and `gen-motion-graphics` can write their outputs to one central folder, `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project>/`, not into the project. Outputs in the central folder are in one location for all projects, and they cannot be committed by accident.
 
-`gen-motion-graphics` asks at the start whether to store a video in the current folder, in the central folder (with its exact path) or in another folder.
+Each skill asks where to store its outputs. `riper-5` and `pr-analysis` offer the central folder, the project's `.ai/` folder and another folder. They recommend the one that exists already, or the central folder when neither exists. When both exist, they recommend none. `gen-motion-graphics` offers the current folder, the central folder (with its exact path) and another folder.
 
 `<project>` identifies the project:
 
@@ -33,7 +33,7 @@ Layout:
 
 ### Migration from the old `.ai/` folder
 
-Before this change, the skills wrote to `.ai/` in each project. When `riper-5` or `pr-analysis` finds old outputs there, it offers to move them. `gen-motion-graphics` does not, because it can also store videos in the project. You can also run the migration yourself from the project folder, with `<skill>` as the installed skill folder:
+Before this change, the skills wrote to `.ai/` in each project. The skills do not offer to move it, because the project's `.ai/` is also a valid place. When you choose `.ai/`, `riper-5` and `pr-analysis` tell you how to move it later. You can run the migration yourself from the project folder, with `<skill>` as the installed skill folder:
 
 ```
 sh <skill>/scripts/migrate-ai-output.sh plans done            # riper-5, dry run
@@ -57,7 +57,7 @@ A gitignore pattern `.ai/` matches only a folder, so Git does not ignore the `.a
 
 ### Tests
 
-[test-ai-output-scripts.sh](scripts/skills/test-ai-output-scripts.sh) runs `ai-output-dir.sh` and `migrate-ai-output.sh` against throwaway Git repositories and folders in a temporary folder and checks the results. It also tests `link-ai-folder.sh` and `install-rule.sh`, and checks that the copies in the four skills are identical. It never touches your real output folder. It needs `bash` and `git`, and no network access.
+[test-ai-output-scripts.sh](scripts/skills/test-ai-output-scripts.sh) runs `ai-output-dir.sh` and `migrate-ai-output.sh` against throwaway Git repositories and folders in a temporary folder and checks the results. It also tests `ai-output-choices.sh`, `link-ai-folder.sh` and `install-rule.sh`, and checks that the copies in the four skills are identical. It never touches your real output folder. It needs `bash` and `git`, and no network access.
 
 ```
 bash scripts/skills/test-ai-output-scripts.sh

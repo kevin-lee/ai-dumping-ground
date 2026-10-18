@@ -51,7 +51,7 @@ YOU MUST BEGIN EVERY SINGLE RESPONSE WITH YOUR CURRENT MODE IN BRACKETS. NO EXCE
   ```
 - Duration: Until I explicitly approve plan and signal to move to next mode
 - Output Format: Begin with `[MODE: PLAN]`, then ONLY specifications and implementation details
-- Once the plan is ready, the content should be stored in a markdown file in the AI output folder of the current project (see AI OUTPUT FOLDER below). Create the folder if it does not exist. The content of the plan file should remain unchanged from the original plan, without removing anything (e.g. the checklist, metadata for the AI agent's PLAN mode, etc.). This MUST be done before asking me to signal "ENTER EXECUTE MODE", so I can review the plan file and edit it if needed before execution.
+- Once the plan is ready, the content should be stored in a markdown file in the output folder of the current project (see OUTPUT FOLDER below). Create the folder if it does not exist. The content of the plan file should remain unchanged from the original plan, without removing anything (e.g. the checklist, metadata for the AI agent's PLAN mode, etc.). This MUST be done before asking me to signal "ENTER EXECUTE MODE", so I can review the plan file and edit it if needed before execution.
 - Plan File Naming: Store the plan file under a `plans/{yyyy-MM}` subfolder, named as follows:
   - With an issue ID: `<output>/plans/{yyyy-MM}/{yyyy-MM-dd}-{HHmm}-issue-{id}-{short-summary}.md`, where `{HHmm}` is the current local time in 24-hour format (e.g. `<output>/plans/2026-07/2026-07-13-1405-issue-123-improve-ux.md`)
   - Without an issue ID: `<output>/plans/{yyyy-MM}/{yyyy-MM-dd}-{HHmm}-{short-summary}.md`, where `{HHmm}` is the current local time in 24-hour format (e.g. `<output>/plans/2026-07/2026-07-13-1432-improve-ux.md`)
@@ -83,12 +83,23 @@ YOU MUST BEGIN EVERY SINGLE RESPONSE WITH YOUR CURRENT MODE IN BRACKETS. NO EXCE
   - e.g.) If the file is at `<output>/plans/2026-07/2026-07-13-1405-issue-123-improve-ux.md`, move it to `<output>/done/2026-07/2026-07-13-1405-issue-123-improve-ux.md`.
   - If other docs refer to the moved file, update those references. Write references as paths relative to `<output>`, for example `done/2026-07/2026-07-13-1405-issue-123-improve-ux.md`, never as absolute paths.
 
-## AI OUTPUT FOLDER
-- `<skill>` is this skill's directory. `<output>` is the AI output folder of the current project. Get it with `sh <skill>/scripts/ai-output-dir.sh`, run from the project folder, before the first plan file of the session is written. Use the printed absolute path. Do not calculate it yourself.
-- The folder is `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<absolute project path>` when there is no remote or no Git repository. Symbolic link paths are kept.
-- If the script exits with an error, show its message to the user and stop. Never write the plan into the project instead.
-- If a sandbox blocks the write, tell the user to allow writes to the root folder (`sh <skill>/scripts/ai-output-dir.sh --root` prints it).
-- Old plans: after `<output>` is resolved, run `sh <skill>/scripts/migrate-ai-output.sh --check plans done`. If it prints a folder, tell the user one time in the session that old RIPER-5 files exist in the project's `.ai/` folder, and offer to migrate them. If the user wants it, run `sh <skill>/scripts/migrate-ai-output.sh plans done` (dry run) and show the result. Run it with `--apply` only after the user explicitly agrees. Never delete files or folders. Migration is allowed in any mode and does not change the mode.
+## OUTPUT FOLDER
+`<skill>` is this skill's directory. `<output>` is the folder for the plan files of the current project. `plans/` and `done/` are inside it.
+
+Choose `<output>` once per session, before the first file is written:
+
+1. If the user's prompt names a location, use it and do not ask.
+2. Else run `sh <skill>/scripts/ai-output-choices.sh` from the project folder. Do not check the folders yourself. It prints `key=value` lines:
+   - `central` is the central folder, `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<absolute project path>` when there is no remote or no Git repository. `project` is `.ai` in the project root.
+   - `ask=no` means that `.ai` is a symbolic link to the central folder. Use `use` and do not ask.
+   - If `central_error` is set, show it to the user. The central folder is not an option then.
+3. Else ask "Where should the RIPER-5 plan files be stored?", with a choice prompt if the agent has one. Show the options in the `order` from the script: `central`, `project` and `other` ("Other": a folder that the user types). Each option shows its absolute path, and says whether the folder exists already (`central_exists`, `project_exists`). Mark the option named by `recommended` with "(Recommended)". When `recommended=none`, mark none. For "Other", expand a leading `~`, a relative path is relative to the current folder, and say the resulting absolute path.
+4. If the user chooses `project`, tell the user how to move it to the central folder later: run `/centralize-ai-output` if that skill is installed, or run the `migrate` command from the project root (a dry run) and then the same command with `--apply`. Do not run them yourself, and do not offer the migration again.
+5. When `central` is chosen, run `sh <skill>/scripts/ai-output-dir.sh` once before the first write. It creates the folder and its `.project-info`. If a sandbox blocks a write, tell the user to allow writes to that folder (`sh <skill>/scripts/ai-output-dir.sh --root` prints the central root).
+
+If the session continues a plan from an earlier session (for example in EXECUTE or REVIEW mode), `<output>` is the folder that holds that plan's `plans/` or `done/` folder. Do not ask.
+
+Choosing the folder is allowed in any mode and does not change the mode.
 
 ## CRITICAL PROTOCOL GUIDELINES
 1. You CANNOT transition between modes without my explicit permission
