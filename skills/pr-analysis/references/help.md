@@ -31,10 +31,15 @@ INTAKE (asked once, before any analysis)
   4. References         None, or paths, URLs, repository paths, and notes that should be
                         considered while explaining the PR.
 
-OUTPUT LOCATION (decided by the skill)
-  With a Jira style key      .ai/docs/pr/ABC-123/pr-<N>-report.html
-  With a GitHub issue        .ai/docs/pr/issue-123/pr-<N>-report.html
-  Without a ticket           .ai/docs/pr/no-ticket/pr-<N>-report.html
+OUTPUT LOCATION (asked after the intake)
+  Choose the central folder ~/.ai/<project>, the repository's .ai folder, or a
+  folder you type. The one that exists already is recommended (the central folder
+  when neither exists). When both exist, no choice is recommended.
+  With a Jira style key      <folder>/docs/pr/ABC-123/pr-<N>-report.html
+  With a GitHub issue        <folder>/docs/pr/issue-123/pr-<N>-report.html
+  Without a ticket           <folder>/docs/pr/no-ticket/pr-<N>-report.html
+  <project> is <host>/<owner>/<repo> from the Git remote, or local/<name>-<hash>.
+  Set AI_AGENT_OUTPUT_DIR to use a root other than ~/.ai.
   The completion message gives the absolute path and a file:// link.
 
 WHAT THE PAGE CONTAINS

@@ -12,7 +12,7 @@ Narrated motion-graphics videos, made in three modes.
 
 | Command | Starts |
 |---|---|
-| `/gen-motion-graphics` | By asking how to start |
+| `/gen-motion-graphics` | By asking how to start and where to store the files |
 | `/gen-motion-graphics script <prompt>` | SCRIPT MODE with your prompt (also `text`, `narration`) |
 | `/gen-motion-graphics audio <script.txt>` | AUDIO MODE with your own script |
 | `/gen-motion-graphics video <audio> [script.txt]` | VIDEO MODE with your own audio |
@@ -61,10 +61,15 @@ The skill stays in a mode until you say the next phrase, so you can revise freel
 
 ## Output
 
-| Where you run it | Folder |
+At the start, choose where the files go. Each video gets a `<short-summary>` folder with `output/` for the HTML page and the MP4, and `sources/` for the script, audio, samples, music, license proof and build files.
+
+| Choice | Folder |
 |---|---|
-| In a Git repository | `.ai/video/<short-summary>/output/` for the HTML page and the MP4, and `.ai/video/<short-summary>/sources/` for the script, audio, samples, music, license proof and build files |
-| Elsewhere | `video/<short-summary>/output/` and `video/<short-summary>/sources/` |
+| Current folder | `./video/<short-summary>/` |
+| Central AI output folder | `~/.ai/<project>/video/<short-summary>/` (the exact path is shown when it asks) |
+| Other | The folder you type |
+
+`<project>` is `<host>/<owner>/<repo>` from the Git remote, or `local/<name>-<hash>` when there is no remote or no Git repository. Set `AI_AGENT_OUTPUT_DIR` to use a root other than `~/.ai`.
 
 Name a folder in your prompt to use it instead.
 

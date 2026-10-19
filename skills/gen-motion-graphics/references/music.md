@@ -79,7 +79,7 @@ You cannot listen, so choose on data and let the user judge:
 - Match the tempo to the narration's energy. 95 to 110 BPM suits a lively intro, 85 to 95 a relaxed explainer.
 - Prefer tracks whose drums start within the first few bars (`analyze_music.py` shows the drop) and that last long enough. Shorter tracks loop whole bars cleanly, but a long track means fewer repeats.
 - For the generated beat, the track must be steady: `analyze_music.py` prints how far the track's attacks stray from the grid. Windows Down (5 ms), Doodles (2 ms) and happy lofi day (4 ms) all passed. Over 8 ms, choose another track or go without the beat.
-- Check `.ai/video/*/sources/music/MUSIC.md` for tracks used in the user's other videos. Mention it, and reuse one only if the user wants a consistent channel sound.
+- Check the `MUSIC.md` files of the user's other videos, in all projects: `find "$(sh <skill>/scripts/ai-output-dir.sh --root)" -path '*/video/*/sources/music/MUSIC.md'`. Mention it, and reuse one only if the user wants a consistent channel sound.
 - Name the pick and two alternatives in the final report, each with its page link so the user can preview them. Swapping later costs only a re-mix and a rebuild.
 
 ## Download and keep proof

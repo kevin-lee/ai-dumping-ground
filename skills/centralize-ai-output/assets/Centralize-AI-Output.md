@@ -1,0 +1,8 @@
+# Centralize AI Output
+- Write files that are the output of AI agent work and are not part of the project to the project's AI output folder, not into the project. Examples: plans, reports, reviews, analyses, notes, generated documents, images, audio, video, and intermediate results that the user may want to keep.
+- Get the folder with `sh {{SCRIPT}}` run from the project folder, and use the printed absolute path. Do not calculate the folder yourself.
+- If the script prints a note for the AI agent, tell the user what it says.
+- If the script does not exist or exits with an error, do not calculate the folder and do not write the file into the project. Tell the user why. If the script does not exist, tell the user to install or update the `centralize-ai-output` skill and then run `/centralize-ai-output install-rule`. Ask the user where to write the file.
+- Use a different location only when the user names one, or when the file belongs in the project, for example source code, tests, configuration or documentation that the user asked to add to the project.
+- A project's `.ai` can be a symbolic link to this folder. Writing into it is the same as writing into the folder.
+- Never delete or overwrite existing files in the folder unless the user asks.
