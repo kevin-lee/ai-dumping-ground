@@ -46,8 +46,8 @@ Builds the video from the narration audio.
 - **Music:** lo-fi on the beat. By default a CC0 track it finds, with drums it generates and locks to that track. Or an original beat it composes in code.
 - **Sound effects:** light, on cuts, reveals and typing.
 - **Motion graphics:** designed for every sentence, with something new on screen every second or so.
-- **Captions:** always on. The HTML has a CC toggle and lights up each word as it is spoken. The MP4 has them burned in unless you say no.
-- **Output:** a standalone HTML page and an MP4 (1920x1080, 60 fps, H.264, AAC, -14 LUFS).
+- **Captions:** always on. The HTML has a CC toggle and lights up each word as it is spoken. The MP4 (when it is made) has them burned in unless you say no.
+- **Output:** a standalone HTML page and an MP4 (1920x1080, 60 fps, H.264, AAC, -14 LUFS). It asks whether you want both (the default) or only the HTML page, which skips the MP4 render. You can ask for the MP4 later.
 
 The skill stays in a mode until you say the next phrase, so you can revise freely. You can go back at any time, for example with `ENTER SCRIPT MODE`. Files made after that point are then out of date.
 
@@ -57,11 +57,11 @@ The skill stays in a mode until you say the next phrase, so you can revise freel
 |---|---|
 | SCRIPT | Topic, target duration (for example 60 seconds), audience and tone, language, and sources for facts (this repository, docs, URLs) |
 | AUDIO | Voice and speeds, or let it ask |
-| VIDEO | Whether to trim the pauses (they stay by default), the look (colours, style), the music (a found track with a generated beat, the track alone, an original composed beat, a mood, or a track you have the rights to), sound effects (light, none, stronger), 1080p60 (default) or 4K60, and "no burned-in captions" if you want them only in the HTML |
+| VIDEO | HTML and MP4 (default) or only HTML, whether to trim the pauses (they stay by default), the look (colours, style), the music (a found track with a generated beat, the track alone, an original composed beat, a mood, or a track you have the rights to), sound effects (light, none, stronger), 1080p60 (default) or 4K60 for the MP4, and "no burned-in captions" if you want them only in the HTML |
 
 ## Output
 
-At the start, choose where the files go. Each video gets a `<short-summary>` folder with `output/` for the HTML page and the MP4, and `sources/` for the script, audio, samples, music, license proof and build files.
+At the start, choose where the files go. Each video gets a `<short-summary>` folder with `output/` for the HTML page and the MP4 (when it is made), and `sources/` for the script, audio, samples, music, license proof and build files.
 
 | Choice | Folder |
 |---|---|

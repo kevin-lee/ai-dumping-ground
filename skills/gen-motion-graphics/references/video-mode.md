@@ -1,11 +1,11 @@
 # VIDEO MODE
 
-Build the video from the narration audio: prepare it (its pauses stay as recorded unless the user wants them trimmed), time every word, add beat-matched music, design the motion graphics on the bundled engine, check them, and render.
+Build the video from the narration audio: prepare it (its pauses stay as recorded unless the user wants them trimmed), time every word, add beat-matched music, design the motion graphics on the bundled engine, check them, and render. When the user chooses "HTML only", the MP4 is not rendered.
 
 Final output (in `output/`):
 
 - `<slug>.html`: a standalone page with a player. Fonts, timings and audio are inlined, so it plays with no other file.
-- `<slug>.mp4`: 1920x1080, 60 fps, H.264 High, yuv420p, BT.709, with AAC 48 kHz stereo (384 kbps target), mastered to -14 LUFS. These are YouTube's recommended upload settings.
+- `<slug>.mp4`: 1920x1080, 60 fps, H.264 High, yuv420p, BT.709, with AAC 48 kHz stereo (384 kbps target), mastered to -14 LUFS. These are YouTube's recommended upload settings. It is not made for "HTML only".
 
 Everything else goes in `sources/`. Paths below are relative to the video folder, and `S=<skill>/scripts`.
 
@@ -14,13 +14,14 @@ Everything else goes in `sources/`. Paths below are relative to the video folder
 - **Audio:** use the file the user named. If AUDIO MODE produced several, ask which, listing each with its length. Copy a user file into `sources/audio/`.
 - **Script:** `sources/script/narration.txt` if it exists, or a file the user gives (copy it there). Without a script, the transcript is used, and step 3 explains how.
 - **Lengths:** measure the audio before asking, so the pause question can name both lengths: `uv run --script $S/trim_silence.py sources/audio/<file> --dry-run`.
-- **Preferences:** skip whatever the prompt already says. Ask the rest with `AskUserQuestion`. It takes at most four questions per call, so ask the first four together and the format in a second call. When the prompt already answered some, one call is enough.
-  1. **Pauses:** "Keep the pauses (Recommended)" (the narration plays as recorded, with only the silence before the first word and after the last cut), "Trim the pauses" (each pause becomes 0.12 to 0.26 s, for a faster pace). Put the measured length into each description. As Other: for example a lighter trim. Never trim without asking. Keeping the pauses is the default.
-  2. **Look:** "Dark pastel (Recommended)" (deep navy, peach, lavender and mint accents, soft glow, light grain: the look of the user's earlier intro), "Light and clean", "Bold and colourful". As Other: a description or brand colours.
-  3. **Music:** "Lo-fi track + generated beat (Recommended)" (a found CC0 track, fast, rhythmic and smooth, with drums synthesized for this video and locked to it), "Original beat only" (composed in code for this video, so it fits the narration exactly, with no license to check), "Lo-fi track only" (the found track as it is), "No music". As Other: calmer, a mood, or a track the user has the rights to.
-  4. **Sound effects:** "Light (Recommended)" (whooshes on cuts, pops as things appear, an impact on the big reveal, typing ticks), "None", "Stronger".
-  5. **Format:** "1080p, 60 fps (Recommended)", "4K, 60 fps" (sharper on YouTube because 4K uploads get a better codec, about 4x the render time), "1080p, 30 fps".
-- **Captions are always on,** so never ask about them. The HTML has them with a CC toggle (the button and the `c` key), and each word lights up as it is spoken. The MP4 has them burned in, unless the user asks to leave them out (`--no-captions` in step 10).
+- **Preferences:** skip whatever the prompt already says. Ask the rest with `AskUserQuestion`, in the order below. It takes at most four questions per call, so ask the first four together, and the sound effects and the format in a second call. Ask the format only when the output includes the MP4. Output is the first question, so its answer is known before the second call. When the prompt already answered enough of them, one call is enough.
+  1. **Output:** "HTML and MP4 (Recommended)" (the standalone page and the YouTube-ready video), "HTML only" (the standalone page only: no format question, no preview clip, and no MP4 render, which saves the render time). The MP4 can be made later (see "Make the MP4 later").
+  2. **Pauses:** "Keep the pauses (Recommended)" (the narration plays as recorded, with only the silence before the first word and after the last cut), "Trim the pauses" (each pause becomes 0.12 to 0.26 s, for a faster pace). Put the measured length into each description. As Other: for example a lighter trim. Never trim without asking. Keeping the pauses is the default.
+  3. **Look:** "Dark pastel (Recommended)" (deep navy, peach, lavender and mint accents, soft glow, light grain: the look of the user's earlier intro), "Light and clean", "Bold and colourful". As Other: a description or brand colours.
+  4. **Music:** "Lo-fi track + generated beat (Recommended)" (a found CC0 track, fast, rhythmic and smooth, with drums synthesized for this video and locked to it), "Original beat only" (composed in code for this video, so it fits the narration exactly, with no license to check), "Lo-fi track only" (the found track as it is), "No music". As Other: calmer, a mood, or a track the user has the rights to.
+  5. **Sound effects:** "Light (Recommended)" (whooshes on cuts, pops as things appear, an impact on the big reveal, typing ticks), "None", "Stronger".
+  6. **Format** (only when the output includes the MP4): "1080p, 60 fps (Recommended)", "4K, 60 fps" (sharper on YouTube because 4K uploads get a better codec, about 4x the render time), "1080p, 30 fps".
+- **Captions are always on,** so never ask about them. The HTML has them with a CC toggle (the button and the `c` key), and each word lights up as it is spoken. The MP4 (when it is made) has them burned in, unless the user asks to leave them out (`--no-captions` in step 10).
 - Preferences the user gives (here or in the prompt) override the defaults in this file.
 
 ## 1. Prerequisites
@@ -80,7 +81,7 @@ uv run --script $S/mix_audio.py sources/build/narration.wav --music sources/musi
     --analysis sources/music/music.json --lead-in 2.0 --out-dir sources/build [--cut A:B] [--outro 4] [--beat light|strong|off]
 ```
 
-- It writes `master.wav` (for the MP4), `master.mp3` (for the page) and `mix.json`. `mix.json` holds the length, the narration span, the beat grid in video time and the drum activity, and the page reads all of it.
+- It writes `master.wav` (for the MP4), `master.mp3` (for the page) and `mix.json`. `mix.json` holds the length, the narration span, the beat grid in video time and the drum activity, and the page reads all of it. It writes both files also for "HTML only", because `master.mp3` is encoded from `master.wav`, and an MP4 made later needs `master.wav`.
 - Check the printed loudness (about -14 LUFS, peak at or under -1 dBFS) and the segment plan.
 - With a found track, it lays the generated beat on top (`--beat light` by default, `strong` for more drive, `off` for the track as it is) and prints how it locked to the track: the shift, and how many kicks and claps it moved onto the track's own hits. A line "beat: left out, because ..." means the track's beat is not steady enough. Tell the user, and offer another track.
 - The music plays alone for the lead-in, sits 7 dB lower under the narration, dips a further 6 dB under each phrase, and closes on a bar line with a low-pass sweep and fade. The ending waits for the first bar line at least `--outro` seconds (default 4) after the last word, so the end card lasts 4 s plus up to one bar.
@@ -151,7 +152,7 @@ uv run --script $S/render_video.py output/<slug>.html --stills auto --out-dir so
 - things colliding with the captions
 - a visual that does not match the words being spoken (add stills at specific cues: `--stills 12.3,18.9`)
 
-Rebuild and re-check after each round. To judge motion, render a short preview clip and offer it to the user. JPEG frames make it quicker:
+Rebuild and re-check after each round. To judge motion, render a short preview clip and offer it to the user. For "HTML only", skip the preview clip: the user opens the page to judge the motion. JPEG frames make it quicker:
 
 ```sh
 uv run --script $S/render_video.py output/<slug>.html --audio sources/build/master.wav --out sources/build/preview.mp4 \
@@ -159,6 +160,8 @@ uv run --script $S/render_video.py output/<slug>.html --audio sources/build/mast
 ```
 
 ## 10. Render the video
+
+Skip steps 10 and 11 when the user chose "HTML only", and go to step 12.
 
 ```sh
 uv run --script $S/render_video.py output/<slug>.html --audio sources/build/master.wav --out output/<slug>.mp4
@@ -181,11 +184,19 @@ ffmpeg -v error -y -ss 12 -i output/<slug>.mp4 -frames:v 1 sources/build/stills/
 
 ## 12. Report
 
-- The two output files with absolute paths, length, resolution and frame rate, and file sizes.
+- The output files with absolute paths, length and file sizes, and the MP4's resolution and frame rate. For "HTML only", say that the MP4 was not made, and that the user can ask for it later in VIDEO MODE.
 - Whether the narration's pauses were kept or trimmed.
 - The music: title, artist, license, and the optional credit line, plus the generated beat's setting (light, strong or off). Point to `sources/music/MUSIC.md` and add its Content ID advice.
 - A short scene list from the storyboard.
 - What the user should check, and how revisions work. Revisions stay in VIDEO MODE:
-  - a visual change means editing the scenes, then rebuild, check and render again
+  - a visual change means editing the scenes, then rebuild, check, and render the MP4 again when there is one
   - a different track means mixing again, then rebuild
   - a narration change means going back with ENTER SCRIPT MODE or ENTER AUDIO MODE
+
+## Make the MP4 later
+
+When the user asks for the MP4 of a video that was made as "HTML only", in this session or a later one:
+
+- Ask only the format question (item 6 in step 0), unless the prompt already says it.
+- Run steps 10 to 12 on the existing `output/<slug>.html` with the existing `sources/build/master.wav`. Do not mix again and do not build the page again, so the MP4 matches the page.
+- If the scenes, the mix or the page changed since the page was built, or `master.wav` is missing, say so, and rebuild from the step that changed before the render.
