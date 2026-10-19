@@ -73,7 +73,7 @@ run() {
   local envs=()
   while [[ "${1:-}" == *=* ]]; do envs+=("$1"); shift; done
   local script="$1"; shift
-  (cd "$dir" && env -u AI_AGENT_OUTPUT_DIR HOME="$H" ${envs[@]+"${envs[@]}"} \
+  (cd "$dir" && env -u AI_AGENT_OUTPUT_DIR -u CLAUDE_CONFIG_DIR -u CODEX_HOME -u AI_AGENT_OUTPUT_RULE_CHECK HOME="$H" ${envs[@]+"${envs[@]}"} \
     "$SH_UNDER_TEST" "$S/$script" ${1+"$@"} >"$WORK/out" 2>"$WORK/err"; echo $? >"$WORK/rc")
 }
 
@@ -524,7 +524,7 @@ before=$(snap "$IH")
 runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh
 [ "$(rc)" = 0 ] && [ "$before" = "$(snap "$IH")" ] &&
   grep -qxF "create $IH/claude/rules/Centralize-AI-Output.md" "$WORK/out" &&
-  grep -qxF "update $IH/codex/AGENTS.md" "$WORK/out" && ! grep -q 'gemini' "$WORK/out" &&
+  grep -qxF "add $IH/codex/AGENTS.md" "$WORK/out" && ! grep -q 'gemini' "$WORK/out" &&
   grep -q '^Cursor: ' "$WORK/out"
 check "rule: a dry run lists the targets with a folder, skips gemini, and changes nothing" $?
 runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh --target gemini
@@ -560,6 +560,49 @@ cp "$IH/codex3/AGENTS.md" "$WORK/broken.md"
 runc "$WORK/plain" HOME="$IH" CODEX_HOME="$IH/codex3" install-rule.sh --apply --target codex
 [ "$(rc)" = 1 ] && cmp -s "$WORK/broken.md" "$IH/codex3/AGENTS.md"
 check "rule: broken markers exit 1 and change nothing" $?
+runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh --print
+grep -qF 'Do not calculate the folder yourself' "$WORK/out" && ! grep -qF 'cksum' "$WORK/out" &&
+  ! grep -qF '<host>/<owner>/<repo>' "$WORK/out"
+check "rule: the rule text has no key format" $?
+CS="$IH/codex/skills/centralize-ai-output/scripts/ai-output-dir.sh"
+mkdir -p "${CS%/*}" && : > "$CS"
+before=$(snap "$IH")
+runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh
+[ "$(rc)" = 0 ] && [ "$before" = "$(snap "$IH")" ] && grep -qxF "outdated $IH/codex/AGENTS.md" "$WORK/out" &&
+  grep -qxF "  script: $CS" "$WORK/out" && grep -qxF -- '--- installed' "$WORK/out" && grep -qxF '+++ new' "$WORK/out" &&
+  grep -qF -- "-- Get the folder with \`sh $C/ai-output-dir.sh\`" "$WORK/out" &&
+  grep -qF -- "+- Get the folder with \`sh $CS\`" "$WORK/out"
+check "rule: with its own copy of the skill, the codex rule is outdated, the dry run shows a diff and changes nothing" $?
+runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh --apply --target codex
+[ "$(rc)" = 0 ] && grep -qF "sh $CS" "$IH/codex/AGENTS.md" && grep -qF "sh $C/ai-output-dir.sh" "$IH/claude/rules/Centralize-AI-Output.md"
+check "rule: --apply writes the path of each agent's own copy, else the running copy" $?
+mkdir -p "$IH/.gemini"
+runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh --check
+[ "$(rc)" = 0 ] && [ -z "$(out)" ]
+check "rule: --check with every installed rule up to date exits 0, and a folder without a rule is not listed" $?
+printf 'my edit\n' >> "$IH/claude/rules/Centralize-AI-Output.md"
+runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh --check
+[ "$(rc)" = 3 ] && [ "$(out)" = "outdated $IH/claude/rules/Centralize-AI-Output.md" ]
+check "rule: --check lists only the outdated rule and exits 3" $?
+runc "$WORK/plain" "${RULE_ENV[@]}" ai-output-dir.sh
+[ "$(rc)" = 0 ] && [ "$(out)" = "$IH/.ai/$(lkey "$WORK/plain")" ] &&
+  grep -qF "note for the AI agent: tell the user that the Centralize AI Output rule in $IH/claude/rules/Centralize-AI-Output.md is outdated" "$WORK/err"
+check "rule: ai-output-dir.sh of centralize-ai-output prints the path, and a note on stderr for an outdated rule" $?
+runc "$WORK/plain" "${RULE_ENV[@]}" AI_AGENT_OUTPUT_RULE_CHECK=0 ai-output-dir.sh
+[ "$(rc)" = 0 ] && [ "$(out)" = "$IH/.ai/$(lkey "$WORK/plain")" ] && [ ! -s "$WORK/err" ]
+check "rule: AI_AGENT_OUTPUT_RULE_CHECK=0 turns the note off" $?
+runc "$WORK/plain" "${RULE_ENV[@]}" ai-output-dir.sh --print-only
+[ "$(rc)" = 0 ] && [ ! -s "$WORK/err" ]
+check "rule: ai-output-dir.sh --print-only prints no note" $?
+run "$WORK/plain" "${RULE_ENV[@]}" ai-output-dir.sh
+[ "$(rc)" = 0 ] && [ ! -s "$WORK/err" ]
+check "rule: the riper-5 copy of ai-output-dir.sh prints no note" $?
+runc "$WORK/plain" HOME="$IH" CODEX_HOME="$IH/codex3" install-rule.sh --check
+[ "$(rc)" = 3 ] && [ "$(out)" = "broken $IH/codex3/AGENTS.md" ] && cmp -s "$WORK/broken.md" "$IH/codex3/AGENTS.md"
+check "rule: --check lists broken markers, exits 3 and changes nothing" $?
+runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh --check --apply
+[ "$(rc)" = 2 ]
+check "rule: --check with --apply exits 2" $?
 runc "$WORK/plain" "${RULE_ENV[@]}" install-rule.sh --target cursor
 [ "$(rc)" = 2 ]
 check "rule: --target cursor exits 2" $?

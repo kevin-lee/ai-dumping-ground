@@ -16,6 +16,7 @@ AI agents write plans, reports, notes, videos and other outputs. This skill keep
 - `AI_AGENT_OUTPUT_DIR` can be an absolute path, `~`, or a path that starts with `~/`, `$HOME/` or `${HOME}/`.
 - Each project folder has a hidden `.project-info` file with the remote and every path that used the folder.
 - Every step starts with a dry run. Run a step with `--apply` only after the user explicitly agrees to that step. Never delete or overwrite a file, except what the `link` step lists and the user accepts.
+- When the user runs `migrate`, `link` or `install-rule` directly, first run `sh <skill>/scripts/install-rule.sh --check`. If it exits 3, tell the user in one line which rule is outdated or broken and that `install-rule` updates it. Then continue the step.
 - If a script exits with an error, show its message and stop. If a sandbox blocks a write, tell the user to allow writes to the root folder (`sh <skill>/scripts/ai-output-dir.sh --root` prints it) or to the agent config folder.
 
 ## Arguments
@@ -37,9 +38,9 @@ Run these and report the results in short form:
 1. `sh <skill>/scripts/ai-output-dir.sh --print-only`: the output folder.
 2. `sh <skill>/scripts/migrate-ai-output.sh --check --all`: the entries of `.ai/` that still have files.
 3. `sh <skill>/scripts/link-ai-folder.sh`: the link state.
-4. `sh <skill>/scripts/install-rule.sh`: the rule state of each agent.
+4. `sh <skill>/scripts/install-rule.sh`: the rule state of each agent. `create` or `add` means that the rule is not installed. `outdated` means that the rule is installed but is different from the rule that the script writes now: an older skill version, a different script path, or a hand edit. `unchanged` means that the rule is up to date.
 
-Then offer the steps that are not done yet, in this order: migrate, link, install-rule. Ask the user which to run, with a choice prompt if the agent has one.
+Then offer the steps that are not done yet. When a rule is outdated, offer install-rule first, then migrate and link. Else use this order: migrate, link, install-rule. Ask the user which to run, with a choice prompt if the agent has one.
 
 ## migrate
 
@@ -59,10 +60,14 @@ The link makes `.ai` a symbolic link to the output folder, so any agent or tool 
 
 The rule tells agents to write their outputs into the output folder unless the user names another location.
 
-1. Run `sh <skill>/scripts/install-rule.sh` (dry run). It lists `create`, `update` or `unchanged` for each agent whose config folder exists:
+1. Run `sh <skill>/scripts/install-rule.sh` (dry run). It lists an action for each agent whose config folder exists:
    - Claude: `~/.claude/rules/Centralize-AI-Output.md` (or under `$CLAUDE_CONFIG_DIR`)
    - Codex: a marked block in `~/.codex/AGENTS.md` (or under `$CODEX_HOME`)
    - Gemini: a marked block in `~/.gemini/GEMINI.md`
+
+   The actions are `create` (no file), `add` (the file has no block), `outdated` (the installed rule is different) and `unchanged`. The `script:` line under each action is the `ai-output-dir.sh` that the rule of that agent runs: the agent's own copy of this skill when it exists, else the copy that runs the installer. For each outdated rule, show the diff that the dry run prints before you ask.
 2. Ask the user. Only after an explicit yes, run it with `--apply`. Use `--target claude`, `--target codex` or `--target gemini` when the user wants only some of them. Each changed file gets a backup, `<file>.bak.<YYYYmmdd-HHMMSS>`.
 3. Cursor has no user rule file. Show the text from `sh <skill>/scripts/install-rule.sh --print`, and tell the user to paste it into Cursor Settings > Rules > User Rules.
 4. The rule takes effect in new sessions.
+5. The rule has no key format. It only runs `ai-output-dir.sh`, so a change of the project key needs no rule update.
+6. When a rule is outdated or has broken markers, `ai-output-dir.sh` of this skill (the script that the rule runs) prints a note for the agent on stderr. `AI_AGENT_OUTPUT_RULE_CHECK=0` turns the note off.

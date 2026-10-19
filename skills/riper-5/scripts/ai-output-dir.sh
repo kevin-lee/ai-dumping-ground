@@ -19,9 +19,14 @@
 #         no symbolic link to keep, and the resolved path is used.
 #         A linked worktree without a remote uses the folder whose .project-info has canonical=<main worktree path>.
 #
+# Rule check: without an option, when install-rule.sh is in the same folder (only in centralize-ai-output), the script
+# runs install-rule.sh --check. For each installed Centralize AI Output rule that is outdated or has broken markers, it
+# prints a note for the AI agent on stderr. It never changes the rule. AI_AGENT_OUTPUT_RULE_CHECK=0 turns the check off.
+#
 # Exit codes: 0 success, 1 the folder or .project-info cannot be written, 2 bad usage, HOME or AI_AGENT_OUTPUT_DIR.
 #
 # This file is identical in every skill that has it. Change all copies together.
+# Maintainers: see docs/ai-output-folder-maintenance.md in the ai-dumping-ground repository.
 
 set -u
 
@@ -257,3 +262,22 @@ add_line "path=$path_line"
 add_line "canonical=$canonical_line"
 
 printf '%s\n' "$out"
+
+# The rule check. A failure of the check never changes the result.
+here=$(cd -- "$(dirname -- "$0")" 2>/dev/null && pwd) || here=
+if [ "${AI_AGENT_OUTPUT_RULE_CHECK:-1}" != 0 ] && [ -n "$here" ] && [ -f "$here/install-rule.sh" ]; then
+  stale=$(sh "$here/install-rule.sh" --check 2>/dev/null)
+  if [ $? -eq 3 ]; then
+    printf '%s\n' "$stale" | while IFS= read -r line; do
+      case $line in
+        'outdated '*)
+          printf 'note for the AI agent: tell the user that the Centralize AI Output rule in %s is outdated. To update it, run /centralize-ai-output install-rule.\n' \
+            "${line#outdated }" >&2 ;;
+        'broken '*)
+          printf 'note for the AI agent: tell the user that the Centralize AI Output markers in %s are broken. Fix them, then run /centralize-ai-output install-rule.\n' \
+            "${line#broken }" >&2 ;;
+      esac
+    done
+  fi
+fi
+exit 0
