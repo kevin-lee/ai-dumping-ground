@@ -57,7 +57,7 @@ The skill stays in a mode until you say the next phrase, so you can revise freel
 |---|---|
 | SCRIPT | Topic, target duration (for example 60 seconds), audience and tone, language, and sources for facts (this repository, docs, URLs) |
 | AUDIO | Voice and speeds, or let it ask |
-| VIDEO | HTML and MP4 (default) or only HTML, whether to trim the pauses (they stay by default), the look (colours, style), the music (a found track with a generated beat, the track alone, an original composed beat, a mood, or a track you have the rights to), sound effects (light, none, stronger), 1080p60 (default) or 4K60 for the MP4, and "no burned-in captions" if you want them only in the HTML |
+| VIDEO | Whether to trim the pauses (they stay by default), the look (colours, style), the music (a found track with a generated beat, the track alone, an original composed beat, a mood, or a track you have the rights to), sound effects (light, none, stronger), HTML and MP4 (default) in 1080p60 (default) or 4K60, or only HTML, and "no burned-in captions" if you want them only in the HTML |
 
 ## Output
 
