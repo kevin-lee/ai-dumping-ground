@@ -10,6 +10,8 @@
 #   KEEP_TEST_DIR=1  keep the work folder even when every check passes
 #   NO_COLOR=1       no color, even in a terminal
 #   FORCE_COLOR=1    color, even in a pipe or a file (NO_COLOR wins over it)
+#
+# Maintainers: see docs/ai-output-folder-maintenance.md.
 
 # shellcheck disable=SC2319 # each check receives the status of the condition written right before it
 # shellcheck disable=SC2016 # the $HOME cases pass the literal text on purpose

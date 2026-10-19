@@ -15,6 +15,7 @@ Four skills write into `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`:
 
 - Each copy of `ai-output-dir.sh`, `migrate-ai-output.sh` and `ai-output-choices.sh` must be identical in every skill that has it. A skill is installed alone, so each skill needs its own copy. The tests compare the copies.
 - `install-rule.sh` copies the rule into `~/.claude/rules/Centralize-AI-Output.md` (or under `$CLAUDE_CONFIG_DIR`) and into a marked block in `~/.codex/AGENTS.md` (or under `$CODEX_HOME`) and `~/.gemini/GEMINI.md`. Cursor has no user rule file, so the user pastes the text from `--print`.
+- `AGENTS.md` at the repository root lists the files that make an agent read this document. When you add, rename or remove a file in the table above, or a test script, update that list too.
 
 ## Invariants
 

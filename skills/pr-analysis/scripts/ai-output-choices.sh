@@ -21,6 +21,7 @@
 # Exit codes: 0 success (also when ai-output-dir.sh fails), 2 bad usage.
 #
 # This file is identical in every skill that has it. Change all copies together.
+# Maintainers: see docs/ai-output-folder-maintenance.md in the ai-dumping-ground repository.
 
 set -u
 

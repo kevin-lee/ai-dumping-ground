@@ -14,6 +14,8 @@
 #
 # Exit codes: 0 success, 1 a step failed, 2 bad usage, 4 the state of .ai does not allow the link.
 #             A failure of ai-output-dir.sh exits with its code.
+#
+# Maintainers: see docs/ai-output-folder-maintenance.md in the ai-dumping-ground repository.
 
 set -u
 

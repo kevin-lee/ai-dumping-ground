@@ -23,6 +23,7 @@
 #             2 bad usage, 3 --apply left conflicts in place. A failure of ai-output-dir.sh exits with its code.
 #
 # This file is identical in every skill that has it. Change all copies together.
+# Maintainers: see docs/ai-output-folder-maintenance.md in the ai-dumping-ground repository.
 
 set -u
 
