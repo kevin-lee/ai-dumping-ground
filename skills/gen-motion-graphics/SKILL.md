@@ -1,6 +1,6 @@
 ---
 name: gen-motion-graphics
-description: Make narrated motion-graphics videos (YouTube intros, explainers, product promos) in three sequential modes. SCRIPT MODE writes a voice-over narration sized to a target duration. AUDIO MODE turns it into speech on this machine with the network blocked (Kokoro, or Qwen3-TTS for Korean), with a choice of voice, samples and speeds. VIDEO MODE asks whether to trim the pauses (they stay by default), adds beat-matched royalty-free lo-fi music, and builds a standalone HTML animation plus a YouTube-ready MP4. Use it whenever the user runs /gen-motion-graphics, says "ENTER SCRIPT MODE", "ENTER AUDIO MODE" or "ENTER VIDEO MODE", or asks for a narration script for a video, a local text-to-speech voice-over, or an animated video made from narration audio, even if they do not name the skill.
+description: Make narrated motion-graphics videos (YouTube intros, explainers, product promos) in three sequential modes. SCRIPT MODE writes a voice-over narration sized to a target duration. AUDIO MODE turns it into speech on this machine with the network blocked (Kokoro, or Qwen3-TTS for Korean), with a choice of voice, samples and speeds. VIDEO MODE asks whether to trim the pauses (they stay by default), adds beat-matched royalty-free lo-fi music, and builds a standalone HTML animation plus a YouTube-ready MP4, or only the HTML when the user chooses it. Use it whenever the user runs /gen-motion-graphics, says "ENTER SCRIPT MODE", "ENTER AUDIO MODE" or "ENTER VIDEO MODE", or asks for a narration script for a video, a local text-to-speech voice-over, or an animated video made from narration audio, even if they do not name the skill.
 ---
 
 # gen-motion-graphics
@@ -9,7 +9,7 @@ Turn a topic into a finished, narrated motion-graphics video through three modes
 
 1. **SCRIPT MODE** writes the voice-over text. Optional: skipped when the user brings a script.
 2. **AUDIO MODE** speaks it with a local text-to-speech (TTS) model. Optional: skipped when the user brings audio.
-3. **VIDEO MODE** analyses the audio and builds the video: standalone HTML and an MP4.
+3. **VIDEO MODE** analyses the audio and builds the video: standalone HTML and an MP4, or only the HTML.
 
 `<skill>` below means this skill's directory. The helper scripts are in `<skill>/scripts/`. The Python ones run with `uv run --script` (they declare their own dependencies) and print their usage with `--help`.
 
@@ -83,7 +83,7 @@ Video folders in the project are an expected place, not old files. Never offer t
 <video folder>/
 ├── output/                       what the user asked for
 │   ├── <slug>.html               standalone page: plays with no other file
-│   └── <slug>.mp4                YouTube-ready video
+│   └── <slug>.mp4                YouTube-ready video (not made for "HTML only")
 └── sources/                      everything made along the way
     ├── script/                   narration.txt, display.json, lexicon.json
     ├── audio/                    narration-<voice>-<speed>x.wav
@@ -112,7 +112,7 @@ The narration can hold confidential information on purpose, to explain it. The u
 
 **AUDIO MODE:** Kokoro for English (and Kokoro's other languages), Qwen3-TTS for Korean. Check pronunciations first, ask for a voice (or make samples) and one or more speeds, then write one WAV per speed. Details in `references/audio-mode.md`.
 
-**VIDEO MODE:** ask whether to trim the pauses (by default they stay as recorded), and about the look, music, sound effects and format (unless already given). Then prepare the narration, time every word, and find and license-check a CC0 lo-fi track, laying a generated beat on top that is locked to it (the default), or compose an original beat in code. Mix and master to -14 LUFS, write the scenes on the bundled engine with light sound effects, check and review stills, and render the HTML and MP4. Captions are always on: the HTML has a CC toggle with each word highlighted as it is spoken, and the MP4 has them burned in unless the user says otherwise. Details in `references/video-mode.md`.
+**VIDEO MODE:** ask whether to make the HTML and the MP4 (the default) or only the HTML, whether to trim the pauses (by default they stay as recorded), and about the look, music, sound effects and, for the MP4, the format (unless already given). Then prepare the narration, time every word, and find and license-check a CC0 lo-fi track, laying a generated beat on top that is locked to it (the default), or compose an original beat in code. Mix and master to -14 LUFS, write the scenes on the bundled engine with light sound effects, check and review stills, build the HTML, and render the MP4 unless the user chose "HTML only". Captions are always on: the HTML has a CC toggle with each word highlighted as it is spoken, and the MP4 (when it is made) has them burned in unless the user says otherwise. Details in `references/video-mode.md`.
 
 ## Scripts
 
