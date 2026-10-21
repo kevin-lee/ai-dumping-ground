@@ -88,15 +88,12 @@ fi
 if [ -z "$central" ]; then
   order="project other"
   if [ "$project_exists" = yes ]; then recommended=project; else recommended=none; fi
-elif [ "$central_exists" = yes ] && [ "$project_exists" = yes ]; then
-  order="central project other"
-  recommended=none
-elif [ "$project_exists" = yes ]; then
-  order="project central other"
-  recommended=project
-else
+elif [ "$central_exists" = yes ] && [ "$project_exists" = no ]; then
   order="central project other"
   recommended=central
+else
+  order="project central other"
+  recommended=project
 fi
 
 printf 'central=%s\n' "$central"
