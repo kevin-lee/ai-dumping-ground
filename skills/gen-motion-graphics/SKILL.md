@@ -60,13 +60,17 @@ Read the reference for a mode when you enter it, not before:
 
 Each video gets one folder, `<base>/<slug>/`. The user chooses `<base>` once, at the start, and the later modes reuse it.
 
-Get the central folder first: `sh <skill>/scripts/ai-output-dir.sh --print-only` prints `<output>`, the AI output folder of the current project. It is `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<folder name>-<hash of the absolute path>` when there is no remote or no Git repository. Do not calculate it yourself. If the script exits with an error, show the message and leave out option 2 below.
+Run `sh <skill>/scripts/video-output-choices.sh` from the current folder. Do not check the folders yourself. It prints `key=value` lines:
 
-Ask "Where should the video files be stored?" with these options, each with the absolute path that it gives:
+- `current` is `<absolute current folder>/video`, also in a Git repository.
+- `central` is `<output>/video`. `<output>` is the AI output folder of the current project, `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<folder name>-<hash of the absolute path>` when there is no remote or no Git repository. Do not calculate it yourself.
+- If `central_error` is set, show the message to the user. The central folder is not an option then.
 
-1. "Current folder": `<base>` is `<absolute current folder>/video`. In a Git repository, add to the description that the files can be committed by accident unless `video/` is ignored.
-2. "Central AI output folder": `<base>` is `<output>/video`. Show the full path, for example `/Users/me/.ai/github.com/owner/repo/video/<slug>/`, and say that `<slug>` comes from the video's content.
-3. "Other": the user types a folder. `<base>` is that folder. Expand a leading `~`. A relative path is relative to the current folder. Say the resulting absolute path.
+Ask "Where should the video files be stored?". Show the options in the `order` from the script, each with the absolute path that it gives and whether the folder exists already (`current_exists`, `central_exists`). Mark the option named by `recommended` with "(Recommended)". When `recommended=none`, mark none.
+
+- `current`, "Current folder": `<base>` is `current`. In a Git repository, add to the description that the files can be committed by accident unless `video/` is ignored.
+- `central`, "Central AI output folder": `<base>` is `central`. Show the full path, for example `/Users/me/.ai/github.com/owner/repo/video/<slug>/`, and say that `<slug>` comes from the video's content.
+- `other`, "Other": the user types a folder. `<base>` is that folder. Expand a leading `~`. A relative path is relative to the current folder. Say the resulting absolute path.
 
 Do not ask, and tell the user which folder is used, when:
 

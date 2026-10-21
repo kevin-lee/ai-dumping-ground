@@ -32,9 +32,9 @@ INTAKE (asked once, before any analysis)
                         considered while explaining the PR.
 
 OUTPUT LOCATION (asked after the intake)
-  Choose the central folder ~/.ai/<project>, the repository's .ai folder, or a
-  folder you type. The one that exists already is recommended (the central folder
-  when neither exists). When both exist, no choice is recommended.
+  Choose the repository's .ai folder, the central folder ~/.ai/<project>, or a
+  folder you type. The .ai folder is recommended and shown first, unless only the
+  central folder exists. Then the central folder is recommended and shown first.
   With a Jira style key      <folder>/docs/pr/ABC-123/pr-<N>-report.html
   With a GitHub issue        <folder>/docs/pr/issue-123/pr-<N>-report.html
   Without a ticket           <folder>/docs/pr/no-ticket/pr-<N>-report.html

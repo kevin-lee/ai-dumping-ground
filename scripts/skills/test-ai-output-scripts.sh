@@ -21,6 +21,7 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO=$(cd "$HERE/../.." && pwd)
 S="$REPO/skills/riper-5/scripts"
 C="$REPO/skills/centralize-ai-output/scripts"
+V="$REPO/skills/gen-motion-graphics/scripts"
 SH_UNDER_TEST="${SH_UNDER_TEST:-/bin/sh}"
 
 # Color only for a terminal. NO_COLOR turns it off, FORCE_COLOR turns it on for a pipe or a file.
@@ -83,6 +84,14 @@ run() {
 runc() {
   local saved="$S"
   S="$C"
+  run "$@"
+  S="$saved"
+}
+
+# Runs a gen-motion-graphics script: the same arguments as run.
+runv() {
+  local saved="$S"
+  S="$V"
   run "$@"
   S="$saved"
 }
@@ -625,8 +634,8 @@ before=$(snap "$H")
 run "$WORK/ch" ai-output-choices.sh
 [ "$(rc)" = 0 ] && [ "$(kv central)" = "$CH" ] && [ "$(kv central_exists)" = no ] &&
   [ "$(kv project)" = "$WORK/ch/.ai" ] && [ "$(kv project_exists)" = no ] && [ "$(kv ask)" = yes ] &&
-  [ "$(kv recommended)" = central ] && [ "$(kv order)" = "central project other" ]
-check "choices: neither exists gives central (Recommended), project, other" $?
+  [ "$(kv recommended)" = project ] && [ "$(kv order)" = "project central other" ]
+check "choices: neither exists gives project (Recommended), central, other" $?
 [ "$before" = "$(snap "$H")" ] && [ ! -e "$WORK/ch/.ai" ]
 check "choices: the script creates nothing" $?
 
@@ -637,9 +646,9 @@ check "choices: only .ai exists gives project (Recommended), central, other" $?
 
 mkdir -p "$CH"
 run "$WORK/ch" ai-output-choices.sh
-[ "$(kv central_exists)" = yes ] && [ "$(kv project_exists)" = yes ] && [ "$(kv recommended)" = none ] &&
-  [ "$(kv order)" = "central project other" ] && [ "$(kv ask)" = yes ]
-check "choices: both exist gives central, project, other with no recommendation" $?
+[ "$(kv central_exists)" = yes ] && [ "$(kv project_exists)" = yes ] && [ "$(kv recommended)" = project ] &&
+  [ "$(kv order)" = "project central other" ] && [ "$(kv ask)" = yes ]
+check "choices: both exist gives project (Recommended), central, other" $?
 
 mkrepo ch2 https://github.com/o/ch2
 mkdir -p "$R/github.com/o/ch2"
@@ -673,6 +682,80 @@ check "choices: migrate is the dry run with the absolute script path" $?
 run "$WORK/ch" ai-output-choices.sh --x
 [ "$(rc)" = 2 ]
 check "choices: an argument exits 2" $?
+
+# 15. Video output choices
+[ -x "$V/video-output-choices.sh" ]
+check "video choices: the script is executable" $?
+
+mkrepo vc https://github.com/o/vc
+VC="$R/github.com/o/vc"
+before=$(snap "$H")
+runv "$WORK/vc" video-output-choices.sh
+[ "$(rc)" = 0 ] && [ "$(kv current)" = "$WORK/vc/video" ] && [ "$(kv current_exists)" = no ] &&
+  [ "$(kv central)" = "$VC/video" ] && [ "$(kv central_exists)" = no ] && [ "$(kv recommended)" = current ] &&
+  [ "$(kv order)" = "current central other" ] && ! grep -q '^central_error=' "$WORK/out"
+check "video choices: neither exists gives current (Recommended), central, other" $?
+[ "$before" = "$(snap "$H")" ] && [ ! -e "$WORK/vc/video" ]
+check "video choices: the script creates nothing" $?
+
+mkdir -p "$VC"
+runv "$WORK/vc" video-output-choices.sh
+[ "$(kv central_exists)" = no ] && [ "$(kv recommended)" = current ]
+check "video choices: a central folder without video counts as missing" $?
+
+mkdir -p "$WORK/vc/video"
+runv "$WORK/vc" video-output-choices.sh
+[ "$(kv current_exists)" = yes ] && [ "$(kv recommended)" = current ] && [ "$(kv order)" = "current central other" ]
+check "video choices: only ./video exists gives current (Recommended), central, other" $?
+
+mkdir -p "$VC/video"
+runv "$WORK/vc" video-output-choices.sh
+[ "$(kv current_exists)" = yes ] && [ "$(kv central_exists)" = yes ] && [ "$(kv recommended)" = current ] &&
+  [ "$(kv order)" = "current central other" ]
+check "video choices: both exist gives current (Recommended), central, other" $?
+
+mkrepo vc2 https://github.com/o/vc2
+mkdir -p "$R/github.com/o/vc2/video"
+runv "$WORK/vc2" video-output-choices.sh
+[ "$(kv central_exists)" = yes ] && [ "$(kv current_exists)" = no ] && [ "$(kv recommended)" = central ] &&
+  [ "$(kv order)" = "central current other" ]
+check "video choices: only the central video folder exists gives central (Recommended), current, other" $?
+
+mkdir -p "$WORK/vc/sub"
+runv "$WORK/vc/sub" video-output-choices.sh
+[ "$(kv current)" = "$WORK/vc/sub/video" ] && [ "$(kv central)" = "$VC/video" ]
+check "video choices: in a subfolder, current is video in that folder, not in the repository root" $?
+
+mkdir -p "$WORK/vplain"
+runv "$WORK/vplain" video-output-choices.sh
+[ "$(kv current)" = "$WORK/vplain/video" ] && [ "$(kv central)" = "$R/$(lkey "$WORK/vplain")/video" ]
+check "video choices: outside Git, central uses the local key" $?
+
+runv "$WORK/vc2" AI_AGENT_OUTPUT_DIR=relative video-output-choices.sh
+[ "$(rc)" = 0 ] && [ -z "$(kv central)" ] && [ -n "$(kv central_error)" ] && [ "$(kv order)" = "current other" ] &&
+  [ "$(kv recommended)" = none ]
+check "video choices: a bad AI_AGENT_OUTPUT_DIR gives central_error, no central option and no recommendation" $?
+
+runv "$WORK/vc" AI_AGENT_OUTPUT_DIR=relative video-output-choices.sh
+[ "$(kv recommended)" = current ]
+check "video choices: a bad AI_AGENT_OUTPUT_DIR with ./video gives current (Recommended)" $?
+
+runv "$WORK/vc" video-output-choices.sh --x
+[ "$(rc)" = 2 ]
+check "video choices: an argument exits 2" $?
+
+for state in none project central both; do
+  mkrepo "vs-$state" "https://github.com/o/vs-$state"
+  case $state in project | both) mkdir -p "$WORK/vs-$state/.ai" "$WORK/vs-$state/video" ;; esac
+  case $state in central | both) mkdir -p "$R/github.com/o/vs-$state/video" ;; esac
+  run "$WORK/vs-$state" ai-output-choices.sh
+  want_recommended=$(kv recommended | sed 's/project/current/')
+  want_order=$(kv order | sed 's/project/current/')
+  if [ "$state" = none ]; then when="neither exists"; else when="$state exists"; fi
+  runv "$WORK/vs-$state" video-output-choices.sh
+  [ "$(kv recommended)" = "$want_recommended" ] && [ "$(kv order)" = "$want_order" ]
+  check "video choices: same recommendation and order as ai-output-choices.sh when $when" $?
+done
 
 echo
 if [ "$FAILS" -eq 0 ]; then SUMMARY_COLOR="$GREEN"; else SUMMARY_COLOR="$RED"; fi

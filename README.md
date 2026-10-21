@@ -10,7 +10,7 @@ aiskills install kevin-lee/ai-dumping-ground
 
 `riper-5`, `pr-analysis` and `gen-motion-graphics` can write their outputs to one central folder, `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project>/`, not into the project. Outputs in the central folder are in one location for all projects, and they cannot be committed by accident.
 
-Each skill asks where to store its outputs. `riper-5` and `pr-analysis` offer the central folder, the project's `.ai/` folder and another folder. They recommend the one that exists already, or the central folder when neither exists. When both exist, they recommend none. `gen-motion-graphics` offers the current folder, the central folder (with its exact path) and another folder.
+Each skill asks where to store its outputs. `riper-5` and `pr-analysis` offer the project's `.ai/` folder, the central folder and another folder. `gen-motion-graphics` offers `video/` in the current folder, `video/` in the central folder (with its exact path) and another folder. Each skill recommends the project folder and shows it first, unless only the central folder exists. Then it recommends the central folder.
 
 `<project>` identifies the project:
 
@@ -59,7 +59,7 @@ A gitignore pattern `.ai/` matches only a folder, so Git does not ignore the `.a
 
 ### Tests
 
-[test-ai-output-scripts.sh](scripts/skills/test-ai-output-scripts.sh) runs `ai-output-dir.sh` and `migrate-ai-output.sh` against throwaway Git repositories and folders in a temporary folder and checks the results. It also tests `ai-output-choices.sh`, `link-ai-folder.sh` and `install-rule.sh`, and checks that the copies in the four skills are identical. It never touches your real output folder. It needs `bash` and `git`, and no network access.
+[test-ai-output-scripts.sh](scripts/skills/test-ai-output-scripts.sh) runs `ai-output-dir.sh` and `migrate-ai-output.sh` against throwaway Git repositories and folders in a temporary folder and checks the results. It also tests `ai-output-choices.sh`, `video-output-choices.sh`, `link-ai-folder.sh` and `install-rule.sh`, and checks that the copies in the four skills are identical. It never touches your real output folder. It needs `bash` and `git`, and no network access.
 
 ```
 bash scripts/skills/test-ai-output-scripts.sh
