@@ -47,7 +47,7 @@ Builds the video from the narration audio.
 - **Sound effects:** light, on cuts, reveals and typing.
 - **Motion graphics:** designed for every sentence, with something new on screen every second or so.
 - **Captions:** always on. The HTML has a CC toggle and lights up each word as it is spoken. The MP4 (when it is made) has them burned in unless you say no.
-- **Output:** a standalone HTML page and an MP4 (1920x1080, 60 fps, H.264, AAC, -14 LUFS). It asks whether you want both (the default) or only the HTML page, which skips the MP4 render. You can ask for the MP4 later.
+- **Output:** a standalone HTML page, and an MP4 (1920x1080, 60 fps, H.264, AAC, -14 LUFS) when you ask for it. It asks whether you want only the HTML page (the default), which skips the MP4 render, or both. You can ask for the MP4 later.
 
 The skill stays in a mode until you say the next phrase, so you can revise freely. You can go back at any time, for example with `ENTER SCRIPT MODE`. Files made after that point are then out of date.
 
@@ -57,7 +57,7 @@ The skill stays in a mode until you say the next phrase, so you can revise freel
 |---|---|
 | SCRIPT | Topic, target duration (for example 60 seconds), audience and tone, language, and sources for facts (this repository, docs, URLs) |
 | AUDIO | Voice and speeds, or let it ask |
-| VIDEO | Whether to trim the pauses (they stay by default), the look (colours, style), the music (a found track with a generated beat, the track alone, an original composed beat, a mood, or a track you have the rights to), sound effects (light, none, stronger), HTML and MP4 (default) in 1080p60 (default) or 4K60, or only HTML, and "no burned-in captions" if you want them only in the HTML |
+| VIDEO | Whether to trim the pauses (they stay by default), the look (colours, style), the music (a found track with a generated beat, the track alone, an original composed beat, a mood, or a track you have the rights to), sound effects (light, none, stronger), only HTML (default), or HTML and MP4 in 1080p60 (default) or 4K60, and "no burned-in captions" if you want them only in the HTML |
 
 ## Output
 
@@ -66,10 +66,11 @@ At the start, choose where the files go. Each video gets a `<short-summary>` fol
 | Choice | Folder |
 |---|---|
 | Current folder | `./video/<short-summary>/` |
+| Project `.ai` folder | `.ai/video/<short-summary>/` in the repository root (the current folder outside Git). Not shown when `.ai` is a link to the central folder |
 | Central AI output folder | `~/.ai/<project>/video/<short-summary>/` (the exact path is shown when it asks) |
 | Other | The folder you type |
 
-The current folder is recommended and shown first, unless only the central `video` folder exists. Then the central folder is recommended and shown first.
+The first of these folders that exists is recommended and shown first, in the order current folder, project `.ai` folder, central folder. When none exists, the current folder is recommended.
 
 `<project>` is `<host>/<owner>/<repo>` from the Git remote, or `local/<name>-<hash>` when there is no remote or no Git repository. Set `AI_AGENT_OUTPUT_DIR` to use a root other than `~/.ai`.
 
