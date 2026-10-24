@@ -1,6 +1,6 @@
 ---
 name: gen-motion-graphics
-description: Make narrated motion-graphics videos (YouTube intros, explainers, product promos) in three sequential modes. SCRIPT MODE writes a voice-over narration sized to a target duration. AUDIO MODE turns it into speech on this machine with the network blocked (Kokoro, or Qwen3-TTS for Korean), with a choice of voice, samples and speeds. VIDEO MODE asks whether to trim the pauses (they stay by default), adds beat-matched royalty-free lo-fi music, and builds a standalone HTML animation plus a YouTube-ready MP4, or only the HTML when the user chooses it. Use it whenever the user runs /gen-motion-graphics, says "ENTER SCRIPT MODE", "ENTER AUDIO MODE" or "ENTER VIDEO MODE", or asks for a narration script for a video, a local text-to-speech voice-over, or an animated video made from narration audio, even if they do not name the skill.
+description: Make narrated motion-graphics videos (YouTube intros, explainers, product promos) in three sequential modes. SCRIPT MODE writes a voice-over narration sized to a target duration. AUDIO MODE turns it into speech on this machine with the network blocked (Kokoro, or Qwen3-TTS for Korean), with a choice of voice, samples and speeds. VIDEO MODE asks whether to trim the pauses (they stay by default), adds beat-matched royalty-free lo-fi music, and builds a standalone HTML animation (the default), or also a YouTube-ready MP4 when the user chooses it. Use it whenever the user runs /gen-motion-graphics, says "ENTER SCRIPT MODE", "ENTER AUDIO MODE" or "ENTER VIDEO MODE", or asks for a narration script for a video, a local text-to-speech voice-over, or an animated video made from narration audio, even if they do not name the skill.
 ---
 
 # gen-motion-graphics
@@ -9,7 +9,7 @@ Turn a topic into a finished, narrated motion-graphics video through three modes
 
 1. **SCRIPT MODE** writes the voice-over text. Optional: skipped when the user brings a script.
 2. **AUDIO MODE** speaks it with a local text-to-speech (TTS) model. Optional: skipped when the user brings audio.
-3. **VIDEO MODE** analyses the audio and builds the video: standalone HTML and an MP4, or only the HTML.
+3. **VIDEO MODE** analyses the audio and builds the video: standalone HTML (the default), or the HTML and an MP4.
 
 `<skill>` below means this skill's directory. The helper scripts are in `<skill>/scripts/`. The Python ones run with `uv run --script` (they declare their own dependencies) and print their usage with `--help`.
 
@@ -38,7 +38,7 @@ With no argument, call `AskUserQuestion` once with two questions. The first is "
 
 The second is the location question in "Where files go". If the user picks "Help", ignore the second answer.
 
-When a required file is missing, ask for its path. Offer any candidates found under `<base>/*/sources/` when `<base>` is already chosen, else under `./video/*/sources/`, `<output>/video/*/sources/` and `.ai/video/*/sources/` (newest first), and let the user type a path as "Other".
+When a required file is missing, ask for its path. Offer any candidates found under `<base>/*/sources/` when `<base>` is already chosen, else under `./video/*/sources/`, `.ai/video/*/sources/` in the project root (the Git repository root, else the current folder) and `<output>/video/*/sources/` (newest first), and let the user type a path as "Other".
 
 ## Modes
 
@@ -63,12 +63,14 @@ Each video gets one folder, `<base>/<slug>/`. The user chooses `<base>` once, at
 Run `sh <skill>/scripts/video-output-choices.sh` from the current folder. Do not check the folders yourself. It prints `key=value` lines:
 
 - `current` is `<absolute current folder>/video`, also in a Git repository.
+- `project` is `.ai/video` in the project root, the Git repository root, else the current folder. It is empty when `.ai` is a symbolic link to the central folder, because then it is the same folder as `central`. Do not show it then.
 - `central` is `<output>/video`. `<output>` is the AI output folder of the current project, `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project key>`. The key is `<host>/<owner>/<repo>` from the Git remote, or `local/<folder name>-<hash of the absolute path>` when there is no remote or no Git repository. Do not calculate it yourself.
 - If `central_error` is set, show the message to the user. The central folder is not an option then.
 
-Ask "Where should the video files be stored?". Show the options in the `order` from the script, each with the absolute path that it gives and whether the folder exists already (`current_exists`, `central_exists`). Mark the option named by `recommended` with "(Recommended)". When `recommended=none`, mark none.
+Ask "Where should the video files be stored?". Show the options in the `order` from the script, each with the absolute path that it gives and whether the folder exists already (`current_exists`, `project_exists`, `central_exists`). Mark the option named by `recommended` with "(Recommended)". When `recommended=none`, mark none.
 
 - `current`, "Current folder": `<base>` is `current`. In a Git repository, add to the description that the files can be committed by accident unless `video/` is ignored.
+- `project`, "Project `.ai` folder": `<base>` is `project`. In a Git repository, add to the description that the files can be committed by accident unless `.ai/` is ignored.
 - `central`, "Central AI output folder": `<base>` is `central`. Show the full path, for example `/Users/me/.ai/github.com/owner/repo/video/<slug>/`, and say that `<slug>` comes from the video's content.
 - `other`, "Other": the user types a folder. `<base>` is that folder. Expand a leading `~`. A relative path is relative to the current folder. Say the resulting absolute path.
 
@@ -116,7 +118,7 @@ The narration can hold confidential information on purpose, to explain it. The u
 
 **AUDIO MODE:** Kokoro for English (and Kokoro's other languages), Qwen3-TTS for Korean. Check pronunciations first, ask for a voice (or make samples) and one or more speeds, then write one WAV per speed. Details in `references/audio-mode.md`.
 
-**VIDEO MODE:** ask whether to trim the pauses (by default they stay as recorded), about the look, music and sound effects, and then whether to make the HTML and the MP4 (the default, with the MP4's format) or only the HTML (unless already given). Then prepare the narration, time every word, and find and license-check a CC0 lo-fi track, laying a generated beat on top that is locked to it (the default), or compose an original beat in code. Mix and master to -14 LUFS, write the scenes on the bundled engine with light sound effects, check and review stills, build the HTML, and render the MP4 unless the user chose "HTML only". Captions are always on: the HTML has a CC toggle with each word highlighted as it is spoken, and the MP4 (when it is made) has them burned in unless the user says otherwise. Details in `references/video-mode.md`.
+**VIDEO MODE:** ask whether to trim the pauses (by default they stay as recorded), about the look, music and sound effects, and then whether to make only the HTML (the default) or the HTML and the MP4 (with the MP4's format) (unless already given). Then prepare the narration, time every word, and find and license-check a CC0 lo-fi track, laying a generated beat on top that is locked to it (the default), or compose an original beat in code. Mix and master to -14 LUFS, write the scenes on the bundled engine with light sound effects, check and review stills, build the HTML, and render the MP4 unless the user chose "HTML only". Captions are always on: the HTML has a CC toggle with each word highlighted as it is spoken, and the MP4 (when it is made) has them burned in unless the user says otherwise. Details in `references/video-mode.md`.
 
 ## Scripts
 
