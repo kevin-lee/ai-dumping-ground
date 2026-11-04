@@ -120,6 +120,8 @@ The narration can hold confidential information on purpose, to explain it. The u
 
 **VIDEO MODE:** ask whether to trim the pauses (by default they stay as recorded), about the look, music and sound effects, and then whether to make only the HTML (the default) or the HTML and the MP4 (with the MP4's format) (unless already given). Then prepare the narration, time every word, and find and license-check a CC0 lo-fi track, laying a generated beat on top that is locked to it (the default), or compose an original beat in code. Mix and master to -14 LUFS, write the scenes on the bundled engine with light sound effects, check and review stills, build the HTML, and render the MP4 unless the user chose "HTML only". Captions are always on: the HTML has a CC toggle with each word highlighted as it is spoken, and the MP4 (when it is made) has them burned in unless the user says otherwise. Details in `references/video-mode.md`.
 
+When you write scenes, do not use `file` as a CSS class name or as an id. Slack detects a page that uses it as binary, and the page does not show as HTML. For a card that shows a file, use a name such as `cfg`, `doc` or `fcard`.
+
 ## Scripts
 
 | Script | Does |
@@ -135,4 +137,4 @@ The narration can hold confidential information on purpose, to explain it. The u
 | `mix_audio.py` | Beat-aligned music edit, a generated beat locked to a found track, ducking, synthesized sound effects, ending, mastering, `mix.json` |
 | `fetch_font.py` | Downloads and subsets a Google Fonts family for embedding |
 | `build_html.py` | Assembles the standalone page from `assets/template.html` and the scenes |
-| `render_video.py` | `--check` lint and secret scan, `--stills` for review, `--export-sfx` sound-effect list, parallel MP4 render |
+| `render_video.py` | `--check` lint, secret scan and forbidden class name `file`, `--stills` for review, `--export-sfx` sound-effect list, parallel MP4 render |
