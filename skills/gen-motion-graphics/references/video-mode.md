@@ -104,7 +104,7 @@ Never show a key, password, token or other secret, on screen or in the captions,
 
 ## 7. Scenes, video settings, fonts
 
-Read `references/engine-api.md`. Write `sources/build/scenes/scenes.html`, `scenes.css` and `scenes.js`, and `sources/build/video.json`. Then fetch the fonts. Re-run this whenever the text on screen changes, because only the characters used are kept:
+Read `references/engine-api.md`. Write `sources/build/scenes/scenes.html`, `scenes.css` and `scenes.js`, and `sources/build/video.json`. Do not use `file` as a CSS class name or as an id (Slack then shows the page as a binary file). For a card that shows a file, use `cfg`, `doc` or `fcard`. Then fetch the fonts. Re-run this whenever the text on screen changes, because only the characters used are kept:
 
 ```sh
 uv run --script $S/fetch_font.py "Inter" sources/build/fonts --text sources/build/scenes sources/build/timings.json
@@ -142,6 +142,8 @@ uv run --script $S/render_video.py output/<slug>.html --stills auto --out-dir so
 `--check` runs every frame at 0.25 s steps in a few seconds. Fix every ERROR. Also fix the `captions`, `edge` and `overflow` notes unless an element is meant to sit there (it ignores brief contact while things fly in or out). Its `motion` line gives the elements entering per second and the longest stretch with nothing new. The intro the user approved measured 3.5 per second and 1.25 s. Under about 2 per second, or a stretch over 2 s, means adding beats to the storyboard there.
 
 `--check` also lists every `secret`: text that looks like a key, password or token, on screen, in the captions or anywhere in the page source, comments in `scenes.js` included. It never prints a secret in full. A secret makes it exit with 1: replace it with a placeholder. Only the user can decide that a match is not a secret.
+
+`--check` also reports each line that uses `file` as a CSS class name, as `error: line N: CSS class "file" makes Slack treat the page as binary`, and then exits with 1. The line number is in the built page. Rename the class in the scene files, for example to `cfg`, and build again. Do not look for a way to keep the name.
 
 `--stills auto` saves the middle of every scene and the moment just after every cut, and contact sheets of four stills each at half size (`sheet-01.png`, ...). `--debug` prints the time, scene and current word in the corner. Look at every sheet with the Read tool, open a single still where something needs a closer look, and fix what you see. A session can view only so many images: when a view comes back as "[media removed: request limit]", wait and view it again. Never change the layout on a guess about a frame you did not see:
 

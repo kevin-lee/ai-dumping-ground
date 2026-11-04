@@ -10,6 +10,8 @@
 
 The page has a Content Security Policy that blocks every request to another address. Draw icons and logos as inline SVG, or put images in as `data:` URLs. `build_html.py` refuses a scene file that loads something from another address or leaves the page, and `render_video.py --check` reports a request the policy blocked as an ERROR.
 
+Do not use `file` as a CSS class name or as an id, in `scenes.html`, `scenes.css` or markup that `scenes.js` writes. Slack detects a page that uses it as binary, and the page does not show as HTML. For a card that shows a file, use a name such as `cfg`, `doc` or `fcard`. `render_video.py --check` reports the class `file` as an error.
+
 ## The one rule: every frame is a pure function of time
 
 The renderer jumps to arbitrary times, in parallel processes, and the player seeks. So `draw(t)` must set everything that depends on time from `t` alone:
