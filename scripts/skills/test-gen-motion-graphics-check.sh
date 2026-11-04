@@ -58,9 +58,9 @@ scene("s2", { from: 0, to: DUR, init: () => $("s2a").classList.add("file"), draw
 EOF
 out="$(build_and_check "$BAD")"; status=$?
 printf '%s\n' "--- --check on the page that uses \"file\" (exit $status)" "$out"
-[ "$status" -eq 1 ] && pass "a page that uses the class \"file\" fails --check" || fail "a page that uses the class \"file\" fails --check (exit $status)"
+if [ "$status" -eq 1 ]; then pass "a page that uses the class \"file\" fails --check"; else fail "a page that uses the class \"file\" fails --check (exit $status)"; fi
 n="$(printf '%s\n' "$out" | grep -c 'error: line [0-9]*: CSS class "file" makes Slack treat the page as binary')"
-[ "$n" -eq 5 ] && pass "--check reports 5 lines: 2 class attributes, 2 CSS rules, 1 classList.add" || fail "--check reports 5 lines (got $n)"
+if [ "$n" -eq 5 ]; then pass "--check reports 5 lines: 2 class attributes, 2 CSS rules, 1 classList.add"; else fail "--check reports 5 lines (got $n)"; fi
 
 # A page with similar names and the word "file" in normal text, which must not be reported.
 GOOD="$TMP/good"
@@ -88,7 +88,7 @@ scene("s2", { from: 0, to: DUR, draw: t => {
 EOF
 out="$(build_and_check "$GOOD")"; status=$?
 printf '%s\n' "--- --check on the page that does not use \"file\" (exit $status)" "$out"
-[ "$status" -eq 0 ] && pass "a page with cfg, profile, file-list and the word \"file\" passes --check" || fail "a page with cfg, profile, file-list and the word \"file\" passes --check (exit $status)"
-printf '%s\n' "$out" | grep -q 'CSS class "file"' && fail "--check reports nothing about the class \"file\"" || pass "--check reports nothing about the class \"file\""
+if [ "$status" -eq 0 ]; then pass "a page with cfg, profile, file-list and the word \"file\" passes --check"; else fail "a page with cfg, profile, file-list and the word \"file\" passes --check (exit $status)"; fi
+if printf '%s\n' "$out" | grep -q 'CSS class "file"'; then fail "--check reports nothing about the class \"file\""; else pass "--check reports nothing about the class \"file\""; fi
 
 exit "$FAILED"
