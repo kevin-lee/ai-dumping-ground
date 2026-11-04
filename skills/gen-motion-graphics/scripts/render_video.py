@@ -13,8 +13,8 @@ text that overflows its box, and visible elements that collide with the captions
 It also measures the motion: how many elements enter per second, and the longest stretch in which
 nothing new appears (no element entering, no text changing, no cut, ring or flash). And it lists text that
 looks like a key, password or token, on screen, in the captions or anywhere in the page source, and every
-line that uses "file" as a CSS class name (Slack then shows the page as a binary file). Either one makes it
-exit with 1.
+line that starts with "." and a letter at column 0 or after tabs (Slack can show such a page as a binary
+file, issue #56). Either one makes it exit with 1.
   uv run --script render_video.py page.html --check
 Stills for review (auto = the middle of every scene plus just after every cut), with contact sheets of
 four stills each (sheet-01.png, ...), so a review needs a quarter of the image views:
@@ -170,58 +170,16 @@ def secrets(text: str) -> set[str]:
     return found
 
 
-# Slack shows a page that uses the CSS class "file" as a binary file, not as HTML (found by bisection with
-# uploads, the reason is unknown). So "file" is a forbidden class name: never look for a "safe" way to use it.
-FILE_CLASS = 'CSS class "file" makes Slack treat the page as binary. Rename it, for example to "cfg".'
-_DATA_URL = re.compile(r"""(?<=")data:[^"]*|(?<=')data:[^']*|(?<=\()data:[^)]*|data:[^\s"'<>)]*""")
-_BLOCK = re.compile(r"(<style\b[^>]*>)(.*?)</style>|(<script\b[^>]*>)(.*?)</script>", re.S | re.I)
-_STRING = r"""(["'`])((?:\\.|(?!\1).)*)\1"""
-_TOKEN = re.compile(r"(?<![^\s\"'`])file(?![^\s\"'`])")      # "file" as a whole class token
-_SELECTOR = re.compile(r"\.file(?![-\w])")                    # ".file", not ".file-list" or ".files"
+# Slack shows an uploaded page as a binary file when a line starts with "." and certain names (".file", ".text",
+# ".globl", ".type", ".byte" in the tests of issue #56), at column 0 or after tabs, in any context. build_html.py puts
+# one space before every such line. This finds the lines in a page that was built without that.
+SLACK_LINE = re.compile(r"^\t*\.[A-Za-z_][^\n]{0,30}", re.M)
+SLACK_MSG = 'starts with "." and a letter. Slack can show the page as a binary file (issue #56). Build it again with build_html.py.'
 
 
-def _blank(m: re.Match) -> str:
-    return re.sub(r"[^\n]", " ", m.group(0))  # keeps every line number
-
-
-def file_class(source: str) -> list[int]:
-    """Line numbers where the page uses "file" as a class: in a class attribute, a CSS selector or a script.
-
-    Comments and data: URLs are blanked first, so the word "file" in them, in normal text, in an id such as
-    values-file or in a class such as file-list or profile is not reported."""
-    text = _DATA_URL.sub(_blank, re.sub(r"<!--.*?-->", _blank, source, flags=re.S))
-    hits: set[int] = set()
-    found = lambda pos: hits.add(text.count("\n", 0, pos) + 1)
-    # Class attributes, in the markup and in markup that scripts write (class="...", class='...', class=\"...\").
-    for m in re.finditer(r"""(?<![\w-])class\s*=\s*(\\?["'])(.*?)\1|(?<![\w-])class\s*=\s*(file)(?![-\w])""", text, re.S):
-        if m.group(3):
-            found(m.start(3))
-        for t in _TOKEN.finditer(m.group(2) or ""):
-            found(m.start(2) + t.start())
-    for m in _BLOCK.finditer(text):
-        if m.group(1):  # CSS: a ".file" selector
-            start, css = m.start(2), re.sub(r"/\*.*?\*/", _blank, m.group(2), flags=re.S)
-            for s in _SELECTOR.finditer(css):
-                found(start + s.start())
-            continue
-        start = m.start(4)
-        js = re.sub(r"/\*.*?\*/", _blank, m.group(4), flags=re.S)
-        js = re.sub(r"(?<![:\\\"'])//[^\n]*", _blank, js)
-        calls = [  # (call, how to read its strings)
-            (r"\.(?:querySelector(?:All)?|closest|matches)\s*\(\s*" + _STRING, _SELECTOR),
-            (r"\bgetElementsByClassName\s*\(\s*" + _STRING, _TOKEN),
-            (r"\.className\s*\+?=\s*" + _STRING, _TOKEN),
-            (r"""\bsetAttribute\s*\(\s*["']class["']\s*,\s*""" + _STRING, _TOKEN),
-        ]
-        for rx, inner in calls:
-            for c in re.finditer(rx, js, re.S):
-                for s in inner.finditer(c.group(2)):
-                    found(start + c.start(2) + s.start())
-        for c in re.finditer(r"\bclassList\s*\.\s*(?:add|remove|toggle|replace|contains)\s*\(([^)]*)\)", js):
-            for s in re.finditer(_STRING, c.group(1)):
-                if s.group(2).strip() == "file":
-                    found(start + c.start(1) + s.start())
-    return sorted(hits)
+def slack_lines(source: str) -> list[tuple[int, str]]:
+    """Line numbers and starts of the lines that can make Slack show the page as a binary file."""
+    return [(source.count("\n", 0, m.start()) + 1, m.group(0).strip()) for m in SLACK_LINE.finditer(source)]
 
 
 def launch(p, scale: float):
@@ -321,10 +279,10 @@ def check(html: Path, step: float) -> None:
     for label, ts in sorted(found.items(), key=lambda kv: min(kv[1], default=1e9)):
         where = f"on screen at {min(ts):.2f}-{max(ts):.2f}s" if ts else "in the page source only, not on screen"
         print(f"  secret   {label} {where}")
-    file_lines = file_class(html.read_text(encoding="utf-8"))
-    for line in file_lines:
-        print(f"  error: line {line}: {FILE_CLASS}")
-    if problems or found or file_lines:
+    slack = slack_lines(html.read_text(encoding="utf-8"))
+    for line, text in slack:
+        print(f'  error: line {line}: "{text}" {SLACK_MSG}')
+    if problems or found or slack:
         sys.exit(1)
 
 

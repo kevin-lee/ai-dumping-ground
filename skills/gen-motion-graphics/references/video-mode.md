@@ -104,7 +104,7 @@ Never show a key, password, token or other secret, on screen or in the captions,
 
 ## 7. Scenes, video settings, fonts
 
-Read `references/engine-api.md`. Write `sources/build/scenes/scenes.html`, `scenes.css` and `scenes.js`, and `sources/build/video.json`. Do not use `file` as a CSS class name or as an id (Slack then shows the page as a binary file). For a card that shows a file, use `cfg`, `doc` or `fcard`. Then fetch the fonts. Re-run this whenever the text on screen changes, because only the characters used are kept:
+Read `references/engine-api.md`. Write `sources/build/scenes/scenes.html`, `scenes.css` and `scenes.js`, and `sources/build/video.json`. Then fetch the fonts. Re-run this whenever the text on screen changes, because only the characters used are kept:
 
 ```sh
 uv run --script $S/fetch_font.py "Inter" sources/build/fonts --text sources/build/scenes sources/build/timings.json
@@ -143,7 +143,7 @@ uv run --script $S/render_video.py output/<slug>.html --stills auto --out-dir so
 
 `--check` also lists every `secret`: text that looks like a key, password or token, on screen, in the captions or anywhere in the page source, comments in `scenes.js` included. It never prints a secret in full. A secret makes it exit with 1: replace it with a placeholder. Only the user can decide that a match is not a secret.
 
-`--check` also reports each line that uses `file` as a CSS class name, as `error: line N: CSS class "file" makes Slack treat the page as binary`, and then exits with 1. The line number is in the built page. Rename the class in the scene files, for example to `cfg`, and build again. Do not look for a way to keep the name.
+`--check` also reports each line that starts with `.` and a letter at column 0 or after tabs, as `error: line N: "..." starts with "." and a letter`, and then exits with 1. Slack can show such a page as a binary file (issue #56). `build_html.py` puts a space before these lines, so only a page built another way has them: build it again with `build_html.py`. Passing `--check` does not guarantee that Slack shows the page as HTML, because Slack does not document how it detects the type. If Slack shows a page as a binary file, zip the page for sharing, or find the cause by uploading copies with one part removed at a time, with a page that works stripped the same way as a control.
 
 `--stills auto` saves the middle of every scene and the moment just after every cut, and contact sheets of four stills each at half size (`sheet-01.png`, ...). `--debug` prints the time, scene and current word in the corner. Look at every sheet with the Read tool, open a single still where something needs a closer look, and fix what you see. A session can view only so many images: when a view comes back as "[media removed: request limit]", wait and view it again. Never change the layout on a guess about a frame you did not see:
 

@@ -48,6 +48,13 @@ EXTERNAL = re.compile(
 )
 
 
+# Slack shows an uploaded page as a binary file, not as HTML, when a line starts with "." and certain names, at
+# column 0 or after tabs (issue #56). Uploads found ".file", ".text", ".globl", ".type" and ".byte", also as a prefix
+# (".files") and in CSS, comments and text alike. The list behind it is unknown, so every line that starts with
+# optional tabs, "." and a letter gets one space in front, which was safe in every test.
+SLACK_SAFE = re.compile(r"^(?=\t*\.[A-Za-z_])", re.M)
+
+
 def b64(path: Path) -> str:
     return base64.b64encode(path.read_bytes()).decode("ascii")
 
@@ -151,9 +158,11 @@ def main() -> None:
             "AUDIO_PRELOAD": preload,
         },
     )
+    html, shifted = SLACK_SAFE.subn(" ", html)
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text(html, encoding="utf-8")
-    print(f"{a.out} ({a.out.stat().st_size / 1e6:.2f} MB, {config['duration']:.2f} s, {len(timings)} words)")
+    print(f"{a.out} ({a.out.stat().st_size / 1e6:.2f} MB, {config['duration']:.2f} s, {len(timings)} words, "
+          f"{shifted} lines that start with \".\" moved by one space for Slack)")
     if a.audio_url:
         dst = a.out.parent / a.audio_url
         shutil.copyfile(a.audio, dst)
