@@ -10,7 +10,7 @@
 
 The page has a Content Security Policy that blocks every request to another address. Draw icons and logos as inline SVG, or put images in as `data:` URLs. `build_html.py` refuses a scene file that loads something from another address or leaves the page, and `render_video.py --check` reports a request the policy blocked as an ERROR.
 
-Do not use `file` as a CSS class name or as an id, in `scenes.html`, `scenes.css` or markup that `scenes.js` writes. Slack detects a page that uses it as binary, and the page does not show as HTML. For a card that shows a file, use a name such as `cfg`, `doc` or `fcard`. `render_video.py --check` reports the class `file` as an error.
+Slack shows an uploaded page as a binary file when a line starts with `.` and certain names, such as `.file {`, `.text {` or `.type {` (issue #56). So `build_html.py` puts one space before every line of the page that starts with `.` and a letter, at column 0 or after tabs. Class names do not need to change. In text that keeps its spaces (`white-space: pre`, such as `.term .body`), do not start a line of `scenes.html` with `.`, because the space shows. Write such text from `scenes.js`, for example with `typed()`.
 
 ## The one rule: every frame is a pure function of time
 

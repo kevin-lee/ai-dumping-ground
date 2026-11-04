@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# Tests that `render_video.py --check` of the gen-motion-graphics skill reports the CSS class name "file".
-# Slack shows a page that uses it as a binary file, not as HTML (issue #56).
+# Tests that gen-motion-graphics pages are safe to upload to Slack (issue #56).
 #
-# It builds two small pages with build_html.py in a temporary folder and runs --check on each:
-#   - a page with class="a card file", ".file { ... }" and classList.add("file") must fail
-#   - a page with class="cfg", ".profile", ".file-list", the id "values-file", a comment with ".file"
-#     and the word "file" in a caption must pass
+# Slack shows an uploaded page as a binary file when a line starts with "." and certain names (".file", ".text",
+# ".globl", ".type", ".byte" in the upload tests), at column 0 or after tabs, in CSS, comments and text alike.
+#
+#   - build_html.py puts one space before every line that starts with optional tabs, "." and a letter,
+#     so a built page has no such line, and render_video.py --check passes.
+#   - A page with such a line (a page built without the space) fails --check, with one error per line.
+#   - The class name "file" in the middle of a line (class="a card file") is not a problem.
 #
 # Needs python3, uv and Google Chrome (or Playwright's Chromium). --check opens the page with ?capture,
 # so it never loads the audio.
@@ -19,76 +21,73 @@ S="$ROOT/skills/gen-motion-graphics/scripts"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 FAILED=0
+TAB="$(printf '\t')"
+DOT_LINE="^${TAB}*\\.[A-Za-z_]"   # a line that starts with optional tabs, "." and a letter
 
 pass() { printf 'PASS %s\n' "$1"; }
 fail() { printf 'FAIL %s\n' "$1"; FAILED=1; }
+check() { uv run --quiet --script "$S/render_video.py" "$1" --check 2>&1; }
 
-common() { # $1: folder
-  mkdir -p "$1/scenes"
-  printf '{"title": "check test", "lang": "en", "fadeOut": 0.5}\n' > "$1/video.json"
-  printf '{"duration": 3}\n' > "$1/mix.json"
-  printf '[{"w": "Open", "s": 0.3, "e": 0.6}, {"w": "the", "s": 0.6, "e": 0.7}, {"w": "file", "s": 0.7, "e": 1.1}]\n' > "$1/timings.json"
-  printf 'not real audio' > "$1/master.mp3"
-}
+D="$TMP/page"
+mkdir -p "$D/scenes"
+printf '{"title": "check test", "lang": "en", "fadeOut": 0.5}\n' > "$D/video.json"
+printf '{"duration": 3}\n' > "$D/mix.json"
+printf '[{"w": "Open", "s": 0.3, "e": 0.6}, {"w": "the", "s": 0.6, "e": 0.7}, {"w": "file", "s": 0.7, "e": 1.1}]\n' > "$D/timings.json"
+printf 'not real audio' > "$D/master.mp3"
 
-build_and_check() { # $1: folder; prints the --check output, returns its exit status
-  python3 "$S/build_html.py" --video "$1/video.json" --mix "$1/mix.json" --timings "$1/timings.json" \
-    --audio "$1/master.mp3" --scenes "$1/scenes" --out "$1/page.html" > /dev/null || return 99
-  uv run --quiet --script "$S/render_video.py" "$1/page.html" --check 2>&1
-}
-
-# A page that uses the class "file" in the markup, in the CSS and in a script.
-BAD="$TMP/bad"
-common "$BAD"
-cat > "$BAD/scenes/scenes.html" <<'EOF'
+# Every trigger that the upload tests found: in CSS, a CSS comment, page text and a JS comment, at column 0 and
+# after a tab, and as a prefix. Plus the class name "file" in the middle of a line, which is safe.
+cat > "$D/scenes/scenes.html" <<EOF
 <section class="scene" id="s2">
   <div class="a card file" id="s2a" style="left:600px;top:400px"><div class="fh">values-hydra.yaml</div></div>
-  <div class="a card file" id="s2b" style="left:1300px;top:400px"><div class="fh">values-kratos.yaml</div></div>
+  <div class="a card files" id="s2b" style="left:1300px;top:400px">values-kratos.yaml</div>
+  <p class="a" id="s2c" style="left:960px;top:650px">
+.file
+  </p>
 </section>
 EOF
-cat > "$BAD/scenes/scenes.css" <<'EOF'
+cat > "$D/scenes/scenes.css" <<EOF
 .file { width: 560px; padding: 24px 28px; }
 .file .fh { font-family: var(--font-mono); }
+${TAB}.text { color: inherit; }
+.files { margin: 0; }
+/*
+.type
+*/
 EOF
-cat > "$BAD/scenes/scenes.js" <<'EOF'
-scene("s2", { from: 0, to: DUR, init: () => $("s2a").classList.add("file"), draw: t => {
-  S($("s2a"), pop(t, cue("Open"), .4, 20, .8));
-  S($("s2b"), pop(t, cue("file"), .4, 20, .8));
-}});
-EOF
-out="$(build_and_check "$BAD")"; status=$?
-printf '%s\n' "--- --check on the page that uses \"file\" (exit $status)" "$out"
-if [ "$status" -eq 1 ]; then pass "a page that uses the class \"file\" fails --check"; else fail "a page that uses the class \"file\" fails --check (exit $status)"; fi
-n="$(printf '%s\n' "$out" | grep -c 'error: line [0-9]*: CSS class "file" makes Slack treat the page as binary')"
-if [ "$n" -eq 5 ]; then pass "--check reports 5 lines: 2 class attributes, 2 CSS rules, 1 classList.add"; else fail "--check reports 5 lines (got $n)"; fi
-
-# A page with similar names and the word "file" in normal text, which must not be reported.
-GOOD="$TMP/good"
-common "$GOOD"
-cat > "$GOOD/scenes/scenes.html" <<'EOF'
-<section class="scene" id="s2">
-  <!-- a card for each file -->
-  <div class="a card cfg" id="values-file" style="left:600px;top:400px"><div class="fh">values-hydra.yaml</div></div>
-  <div class="a card profile" id="s2b" style="left:1300px;top:400px"><ul class="file-list"><li>a file</li></ul></div>
-</section>
-EOF
-cat > "$GOOD/scenes/scenes.css" <<'EOF'
-/* a .file card is called .cfg */
-.cfg { width: 560px; padding: 24px 28px; }
-.cfg .fh { font-family: var(--font-mono); }
-.profile { width: 400px; }
-.file-list { margin: 0; }
-EOF
-cat > "$GOOD/scenes/scenes.js" <<'EOF'
-// the card shows one file
+cat > "$D/scenes/scenes.js" <<EOF
+/*
+${TAB}.globl
+*/
 scene("s2", { from: 0, to: DUR, draw: t => {
-  S($("values-file"), pop(t, cue("Open"), .4, 20, .8));
-  S($("s2b"), pop(t, cue("file"), .4, 20, .8));
+  S(\$("s2a"), pop(t, cue("Open"), .4, 20, .8));
+  S(\$("s2b"), pop(t, cue("file"), .4, 20, .8));
 }});
 EOF
-out="$(build_and_check "$GOOD")"; status=$?
-printf '%s\n' "--- --check on the page that does not use \"file\" (exit $status)" "$out"
-if [ "$status" -eq 0 ]; then pass "a page with cfg, profile, file-list and the word \"file\" passes --check"; else fail "a page with cfg, profile, file-list and the word \"file\" passes --check (exit $status)"; fi
-if printf '%s\n' "$out" | grep -q 'CSS class "file"'; then fail "--check reports nothing about the class \"file\""; else pass "--check reports nothing about the class \"file\""; fi
+
+if ! python3 "$S/build_html.py" --video "$D/video.json" --mix "$D/mix.json" --timings "$D/timings.json" \
+  --audio "$D/master.mp3" --scenes "$D/scenes" --out "$D/page.html" > "$D/build.txt"; then
+  fail "build_html.py builds the page"
+  exit 1
+fi
+cat "$D/build.txt"
+
+n="$(grep -c "$DOT_LINE" "$D/page.html")"
+if [ "$n" -eq 0 ]; then pass "the built page has no line that starts with \".\" and a letter"; else fail "the built page has no line that starts with \".\" and a letter (got $n)"; fi
+n="$(grep -c -e '^ \.file {' -e "^ ${TAB}\\.text {" -e '^ \.files {' -e '^ \.type$' -e "^ ${TAB}\\.globl$" -e '^ \.file$' "$D/page.html")"
+if [ "$n" -eq 6 ]; then pass "the 6 scene lines are still there, with one space in front"; else fail "the 6 scene lines are still there, with one space in front (got $n)"; fi
+if grep -q 'class="a card file"' "$D/page.html"; then pass "the class name \"file\" does not change"; else fail "the class name \"file\" does not change"; fi
+
+out="$(check "$D/page.html")"; status=$?
+printf '%s\n' "--- --check on the built page (exit $status)" "$out"
+if [ "$status" -eq 0 ]; then pass "the built page passes --check"; else fail "the built page passes --check (exit $status)"; fi
+
+# The same page without the space before 2 of the lines, as a page built without this fix would be.
+sed -e 's/^ \(\.file {\)/\1/' -e "s/^ \\(${TAB}\\.text {\\)/\\1/" "$D/page.html" > "$D/old.html"
+out="$(check "$D/old.html")"; status=$?
+printf '%s\n' "--- --check on the page without the space (exit $status)" "$out"
+if [ "$status" -eq 1 ]; then pass "a page with a line that starts with \".\" fails --check"; else fail "a page with a line that starts with \".\" fails --check (exit $status)"; fi
+n="$(printf '%s\n' "$out" | grep -c -e 'error: line [0-9]*: "\.file {.*" starts with "\." and a letter' -e 'error: line [0-9]*: "\.text {.*" starts with "\." and a letter')"
+if [ "$n" -eq 2 ]; then pass "--check reports the 2 lines, .file and a tab then .text"; else fail "--check reports the 2 lines, .file and a tab then .text (got $n)"; fi
 
 exit "$FAILED"

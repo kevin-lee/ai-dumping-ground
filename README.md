@@ -75,6 +75,12 @@ bash scripts/skills/test-ai-output-scripts-linux.sh
 
 To test other images, pass their names. This needs network access to pull the images and install `git` in them.
 
+[test-gen-motion-graphics-check.sh](scripts/skills/test-gen-motion-graphics-check.sh) builds a small page with `build_html.py` of `gen-motion-graphics` in a temporary folder. It checks that no line of the page starts with `.` and a letter (Slack shows such a page as a binary file), and that `render_video.py --check` passes on the page and fails on a copy that has such lines. It needs `python3`, `uv` and Google Chrome (or Playwright's Chromium).
+
+```
+bash scripts/skills/test-gen-motion-graphics-check.sh
+```
+
 ## Scripts
 
 ### Claude Code status line
