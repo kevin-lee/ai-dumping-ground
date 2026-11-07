@@ -33,6 +33,7 @@ import argparse
 import hashlib
 import html
 import json
+import os
 import re
 import sys
 import urllib.request
@@ -224,6 +225,13 @@ def samples_page(out_dir: Path, voices: list[str], text: str) -> Path:
     return page
 
 
+def require_offline() -> None:
+    """Text and audio must never leave this machine: work only inside offline.sh's network block."""
+    if os.environ.get("GEN_MOTION_GRAPHICS_NETWORK") != "blocked":
+        sys.exit("Run this through scripts/offline.sh, which blocks the network, so the text and audio cannot "
+                 "leave this machine. Only --setup runs without it.")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--setup", action="store_true", help="download the model files (network)")
@@ -244,6 +252,7 @@ def main() -> None:
     if a.setup:
         setup()
         return
+    require_offline()
     kokoro = load()
     if a.list_voices:
         print(" ".join(sorted(kokoro.get_voices())))

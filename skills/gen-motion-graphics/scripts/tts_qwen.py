@@ -42,6 +42,7 @@ more respellings, overrides a built-in one, or switches it off with null: {"Git"
 import argparse
 import html
 import json
+import os
 import platform
 import re
 import shutil
@@ -109,6 +110,38 @@ def word_pattern(word: str) -> re.Pattern:
     pre = r"(?<![A-Za-z0-9])" if latin.match(word[0]) else ""
     post = r"(?![A-Za-z0-9])" if latin.match(word[-1]) else ""
     return re.compile(pre + re.escape(word) + post)
+
+
+def require_offline() -> None:
+    """Text and audio must never leave this machine: work only inside offline.sh's network block, whatever the
+    model. offline.sh sets the variable only together with the block."""
+    if os.environ.get("GEN_MOTION_GRAPHICS_NETWORK") != "blocked":
+        sys.exit("Run this through scripts/offline.sh, which blocks the network, so the text and audio cannot "
+                 "leave this machine. Only --setup runs without it.")
+
+
+def respell_text(text: str, language: str, lexicon: Path | None) -> str:
+    """The text with the built-in PRONUNCIATIONS for the language and the lexicon's "say" entries applied.
+    A lexicon entry overrides a built-in one, and null switches it off."""
+    respell = {w: {"say": v} for w, v in PRONUNCIATIONS.get(language, {}).items()}
+    user = json.loads(lexicon.read_text(encoding="utf-8")) if lexicon else {}
+    for word, fix in user.items():
+        if fix is None:
+            respell.pop(word, None)
+        else:
+            respell[word] = fix
+    unused = []
+    for word, fix in respell.items():
+        if isinstance(fix, dict) and "say" in fix:
+            pat = word_pattern(word)
+            if not pat.search(text):
+                if word in user:
+                    unused.append(word)
+                continue
+            text = pat.sub(lambda m, say=fix["say"]: say, text)
+    if unused:
+        print(f"note: these lexicon entries do not occur in the text, so they change nothing: {unused}")
+    return text
 
 
 def detect_language(text: str) -> str:
@@ -262,28 +295,12 @@ def main() -> None:
     if a.setup:
         setup(a.model)
         return
+    require_offline()
     if not a.text or not (a.out_dir or a.list_chunks):
         sys.exit("--text and --out-dir are required")
     text = a.text.read_text(encoding="utf-8").strip()
     language = LANGS.get(a.language, a.language) if a.language else detect_language(text)
-    respell = {w: {"say": v} for w, v in PRONUNCIATIONS.get(language, {}).items()}
-    user = json.loads(a.lexicon.read_text(encoding="utf-8")) if a.lexicon else {}
-    for word, fix in user.items():
-        if fix is None:
-            respell.pop(word, None)
-        else:
-            respell[word] = fix
-    unused = []
-    for word, fix in respell.items():
-        if isinstance(fix, dict) and "say" in fix:
-            pat = word_pattern(word)
-            if not pat.search(text):
-                if word in user:
-                    unused.append(word)
-                continue
-            text = pat.sub(lambda m, say=fix["say"]: say, text)
-    if unused:
-        print(f"note: these lexicon entries do not occur in the text, so they change nothing: {unused}")
+    text = respell_text(text, language, a.lexicon)
     if a.list_chunks:
         for i, c in enumerate(chunks(text, language), 1):
             print(f"chunk {i}: {c}")

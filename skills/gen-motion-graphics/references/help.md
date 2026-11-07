@@ -33,7 +33,7 @@ Writes the voice-over narration for a target duration.
 Speaks the script on this machine, offline.
 
 - **English** (and Kokoro's other languages): Kokoro, default voice `af_heart`.
-- **Korean:** Qwen3-TTS, default voice Sohee in a cheerful style. The style changes only the tone, never your words.
+- **Korean:** you choose the engine. Qwen3-TTS (the default) has the voice Sohee, by default in a cheerful style. The style changes only the tone, never your words. VoxCPM2 makes a voice from a description, or clones a voice from a clip you give.
 - Pick a voice or ask for samples, then one or more playback speeds: `1x`, `1.18x`, `1.30x`, or your own list such as `1, 1.3, 1.5`. A 1.18x file is 1.18 times shorter than the 1x file.
 - Every file is checked against the script with a local Whisper model.
 - Optional: skip it by bringing your own audio file.
@@ -83,4 +83,4 @@ Speech and transcription run locally with the network blocked, so your script an
 ## Requirements
 
 - macOS or Linux, `uv`, `ffmpeg`, and Google Chrome (or Playwright's Chromium).
-- First runs download the Kokoro model (about 350 MB), Whisper large-v3-turbo (about 1.6 GB) and, for Korean, the Qwen3-TTS 1.7B model (about 4.2 GB). You are asked before each.
+- First runs download the Kokoro model (about 350 MB), Whisper large-v3-turbo (about 1.6 GB) and, for Korean, the Qwen3-TTS 1.7B model (about 4.2 GB) or the VoxCPM2 model (about 5 GB). You are asked before each.

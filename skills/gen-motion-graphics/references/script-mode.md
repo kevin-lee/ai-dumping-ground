@@ -6,7 +6,7 @@ Write `sources/script/narration.txt`: the exact words a TTS voice will speak ove
 
 - **Topic or prompt.** What the video is about and what it is for (channel intro, product intro, explainer, announcement).
 - **Target duration.** Required, because it sets the length. If the prompt has none, call `AskUserQuestion` with "How long should the video be?" and the options "30 seconds", "60 seconds (Recommended)", "90 seconds" and "2 minutes". The user can type another length as Other. A range such as "60 to 90 seconds" is fine. Aim for the middle of it.
-- **Language.** Write in the language of the request unless the user asks for another. Korean narration is spoken by Qwen3-TTS in AUDIO MODE. Everything below applies, and Korean notes are at the end.
+- **Language.** Write in the language of the request unless the user asks for another. Korean narration is spoken by Qwen3-TTS or VoxCPM2 in AUDIO MODE (the user chooses there). Everything below applies, and Korean notes are at the end.
 - **Audience and tone.** Infer them (a YouTube intro is upbeat, confident and concrete). Ask only when the answer would change the script substantially.
 - **Facts.** When the video is about a project in the current repository, read its README, docs and the code behind each claim. Read any files or URLs the user names. Every statement must be true. Do not invent features, numbers, users or quotes. If something is unclear, leave it out or ask.
 
@@ -24,7 +24,7 @@ English words per second of narration with the pauses kept, measured with Kokoro
 
 Words ≈ (T − 7) × rate. Plan for 1.0x unless the user mentions a faster pace. Examples at 1.0x for a technical script: 30 s needs about 60 words, 60 s about 140 words, 90 s about 215 words. `af_bella` reads about 3 % slower than `af_heart`. Trimming the pauses in VIDEO MODE makes English narration about 8 % shorter, if the user chooses it there.
 
-Korean (Qwen3-TTS 1.7B, `Sohee` in the default cheerful style, measured): about 5.3 Hangul syllables per second with the pauses kept, so plan (T − 7) × 5.3 Hangul characters, not counting spaces, punctuation and Latin letters. Each English word inside the Korean text adds roughly 0.4 s. Trimming the pauses makes it about 10 % shorter. The 0.6B model pauses much longer: the same Korean text ran 39 s with it against 28 s with the 1.7B model.
+Korean (Qwen3-TTS 1.7B, `Sohee` in the default cheerful style, measured): about 5.3 Hangul syllables per second with the pauses kept, so plan (T − 7) × 5.3 Hangul characters, not counting spaces, punctuation and Latin letters. Each English word inside the Korean text adds roughly 0.4 s. Trimming the pauses makes it about 10 % shorter. The 0.6B model pauses much longer: the same Korean text ran 39 s with it against 28 s with the 1.7B model. VoxCPM2 speaks about 10 % slower than Qwen3-TTS 1.7B (the same text ran 28.7 s with a designed voice and 29.9 s with a clone, against 26.5 s), so plan about 4.8 Hangul characters per second for it. The engine is chosen only in AUDIO MODE, so size for Qwen3-TTS unless the user already said VoxCPM2.
 
 Stay within about 5 % of the budget. The user can adjust the speed in AUDIO MODE, so being slightly long is better than padding.
 
@@ -93,5 +93,5 @@ Revisions stay in SCRIPT MODE: rewrite the same file and report again.
 - Use 합니다체 by default: 소개합니다, 바꿔 줍니다, 설치할 수 있습니다. The user prefers it to 해요체. A softer ending in the hook is fine (하나쯤 있죠). Switch to 해요체 only when the user asks for it.
 - A cheerful sound comes from the voice, not from the wording. AUDIO MODE speaks with a bright, cheerful style by default. Once the user found a take "a bit curt and gruff", and they meant the tone of the voice, not the word endings. So never rewrite the endings to sound friendlier. To sound livelier, change the voice style in AUDIO MODE.
 - Write numbers the way they should be read when it matters (삼 년, 세 개, 이천이십육 년).
-- English product names may stay in Latin letters. Qwen3-TTS reads mixed text, but check them in AUDIO MODE. For a name whose reading is uncertain, consider writing it in Hangul (스칼라) and adding a `display.json` entry back to the Latin spelling.
+- English product names may stay in Latin letters. Qwen3-TTS and VoxCPM2 read mixed text, but check them in AUDIO MODE. For a name whose reading is uncertain, consider writing it in Hangul (스칼라) and adding a `display.json` entry back to the Latin spelling.
 - Particles attach to names (Scala로, AI Skills는). That is fine for speech, and the captions keep them.
