@@ -34,6 +34,7 @@ display.json: [{"spoken": "skills dot S H", "written": "skills.sh"}, ...]
 import argparse
 import difflib
 import json
+import os
 import platform
 import re
 import subprocess
@@ -232,6 +233,9 @@ def main() -> None:
             WhisperModel(FW_MODEL, device="auto", compute_type="auto")
             print(f"faster-whisper {FW_MODEL} is cached")
         return
+    if os.environ.get("GEN_MOTION_GRAPHICS_NETWORK") != "blocked":   # audio and script must stay on this machine
+        sys.exit("Run this through scripts/offline.sh, which blocks the network, so the audio and the script cannot "
+                 "leave this machine. Only --setup runs without it.")
     if not a.audio or not (a.out or a.check):
         sys.exit("audio and out are required (or --setup, or --check)")
     if a.check and not a.script:
