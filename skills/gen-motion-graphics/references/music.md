@@ -56,7 +56,6 @@ Check the license on the **track** page, not the artist or album. One artist can
 | Windows Down | HoliznaCC0 (Lazy Summer Lofi) | 110 | 2:46 | fastest, punchy drums, drop at 8 s | https://freemusicarchive.org/music/holiznacc0/lazy-summer-lofi-1/windows-downmp3/ |
 | Midnight Cruiser | Zane Little (New Peach Radio) | 101 | 2:24 | lo-fi funk, drums almost throughout | https://freemusicarchive.org/music/zane-little/new-peach-radio/midnight-cruiser/ |
 | Coexistenz | Loyalty Freak Music (TO CHILL AND STAY AWAKE) | 100 | 2:36 | jazzy hip hop, the happiest of these | https://freemusicarchive.org/music/Loyalty_Freak_Music/TO_CHILL_AND_STAY_AWAKE/Loyalty_Freak_Music_-_TO_CHILL_AND_STAY_AWAKE_-_01_Coexistenz/ |
-| Detour | Zane Little (New Peach Radio) | 100 | 4:11 | lo-fi funk, long | https://freemusicarchive.org/music/zane-little/new-peach-radio/detour/ |
 | happy lofi day | Tarush Singhal (OpenGameArt) | 99 | 1:56 | strongest drums, short, drums from the first bar | https://opengameart.org/content/happy-lofi-day |
 | Plants | HoliznaCC0 (Lo-fi And Chill) | 97 | 3:52 | smooth, steady | https://freemusicarchive.org/music/holiznacc0/lo-fi-and-chill/plantsmp3/ |
 | Mixed Signals | HoliznaCC0 (Lo-fi And Chill) | 96 | 1:49 | short, strong drums | https://freemusicarchive.org/music/holiznacc0/lo-fi-and-chill/mixed-signals/ |
@@ -69,6 +68,12 @@ Check the license on the **track** page, not the artist or album. One artist can
 | Bus Stop | HoliznaCC0 (City Slacker) | 88 | 3:16 | firm drums | https://freemusicarchive.org/music/holiznacc0/city-slacker/bus-stop/ |
 | Doodles (LoFi, Happy) | HoliznaCC0 (Public Domain Lofi) | 85 | 2:18 | used in the user's earlier ai-skills intro, drop at 22.6 s | https://freemusicarchive.org/music/holiznacc0/public-domain-lofi/doodles-lofi-happy-mp3/ |
 | Lofi Jam | John Bartmann (Moody Beats) | 84 | 3:24 | punchiest drums at a relaxed tempo | https://freemusicarchive.org/music/John_Bartmann/moody-beats/lofi-jam/ |
+
+Do not use these tracks, even when a search finds them or the user's earlier videos used them:
+
+| Track | Artist (album) | Why |
+|---|---|---|
+| Detour | Zane Little (New Peach Radio) | unpleasant noise at the start |
 
 The "Cue" page lists a whole compilation. The track is the file `Cue_0.mp3`, so download it by hand and fill in `MUSIC.md` yourself.
 
