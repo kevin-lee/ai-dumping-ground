@@ -595,6 +595,69 @@ def getHttpUrlConnection(): HttpUrlConnection
 
 This applies to all identifier types: classes, traits, objects, methods, variables, and type aliases.
 
+### Split the name into parts
+
+Before you rename an identifier for this rule, split the name into its parts. A part is a word, an abbreviation or an acronym. Each part starts with a capital letter, and the other letters of the part are lower case. The capital letters show where each part starts. They do not show whether the source word was all capitals.
+
+1. **A part with more than one letter has one capital letter, also when it is an acronym.** `HTTP` + `Client` → `HttpClient`. `URL` + `List` → `UrlList`.
+2. **A part with one letter is one capital letter.** `S` (String) + `List` → `SList`, not `Slist`. `C` + `URL` → `CUrl`. `C` + `S` (String) + `URL` + `ID` + `List` → `CSUrlIdList`, not `CSURLIDList` (acronyms in all capitals) and not `CsUrlIdList` (`C` and `S` written as one part). In camelCase, the first part is lower case: `cSUrlIdList`.
+3. **`OAuth` is `O` (Open) + `Auth` (Authorization).** So it stays `OAuth`, never `Oauth`. It is also the usual spelling of the protocol name.
+4. **A name that is one word as used is one part.** The project name "curl" is one word. The curl Frequently Asked Questions (FAQ) says that the name started as a play on "Client for URLs", but today the name is "curl". So `Curl` and `CurlCode` are correct, and `CUrl` is wrong for it.
+
+**Bad:**
+```scala
+// Acronyms in all capitals
+final case class CSURLIDList(values: List[String])
+
+// Two parts written as one part
+final case class ClaudeAiOauth(accessToken: String) // O + Auth
+trait CodexOauth                                    // O + Auth
+final case class Slist(values: List[String])        // S + List
+final case class CsUrlIdList(values: List[String])  // C + S
+
+// The one-word name "curl" split into "C" + "URL"
+object CUrl
+```
+
+**Good:**
+```scala
+final case class CSUrlIdList(values: List[String])
+val cSUrlIdList: CSUrlIdList = CSUrlIdList(List.empty)
+
+final case class ClaudeAiOAuth(accessToken: String)
+trait CodexOAuth
+final case class SList(values: List[String])
+final case class UrlList(values: List[String])
+
+object Curl
+enum CurlCode {
+  case Ok
+  case CouldNotConnect
+}
+```
+
+| Bad | Good | Parts |
+|-----|------|-------|
+| `URLList`, `Urllist` | `UrlList` | `URL` + `List` |
+| `Slist` | `SList` | `S` (String) + `List` |
+| `CSURLIDList`, `CsUrlIdList` | `CSUrlIdList` | `C` + `S` (String) + `URL` + `ID` + `List` |
+| `csurlidlist` (a value) | `cSUrlIdList` | the same parts, in camelCase |
+| `Oauth` | `OAuth` | `O` (Open) + `Auth` (Authorization) |
+| `ClaudeAiOauth` | `ClaudeAiOAuth` | `Claude` + `Ai` + `O` + `Auth` |
+| `CUrl`, `CURL` | `Curl` | "curl" is one word |
+| `CURLcode` | `CurlCode` | "curl" + "code" |
+
+**A JSON key with a different spelling:** if a JSON key is spelled `claudeAiOauth` and a codec reads the key by the field name, the field name can keep the spelling of the key. The type name still uses `OAuth`.
+
+```scala
+// The field name follows the JSON key "claudeAiOauth". The type name uses OAuth.
+final case class Credentials(claudeAiOauth: ClaudeAiOAuth)
+```
+
+Do not flag `OAuth`, `SList` or `CSUrlIdList` in a naming check.
+
+**Note:** on a file system that is not case-sensitive (for example macOS), a rename that changes only the case (for example `Slist` to `SList`) can leave old compiled files (for example Scala Native `.nir` files) in the build output, and then the build can fail. Rename in two steps through a temporary name.
+
 ---
 
 ## 18. Separate Operations from Data in Case Classes
