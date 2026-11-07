@@ -13,13 +13,17 @@ STEPS
                  you name another location. An outdated rule is shown with a diff.
                  For Cursor, it prints the text to paste.
   Each step starts with a dry run, and changes something only after you agree.
+  After status, migrate and install-rule, it always asks whether to link .ai, unless
+  .ai is already linked or still has files.
 
 OUTPUT FOLDER
   ${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project>
   <project> is <host>/<owner>/<repo> from the Git remote, or local/<name>-<hash>
   (folder name and a hash of the path) when there is no remote or no Git repository.
   Clones and worktrees of one repository share one folder. Symbolic links in the
-  project path are kept.
+  project path are kept. When local/<name>-<hash> does not exist, but a folder
+  local/<name>-<other hash> has the same canonical path in its .project-info, that
+  folder is used.
   AI_AGENT_OUTPUT_DIR can be an absolute path, ~, or a path that starts with ~/,
   $HOME/ or ${HOME}/.
 
