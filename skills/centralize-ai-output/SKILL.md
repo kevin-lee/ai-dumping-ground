@@ -12,11 +12,12 @@ AI agents write plans, reports, notes, videos and other outputs. This skill keep
 ## Rules
 
 - The folder is `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project>`. `sh <skill>/scripts/ai-output-dir.sh` prints it. Do not calculate it yourself.
-- `<project>` is `<host>/<owner>/<repo>` of the Git remote (`origin`, else the first remote by name), without the user, the credentials, the port and `.git`, in lowercase. All clones and worktrees of one repository share one folder. Without a remote, or outside Git, it is `local/<name>-<hash>`: the folder name and 8 hexadecimal digits of the `cksum` value of the absolute path. The path keeps symbolic links, and all worktrees share one folder.
+- `<project>` is `<host>/<owner>/<repo>` of the Git remote (`origin`, else the first remote by name), without the user, the credentials, the port and `.git`, in lowercase. All clones and worktrees of one repository share one folder. Without a remote, or outside Git, it is `local/<name>-<hash>`: the folder name and 8 hexadecimal digits of the `cksum` value of the absolute path. The path keeps symbolic links, and all worktrees share one folder. When that folder does not exist, but a folder `local/<name>-<other hash>` has a `.project-info` with the same `canonical=` path, the script uses that folder. This happens when the same project is opened through another path with the same name, for example through a symbolic link.
 - `AI_AGENT_OUTPUT_DIR` can be an absolute path, `~`, or a path that starts with `~/`, `$HOME/` or `${HOME}/`.
 - Each project folder has a hidden `.project-info` file with the remote and every path that used the folder.
 - Every step starts with a dry run. Run a step with `--apply` only after the user explicitly agrees to that step. Never delete or overwrite a file, except what the `link` step lists and the user accepts.
 - When the user runs `migrate`, `link` or `install-rule` directly, first run `sh <skill>/scripts/install-rule.sh --check`. If it exits 3, tell the user in one line which rule is outdated or broken and that `install-rule` updates it. Then continue the step.
+- After `status`, `migrate` and `install-rule`, do the link offer (see below). Do it every time.
 - If a script exits with an error, show its message and stop. If a sandbox blocks a write, tell the user to allow writes to the root folder (`sh <skill>/scripts/ai-output-dir.sh --root` prints it) or to the agent config folder.
 
 ## Arguments
@@ -40,13 +41,14 @@ Run these and report the results in short form:
 3. `sh <skill>/scripts/link-ai-folder.sh`: the link state.
 4. `sh <skill>/scripts/install-rule.sh`: the rule state of each agent. `create` or `add` means that the rule is not installed. `outdated` means that the rule is installed but is different from the rule that the script writes now: an older skill version, a different script path, or a hand edit. `unchanged` means that the rule is up to date.
 
-Then offer the steps that are not done yet. When a rule is outdated, offer install-rule first, then migrate and link. Else use this order: migrate, link, install-rule. Ask the user which to run, with a choice prompt if the agent has one.
+Then offer the steps that are not done yet. When a rule is outdated, offer install-rule first, then migrate and link. Else use this order: migrate, link, install-rule. Ask the user which to run, with a choice prompt if the agent has one. Always include link when the link offer below applies. After the steps that the user chose are done, do the link offer again, because a migrate can make `.ai` empty.
 
 ## migrate
 
 1. Run `sh <skill>/scripts/migrate-ai-output.sh --all` (dry run) and show the result. It moves every entry of `.ai/`, files at the top level included. `.DS_Store` files stay.
 2. Ask the user. Only after an explicit yes, run it with `--apply`.
 3. Report what moved, what is the same, the conflicts and what is left. A conflict means that a different file with the same name exists in the output folder. Both files stay. Let the user decide what to do with them.
+4. Do the link offer.
 
 ## link
 
@@ -55,6 +57,14 @@ The link makes `.ai` a symbolic link to the output folder, so any agent or tool 
 1. Run `sh <skill>/scripts/link-ai-folder.sh` (dry run). If it exits with 4, explain why (files are still in `.ai`, `.ai` is tracked by Git, or `.ai` links to a different place) and stop.
 2. Show what it removes. This is the only step that removes anything: `.DS_Store` files and empty folders in `.ai`. Ask each time. Only after an explicit yes, run it with `--apply`.
 3. If it prints the gitignore warning, explain it: a `.ai/` pattern matches only a folder, not a symbolic link, so `.ai` shows as untracked. The fix is `.ai` (no slash) in the project's `.gitignore` or in the global gitignore file. Do not change any gitignore file unless the user asks.
+
+## Link offer
+
+Always ask the user whether to link `.ai` to the output folder, unless the project already has a `.ai` that is not empty.
+
+1. Run `sh <skill>/scripts/link-ai-folder.sh` (dry run).
+2. If it prints `already linked`, do not ask. If it exits with 4, do not ask. `.ai` still has files, is tracked by Git, or links to a different place. When `.ai` has files, tell the user that migrate must move them first.
+3. Else `.ai` does not exist, or has only empty folders and `.DS_Store` files. Ask the user whether to link it, with a choice prompt if the agent has one. Show what the dry run removes. If the user agrees, do the link step from its step 2 (the `--apply` run). Ask again each time, also when the user said no before.
 
 ## install-rule
 
@@ -70,4 +80,5 @@ The rule tells agents to write their outputs into the output folder unless the u
 3. Cursor has no user rule file. Show the text from `sh <skill>/scripts/install-rule.sh --print`, and tell the user to paste it into Cursor Settings > Rules > User Rules.
 4. The rule takes effect in new sessions.
 5. The rule has no key format. It only runs `ai-output-dir.sh`, so a change of the project key needs no rule update.
-6. When a rule is outdated or has broken markers, `ai-output-dir.sh` of this skill (the script that the rule runs) prints a note for the agent on stderr. `AI_AGENT_OUTPUT_RULE_CHECK=0` turns the note off.
+6. Do the link offer.
+7. When a rule is outdated or has broken markers, `ai-output-dir.sh` of this skill (the script that the rule runs) prints a note for the agent on stderr. `AI_AGENT_OUTPUT_RULE_CHECK=0` turns the note off.

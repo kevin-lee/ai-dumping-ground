@@ -319,6 +319,36 @@ run "$WORK/p2/same" ai-output-dir.sh --print-only
 SAME2=$(out)
 [[ "$SAME1" == "$R/local/same-"* ]] && [[ "$SAME2" == "$R/local/same-"* ]] && [ "$SAME1" != "$SAME2" ]
 check "not Git: two folders with the same name get different folders" $?
+run "$WORK/p1/same" ai-output-dir.sh
+run "$WORK/p2/same" ai-output-dir.sh
+[ "$(out)" = "$SAME2" ] && [ -d "$SAME1" ] && [ -d "$SAME2" ]
+check "not Git: a folder with the same name and another canonical path is not reused" $?
+
+# The same project through another path with the same name: a different hash, the same canonical path.
+mkdir -p "$WORK/reuse/real/rproj"
+ln -s "$WORK/reuse/real" "$WORK/reuse/alias"
+run "$WORK/reuse/real/rproj" ai-output-dir.sh
+REUSE1=$(out)
+run "$WORK/reuse/alias/rproj" ai-output-dir.sh --print-only
+[ "$(out)" = "$REUSE1" ] && [ "$REUSE1" != "$R/$(lkey "$WORK/reuse/alias/rproj")" ] &&
+  [ ! -e "$R/$(lkey "$WORK/reuse/alias/rproj")" ]
+check "not Git: --print-only reuses local/<name>-<other hash> with the same canonical path" $?
+run "$WORK/reuse/alias/rproj" ai-output-dir.sh
+[ "$(rc)" = 0 ] && [ "$(out)" = "$REUSE1" ] && [ ! -e "$R/$(lkey "$WORK/reuse/alias/rproj")" ] &&
+  has_line "$REUSE1/.project-info" "path=$WORK/reuse/alias/rproj"
+check "not Git: the other path reuses the folder and is added to .project-info" $?
+mkdir -p "$R/$(lkey "$WORK/reuse/alias/rproj")"
+run "$WORK/reuse/alias/rproj" ai-output-dir.sh --print-only
+[ "$(out)" = "$R/$(lkey "$WORK/reuse/alias/rproj")" ]
+check "not Git: the folder of the exact local key wins when it exists" $?
+
+mkrepo reuse/real/rrepo
+run "$WORK/reuse/real/rrepo" ai-output-dir.sh
+RREPO=$(out)
+run "$WORK/reuse/alias/rrepo" ai-output-dir.sh
+[ "$(rc)" = 0 ] && [ "$(out)" = "$RREPO" ] && [ ! -e "$R/$(lkey "$WORK/reuse/alias/rrepo")" ] &&
+  has_line "$RREPO/.project-info" "path=$WORK/reuse/alias/rrepo"
+check "no remote: the other path reuses local/<name>-<other hash> with the same canonical path" $?
 
 mkdir -p "$WORK/.dotproj"
 run "$WORK/.dotproj" ai-output-dir.sh --print-only

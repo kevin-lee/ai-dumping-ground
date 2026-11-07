@@ -18,6 +18,9 @@
 #         The path keeps symbolic links as $PWD shows them. If the agent starts its shell in the resolved path, $PWD has
 #         no symbolic link to keep, and the resolved path is used.
 #         A linked worktree without a remote uses the folder whose .project-info has canonical=<main worktree path>.
+#         When the folder of the local key does not exist, and a folder local/<name>-<other hash> has a .project-info
+#         with canonical=<the same canonical path>, that folder is used. This happens when the same project is
+#         reached through another path, for example through a symbolic link with the same name.
 #
 # Rule check: without an option, when install-rule.sh is in the same folder (only in centralize-ai-output), the script
 # runs install-rule.sh --check. For each installed Centralize AI Output rule that is outdated or has broken markers, it
@@ -59,6 +62,27 @@ local_key() { # absolute path. Prints local/<name>-<hash>.
   l_c=$(printf '%s' "$1" | cksum) || return 1
   l_c=${l_c%% *}
   printf 'local/%s-%08x\n' "$l_n" "$l_c"
+}
+
+reuse_local() { # folder of the local key, canonical path. Prints the folder to use.
+  # When the folder of the local key does not exist, a folder local/<same name>-<other hash> whose .project-info has
+  # canonical=<the same canonical path> is the same project reached through another path. Use it.
+  r_out=$1
+  if [ ! -d "$r_out" ] && [ -d "$base/local" ]; then
+    r_name=${r_out##*/}
+    r_name=${r_name%-*}
+    for r_d in "$base/local/"*; do
+      case ${r_d##*/} in
+        "$r_name"-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;;
+        *) continue ;;
+      esac
+      if [ -f "$r_d/.project-info" ] && grep -qxF -e "canonical=$2" "$r_d/.project-info" 2>/dev/null; then
+        printf '%s\n' "$r_d"
+        return 0
+      fi
+    done
+  fi
+  printf '%s\n' "$r_out"
 }
 
 normalize_remote() { # remote URL. Prints <host>/<path>, or nothing for a local path.
@@ -216,7 +240,7 @@ if $in_git; then
   elif ! $linked; then
     kind=local
     lkey=$(local_key "$top_logical") || die 1 "cannot calculate the local key of $top_logical"
-    out=$base/$lkey
+    out=$(reuse_local "$base/$lkey" "$main_canonical")
   else
     kind=local
     lkey=$(local_key "$main_canonical") || die 1 "cannot calculate the local key of $main_canonical"
@@ -234,7 +258,7 @@ if $in_git; then
 else
   kind=local
   lkey=$(local_key "$logical") || die 1 "cannot calculate the local key of $logical"
-  out=$base/$lkey
+  out=$(reuse_local "$base/$lkey" "$phys")
   path_line=$logical
   canonical_line=$phys
 fi
