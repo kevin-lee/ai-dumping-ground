@@ -68,6 +68,14 @@ Avoid `var` unless it is absolutely required (e.g. for Java interop or performan
 ### 17. Naming: No ALL-CAPITAL Acronyms
 Never use all-capital letters for acronyms or short words in identifiers — they are hard to read. Use PascalCase for acronyms/abbreviations. For example: `VpnIdHttpPinUuid` not `VPNIDHTTPPINUUID`, `HttpClient` not `HTTPClient`, `JsonParser` not `JSONParser`.
 
+Refinements:
+- Split the name into its parts. A part is a word, an abbreviation or an acronym. Each part starts with a capital letter, and the other letters of the part are lower case. The capital letters show where each part starts. They do not show whether the source word was all capitals.
+- A part with more than one letter has one capital letter, also when it is an acronym: `HTTP` + `Client` → `HttpClient`, `URL` + `List` → `UrlList`.
+- A part with one letter is one capital letter: `S` (String) + `List` → `SList` (not `Slist`), `C` + `URL` → `CUrl`, `C` + `S` (String) + `URL` + `ID` + `List` → `CSUrlIdList` (not `CSURLIDList` or `CsUrlIdList`). In camelCase, the first part is lower case: `cSUrlIdList`.
+- `OAuth` is `O` (Open) + `Auth` (Authorization), so it stays `OAuth` (never `Oauth`). It is also the usual spelling of the protocol name. For example: `ClaudeOAuth`, `CodexOAuth`, `ClaudeAiOAuth` not `ClaudeAiOauth`. If a JavaScript Object Notation (JSON) key is spelled `claudeAiOauth`, the field name can keep the spelling of the key when a codec reads the key by the field name, but the type name uses `OAuth`.
+- A name that is one word as used is one part. The project name "curl" is one word (it started as a play on "Client for URLs", but today the name is "curl"), so `Curl` and `CurlCode` are correct.
+- Before you rename an identifier for this rule, find its parts. Do not flag `OAuth`, `SList` or `CSUrlIdList`.
+
 ### 18. Separate Operations from Data in Case Classes
 Do not put methods in a case class body. Instead, define them as extension methods in the companion object. Case classes should be pure data carriers — separating operations from data follows the core FP principle of defining data types and functions over them independently. This improves composability, makes serialization cleaner, and avoids conflating data definition with behavior.
 
@@ -139,7 +147,7 @@ When **refactoring existing Scala code**: scan for violations of the rules above
 - Scala 3 code using significant indentation (braceless) syntax instead of braces
 - `if` expressions missing an `else` branch
 - Use of `var` where `val` or immutable patterns would suffice
-- ALL-CAPITAL acronyms in identifiers (e.g. `HTTPClient` instead of `HttpClient`)
+- ALL-CAPITAL acronyms in identifiers (e.g. `HTTPClient` instead of `HttpClient`). Each part of a name starts with one capital letter, and a part with one letter is one capital letter. Do not flag `OAuth` (`O` + `Auth`), `SList` (`S` + `List`) or `CSUrlIdList`
 - Methods defined directly in case class bodies instead of as extension methods in companion objects
 - Default parameter values hiding semantics, smuggling policy, or encouraging oversized function signatures
 - Tuple element access via `_._1`, `_._2` instead of pattern matching (e.g. `{ case (name, _) => name }`)
