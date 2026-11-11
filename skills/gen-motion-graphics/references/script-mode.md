@@ -79,7 +79,7 @@ It works on macOS and Linux and installs with Homebrew.
 
 ## 6. Save and report
 
-1. Decide the video folder and slug (see "Where files go" in SKILL.md). Write `sources/script/narration.txt` (UTF-8, ending with a newline) and `display.json` if needed.
+1. Decide the video folder (see "Where files go" in SKILL.md). In the central folder, decide `<project-name>` before you write the file. Write `sources/script/narration.txt` (UTF-8, ending with a newline) and `display.json` if needed.
 2. Show the full script in your reply. Users want to read it, not open a file.
 3. Report the word count (Korean: characters). Give the estimated narration length at 1.0x, 1.18x and 1.30x with the pauses kept, and the resulting video length (narration + about 7 s). Mention that trimming the pauses in VIDEO MODE would make it about 8 % shorter (Korean about 10 %).
 4. List the spoken-form choices you made and the names whose pronunciation AUDIO MODE should check.

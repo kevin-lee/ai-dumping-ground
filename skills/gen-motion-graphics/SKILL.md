@@ -38,7 +38,7 @@ With no argument, call `AskUserQuestion` once with two questions. The first is "
 
 The second is the location question in "Where files go". If the user picks "Help", ignore the second answer.
 
-When a required file is missing, ask for its path. Offer any candidates found under `<base>/*/sources/` when `<base>` is already chosen, else under `./video/*/sources/`, `.ai/video/*/sources/` in the project root (the Git repository root, else the current folder) and `<output>/video/*/sources/` (newest first), and let the user type a path as "Other".
+When a required file is missing, ask for its path. Offer any candidates found under `<base>/*/sources/` when `<base>` is already chosen (also `<base>/*/*/sources/` when `<base>` is `central`), else under `./video/*/sources/`, `.ai/video/*/sources/` in the project root (the Git repository root, else the current folder), `<output>/video/*/sources/` and `<output>/video/*/*/sources/` (newest first), and let the user type a path as "Other".
 
 ## Modes
 
@@ -58,7 +58,7 @@ Read the reference for a mode when you enter it, not before:
 
 ## Where files go
 
-Each video gets one folder, `<base>/<slug>/`. The user chooses `<base>` once, at the start, and the later modes reuse it.
+Each video gets one folder, `<base>/<slug>/`. In the central folder, a video about a different project gets one more level, `<base>/<project-name>/<slug>/` (see "Project name"). The user chooses `<base>` once, at the start, and the later modes reuse it.
 
 Run `sh <skill>/scripts/video-output-choices.sh` from the current folder. Do not check the folders yourself. It prints `key=value` lines:
 
@@ -71,22 +71,58 @@ Ask "Where should the video files be stored?". Show the options in the `order` f
 
 - `current`, "Current folder": `<base>` is `current`. In a Git repository, add to the description that the files can be committed by accident unless `video/` is ignored.
 - `project`, "Project `.ai` folder": `<base>` is `project`. In a Git repository, add to the description that the files can be committed by accident unless `.ai/` is ignored.
-- `central`, "Central AI output folder": `<base>` is `central`. Show the full path, for example `/Users/me/.ai/github.com/owner/repo/video/<slug>/`, and say that `<slug>` comes from the video's content.
+- `central`, "Central AI output folder": `<base>` is `central`. Show the full path, for example `/Users/me/.ai/github.com/owner/repo/video/<slug>/`, and say that `<slug>` comes from the video's content. Also say that a video about a project other than `repo` goes to `video/<project-name>/<slug>/`.
 - `other`, "Other": the user types a folder. `<base>` is that folder. Expand a leading `~`. A relative path is relative to the current folder. Say the resulting absolute path.
 
 Do not ask, and tell the user which folder is used, when:
 
 - The user's prompt names a location. That location is `<base>`.
-- An input file is inside an existing video folder (a folder with `sources/` and `output/`, under a folder named `video`). Use that video folder again.
+- An input file is inside an existing video folder (a folder with `sources/` and `output/`, directly under a folder named `video`, or under `video/<project-name>/` in the central folder). Use that video folder again. Do not ask the project question either.
 
 Ask again only if the user asks to change the location. When the first file is written for the central folder, run `sh <skill>/scripts/ai-output-dir.sh` once to create it. If a sandbox blocks a write, tell the user to allow writes to that folder (`sh <skill>/scripts/ai-output-dir.sh --root` prints the central root).
 
 Video folders in the project are an expected place, not old files. Never offer to move them to the central folder.
 
+### Project name
+
+This section applies only when `<base>` is `central`. For `current`, `project` and `other`, the video folder is always `<base>/<slug>/`.
+
+The central folder belongs to one project already: the project where the skill runs. A video about that project goes to `<base>/<slug>/`. A video about a different project goes to `<base>/<project-name>/<slug>/`, so that the videos about each project stay together. A project can be anything: a software repository, a product, a team, a course, a hobby.
+
+The central project name is the last part of the project key in the `central` path that the script prints. Read it from that path. Do not calculate the key.
+
+- `<root>/<host>/<owner>/<repo>/video` gives `<repo>`.
+- `<root>/local/<name>-<8 hexadecimal digits>/video` gives `<name>`.
+
+Examples, for a video about `refined4s`:
+
+- `central` is `~/.ai/local/refined4s-1a2b3c4d/video`. The central project name is `refined4s`, the same project. The video folder is `~/.ai/local/refined4s-1a2b3c4d/video/<slug>/`.
+- `central` is `~/.ai/local/pr-1a2b3c4d/video`. The central project name is `pr`, a different project. The video folder is `~/.ai/local/pr-1a2b3c4d/video/refined4s/<slug>/`.
+
+Decide as soon as the video's content is known and before the first file is written: in SCRIPT MODE after the topic is known, and when starting from an audio file without a script, after the transcription.
+
+1. Guess the project that the video is about. For a repository or a pull request, use the repository name (`refined4s`). Otherwise use a short kebab-case name of the subject (`sourdough`).
+2. If the guess is the central project name (compare without case), use `<base>/<slug>/`. Do not ask. Tell the user the folder.
+3. Else ask "Which project is this video for?" with these options:
+   1. The guess, marked "(Recommended)". In the description, show the full path `<base>/<guess>/<slug>/`.
+   2. The central project name: "This project", with the path `<base>/<slug>/`.
+   3. Up to two existing project folders under `<base>` (folders without `sources/` directly in them), the closest to the content first.
+   4. "Other" (added by the tool): the user types a name.
+
+Do not ask, and tell the user which folder is used, when the user's prompt names the project, or when an existing video folder is used again (see above).
+
+The name is one folder name. Keep a repository name as it is. For other names use lowercase kebab-case. Do not use `/`, `.`, `..`, `sources` or `output`. If `<base>/<project-name>/` is a video folder (it has `sources/` directly in it), ask for a different name.
+
+Two projects with the same name share one folder, for example two repositories named `utils` with different owners. When `<base>/<project-name>/` already holds videos about a different project, say so and suggest a longer name, for example `<owner>-utils`.
+
+Videos at `<base>/<slug>/` in the central folder from before this rule stay where they are, also when they are about a different project. Use them again as they are. Never move them, and never offer to move them.
+
+### Slug
+
 `<slug>` is a short kebab-case summary of the video's content, for example `ai-skills-intro` or `sourdough-basics-explainer`. When starting from an audio file without a script, transcribe it first (VIDEO MODE does this anyway) and name the folder after its content. If the folder already exists for a different video, add `-2`, `-3`, and so on. If it holds the same video from an earlier session, reuse it and tell the user.
 
 ```
-<video folder>/
+<video folder>/                   <base>/<slug>/ or <base>/<project-name>/<slug>/
 ├── output/                       what the user asked for
 │   ├── <slug>.html               standalone page: plays with no other file
 │   └── <slug>.mp4                YouTube-ready video (not made for "HTML only")

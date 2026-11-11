@@ -67,12 +67,14 @@ At the start, choose where the files go. Each video gets a `<short-summary>` fol
 |---|---|
 | Current folder | `./video/<short-summary>/` |
 | Project `.ai` folder | `.ai/video/<short-summary>/` in the repository root (the current folder outside Git). Not shown when `.ai` is a link to the central folder |
-| Central AI output folder | `~/.ai/<project>/video/<short-summary>/` (the exact path is shown when it asks) |
+| Central AI output folder | `~/.ai/<project key>/video/<short-summary>/`, or `~/.ai/<project key>/video/<project-name>/<short-summary>/` for a video about a different project (the exact path is shown when it asks) |
 | Other | The folder you type |
 
 The first of these folders that exists is recommended and shown first, in the order current folder, project `.ai` folder, central folder. When none exists, the current folder is recommended.
 
-`<project>` is `<host>/<owner>/<repo>` from the Git remote, or `local/<name>-<hash>` when there is no remote or no Git repository. Set `AI_AGENT_OUTPUT_DIR` to use a root other than `~/.ai`.
+`<project-name>` is the project that the video is about, for example `refined4s` for a video about a pull request in that repository, or `sourdough` for a baking explainer. It is used only in the central folder, and only when the central folder belongs to a different project. For example, from `~/.ai/local/pr-<hash>/`, a `refined4s` video goes to `video/refined4s/<short-summary>/`. From `~/.ai/local/refined4s-<hash>/`, it goes to `video/<short-summary>/`. When the project is not clear, it asks, suggests a name, and lists the project folders that exist. Name the project in your prompt to skip the question.
+
+`<project key>` is `<host>/<owner>/<repo>` from the Git remote of the folder where you run the skill, or `local/<name>-<hash>` when there is no remote or no Git repository. Set `AI_AGENT_OUTPUT_DIR` to use a root other than `~/.ai`.
 
 Name a folder in your prompt to use it instead.
 
