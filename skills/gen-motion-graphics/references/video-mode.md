@@ -45,7 +45,7 @@ $S/offline.sh uv run --script $S/make_timings.py sources/build/narration.wav sou
 - Drop `--display` if there is no such file. `--offset` is the lead-in, the video time of the first word, and must equal `--lead-in` in step 5 (2.0 s by default).
 - It prints how much of the script matched what Whisper heard. Below 80 % usually means the wrong script or a bad recording. Investigate before continuing.
 - Read `sources/build/timings.txt`. It lists every sentence with start and end times and is the basis for the storyboard.
-- Without a script, Whisper's own words are used. Review them for misspelled names and fix those through a `display.json`. If the video folder has no name yet, name it now from the content.
+- Without a script, Whisper's own words are used. Review them for misspelled names and fix those through a `display.json`. If the video folder has no name yet, choose it now from the content (see "Project name" and "Slug" in SKILL.md).
 
 ## 4. Music
 
