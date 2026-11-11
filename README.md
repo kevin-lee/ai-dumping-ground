@@ -6,6 +6,16 @@ Use [ai-skills](https://github.com/kevin-lee/ai-skills) to install the skills in
 aiskills install kevin-lee/ai-dumping-ground
 ```
 
+## Table of contents
+
+- [Skill output folder](#skill-output-folder)
+  - [Migration from the old `.ai/` folder](#migration-from-the-old-ai-folder)
+  - [centralize-ai-output](#centralize-ai-output)
+  - [Tests](#tests)
+- [Scripts](#scripts)
+  - [Claude Code status line](#claude-code-status-line)
+    - [Tests](#tests-1)
+
 ## Skill output folder
 
 `riper-5`, `pr-analysis` and `gen-motion-graphics` can write their outputs to one central folder, `${AI_AGENT_OUTPUT_DIR:-~/.ai}/<project>/`, not into the project. Outputs in the central folder are in one location for all projects, and they cannot be committed by accident.
