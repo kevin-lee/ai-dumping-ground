@@ -26,14 +26,52 @@ import re
 import sys
 import urllib.request
 from pathlib import Path
+from urllib.parse import urlparse
 
 UA = {"User-Agent": "Mozilla/5.0"}  # FMA answers 403 to Python's default user agent
 
 
-def get(url: str, timeout: int = 60) -> tuple[bytes, str, str]:
+def site_of(url: str) -> str | None:
+    """The supported site that hosts the URL (the site itself or a subdomain), or None."""
+    p = urlparse(url)
+    host = (p.hostname or "").lower()
+    if p.scheme not in ("http", "https"):
+        return None
+    return next((s for s in SITES if host == s or host.endswith("." + s)), None)
+
+
+def require_site(url: str, what: str) -> str:
+    site = site_of(url)
+    if site is None:
+        sys.exit(f"the {what} {url} is not on {' or '.join(SITES)}; for other sources download by hand and fill MUSIC.md")
+    return site
+
+
+class SitesOnlyRedirects(urllib.request.HTTPRedirectHandler):
+    """Refuse a redirect to another host before the request is sent."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        require_site(newurl, "redirect target")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+SITES_ONLY = urllib.request.build_opener(SitesOnlyRedirects)
+
+
+def get(url: str, timeout: int = 60, sites_only: bool = True) -> tuple[bytes, str, str]:
+    if sites_only:
+        require_site(url, "URL")
     req = urllib.request.Request(url, headers=UA)
-    with urllib.request.urlopen(req, timeout=timeout) as r:
+    with (SITES_ONLY.open if sites_only else urllib.request.urlopen)(req, timeout=timeout) as r:
         return r.read(), r.headers.get("Content-Type", ""), r.geturl()
+
+
+def file_name(value: str) -> str:
+    """argparse type for --name: one plain file name, so the files stay in the output folder."""
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", value) or ".." in value:
+        raise argparse.ArgumentTypeError(
+            f"{value!r} is not a plain file name; use letters, digits, '.', '_' and '-' only, with no '..' and no path")
+    return value
 
 
 def fma(page: str, url: str) -> dict:
@@ -56,12 +94,17 @@ def oga(page: str, url: str) -> dict:
     if not files:
         sys.exit("no audio file link found on this OpenGameArt page")
     block = page[page.find("License(s)"):][:1500] if "License(s)" in page else page
-    lic = re.search(r"""href=['"](https?://creativecommons\.org/[^'"]+)['"]""", block)
+    lic = re.search("href=['\"](https?://creativecommons\\.org/[^'\"]+)['\"]", block)
     names = re.findall(r"class='license-name'>([^<]+)<", block)
     author = re.search(r'field-name-author-submitter.*?<a[^>]*>([^<]+)</a>', page, re.S)
     mp3 = next((f for f in files if f.endswith(".mp3")), files[0])
     return {"title": title.group(1) if title else Path(mp3).stem, "artist": author.group(1).strip() if author else "",
             "album": "", "file": mp3, "license_url": lic.group(1) if lic else "", "license": ", ".join(n.strip() for n in names)}
+
+
+# The supported sites and the parser for the track pages of each. A new site needs an entry here.
+PARSERS = {"freemusicarchive.org": fma, "opengameart.org": oga}
+SITES = tuple(PARSERS)
 
 
 def classify(lic_url: str, lic_text: str) -> str:
@@ -77,7 +120,7 @@ def classify(lic_url: str, lic_text: str) -> str:
 
 def wayback(url: str) -> str:
     try:
-        _, _, final = get("https://web.archive.org/save/" + url, timeout=150)
+        _, _, final = get("https://web.archive.org/save/" + url, timeout=150, sites_only=False)
         return final if "/web/" in final else ""
     except Exception as e:  # the archive is often slow; this is optional proof
         print(f"Wayback snapshot failed ({e}); try again later at https://web.archive.org/save/{url}")
@@ -88,18 +131,15 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("url")
     ap.add_argument("out_dir", type=Path)
-    ap.add_argument("--name", help="file name without extension (default: from the title)")
+    ap.add_argument("--name", type=file_name, help="file name without extension (default: from the title)")
     ap.add_argument("--no-wayback", action="store_true")
     a = ap.parse_args()
 
+    site = require_site(a.url, "track page")
     raw, _, _ = get(a.url)
     page = raw.decode("utf-8", errors="replace")
-    if "freemusicarchive.org" in a.url:
-        t = fma(page, a.url)
-    elif "opengameart.org" in a.url:
-        t = oga(page, a.url)
-    else:
-        sys.exit("only freemusicarchive.org and opengameart.org pages are supported; for other sources download by hand and fill MUSIC.md")
+    t = PARSERS[site](page, a.url)
+    require_site(t["file"], "audio file URL on the track page")
     t["title"] = re.sub(r"\.mp3$", "", t["title"].strip(), flags=re.I)
     kind = classify(t["license_url"], t["license"])
     if kind == "refuse":
@@ -107,7 +147,7 @@ def main() -> None:
     if kind == "unknown":
         sys.exit(f'could not confirm the license on the page (found "{t["license"]}" {t["license_url"]}); check it by hand')
 
-    name = a.name or re.sub(r"[^a-z0-9]+", "-", t["title"].lower()).strip("-")
+    name = a.name or re.sub(r"[^a-z0-9]+", "-", t["title"].lower()).strip("-") or "track"
     a.out_dir.mkdir(parents=True, exist_ok=True)
     data, ctype, _ = get(t["file"], timeout=300)
     if not (ctype.startswith("audio") or data[:3] == b"ID3" or data[:2] == b"\xff\xfb"):
