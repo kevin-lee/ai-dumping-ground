@@ -15,6 +15,8 @@ aiskills install kevin-lee/ai-dumping-ground
 - [Scripts](#scripts)
   - [Claude Code status line](#claude-code-status-line)
     - [Tests](#tests-1)
+  - [Rule installer](#rule-installer)
+    - [Tests](#tests-2)
 
 ## Skill output folder
 
@@ -147,3 +149,68 @@ bash scripts/config/claude/test-setup-statusline-linux.sh
 ```
 
 To test other images, pass their names, for example `bash scripts/config/claude/test-setup-statusline-linux.sh debian:bookworm-slim`. This needs network access to pull the images and install `jq` in them.
+
+### Rule installer
+
+[install-rule.sh](scripts/rules/install-rule.sh) installs a rule from [rules/](rules) for AI agents. The default rule is [Clear-Writing.md](rules/Clear-Writing.md).
+
+Requirements: a POSIX `sh` on macOS or Linux. Running it from GitHub also needs `curl`.
+
+Choose one or more agents with `--agent`. Without `--apply`, the script only shows what it would change.
+
+```
+sh scripts/rules/install-rule.sh --agent claude --agent codex            # dry run
+sh scripts/rules/install-rule.sh --apply --agent claude --agent codex    # write
+sh scripts/rules/install-rule.sh --apply --agent all                     # every global agent
+sh scripts/rules/install-rule.sh --print                                 # print the rule text
+```
+
+Or run it from GitHub:
+
+```
+curl -fsSL https://raw.githubusercontent.com/kevin-lee/ai-dumping-ground/main/scripts/rules/install-rule.sh | sh -s -- --apply --agent claude
+```
+
+To install only `Clear-Writing` rule:
+```
+curl -fsSL https://raw.githubusercontent.com/kevin-lee/ai-dumping-ground/main/scripts/rules/install-rule.sh | sh -s -- --apply --agent claude --rule Clear-Writing
+```
+
+| `--agent` | Where the rule goes |
+|---|---|
+| `claude` | `${CLAUDE_CONFIG_DIR:-~/.claude}/rules/Clear-Writing.md` |
+| `codex` or `chatgpt` | a marked block in `${CODEX_HOME:-~/.codex}/AGENTS.md`, or in `AGENTS.override.md` in the same folder when that file exists, because Codex then reads it instead of `AGENTS.md` |
+| `antigravity` or `gemini` | a marked block in `~/.gemini/GEMINI.md`. Gemini CLI reads this file too |
+| `windsurf` or `devin` | `~/.devin/rules/Clear-Writing.md` with `trigger: always_on` front matter (Devin Desktop, the new name of Windsurf), and a marked block in `~/.codeium/windsurf/memories/global_rules.md` (old Windsurf). Each one only when its folder exists |
+| `cursor` | nowhere. Cursor has no global rule file. The script tells you to paste the text from `--print` into Cursor Settings > Rules > User Rules |
+| `agents` | a marked block in `AGENTS.md` of the project. Codex, Cursor, Windsurf, Antigravity and other agents read it. Claude Code does not |
+| `all` | `claude`, `codex`, `antigravity`, `windsurf` and `cursor`. Not `agents`, because it changes a project |
+
+Options:
+
+- `--rule <name>`: install `rules/<name>.md` instead of `Clear-Writing.md`.
+- `--force`: replace a rule file of `claude` or `windsurf` that has the same name but that the script did not write. The script backs it up first.
+- `--project <dir>`: the project folder for `agents`. The default is the root of the Git repository of the current folder, or the current folder outside Git.
+
+What it does:
+
+- Skips a global agent whose config folder does not exist.
+- Never replaces an existing `AGENTS.md`, `GEMINI.md` or `global_rules.md`. It adds the rule as a marked block, and keeps the content outside the block between `<!-- rule:<name>:start -->` and `<!-- rule:<name>:end -->`. A second run replaces only the block.
+- Before changing an existing file, saves a copy next to it as `<file name>.bak.<YYYYmmdd-HHMMSS>`.
+- Changes nothing when the rule is already up to date.
+- If a file is a symbolic link, keeps the link and updates the file it points to.
+- Stops with exit code 1 when a file has broken markers.
+- For `claude` and `windsurf`, writes the rule between the same markers into its own file, for example `~/.claude/rules/Clear-Writing.md`. When a file with that name exists, the script changes it only when the file has the markers or is a copy of the rule. Otherwise it reports `conflict`, changes nothing, and exits with 1. Use `--force` to replace the file.
+- Does not change the old Windsurf `global_rules.md` when the result is longer than 6,000 characters, because the old Windsurf reads only the first 6,000 characters. `Clear-Writing.md` is longer than that, so use Devin Desktop or a workspace rule in `.windsurf/rules/`.
+
+There is no global `AGENTS.md` that all agents read. Some agents, for example Kimi Code, read `~/.agents/AGENTS.md`, but Claude Code, Codex and Cursor do not, so the script does not write it.
+
+#### Tests
+
+[test-install-rule.sh](scripts/rules/test-install-rule.sh) runs `install-rule.sh` against throwaway home and project folders in a temporary folder and checks the results. It never touches your real agent config. It needs `bash`, `git` and `curl` (for `file://` downloads), and no network access.
+
+```
+bash scripts/rules/test-install-rule.sh
+```
+
+Each check prints `PASS`, `FAIL` or `SKIP`, and the script exits with 1 if any check fails. Set `KEEP_TEST_DIR=1` to keep the temporary folder for inspection, or `SH_UNDER_TEST` to run the installer with a different shell (default: `/bin/sh`).
