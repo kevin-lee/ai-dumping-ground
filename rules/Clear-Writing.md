@@ -2,7 +2,7 @@
 
 Write so that a reader gets the point on a quick skim. Every rule below serves that goal. If a rule makes a sentence harder to read, break the rule.
 
-These rules add to `Simple-Global-Rules.md`. If the two files conflict, `Simple-Global-Rules.md` wins.
+Follow these rules in everything you write. When another rule asks for added text, such as the same answer in a second language, that text is not a repeat, so keep it. When the user asks for something in the conversation, do what they ask.
 
 Sources: Joseph M. Williams and Joseph Bizup, *Style: The Basics of Clarity and Grace*, and Zonder Labs, "Why is AI Slop so Frustrating to Read?" (https://zonderlabs.com/slop).
 
