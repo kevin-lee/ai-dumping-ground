@@ -12,7 +12,8 @@ How to make the video dynamic and engaging rather than a narrated slideshow. The
 6. **Continuity beats cuts.** Carry objects across scenes with a `layer`. In the approved intro, the six agent tiles lined up, scattered on "messy", orbited the logo, collapsed into it, and came back for the end card. The logo itself shrank into the corner as a heads-up display (HUD) badge. Recurring objects make it feel designed.
 7. **Contrast tension and release.** A problem gets tension: rose tint, shake, tangled lines, glitch-split text. The solution resolves it: clean layout, smooth curves, green ticks, a calm palette.
 8. **Sound marks the moments.** Light sound effects make motion feel physical: a whoosh on a cut, a pop when a card lands on its word, ticks while a command types, a riser into the reveal and an impact on it, a ding when something succeeds. Put one on each meaningful moment and leave the rest to the music. A sound on every element turns into noise. Declare them in `scenes.js` with the same cues as the visuals (`sfx(C.pick, "pop")`), so sound and picture stay in step.
-9. **Energy curve.** Fast hook, big reveal, steady informative body with chapters, one more reveal for the strongest point, then a calm end card while the music plays out.
+9. **Let each scene land.** Viewers must see the completed picture before the transition. Start a scene's last entrance at least 1.5 s before the scene's last word ends, so it has settled about 1 s before, and let the last words play over the completed picture. With the hold before the next scene (VIDEO MODE step 3b), the completed scene stays on screen for at least 1.5 s before its exit starts. During this hold, only quiet motion runs: the camera push, a float, the beat pulse, or a highlight on an element that is already on screen.
+10. **Energy curve.** Fast hook, big reveal, steady informative body with chapters, one more reveal for the strongest point, then a calm end card while the music plays out.
 
 ## Density
 
@@ -20,7 +21,8 @@ The user approved this amount of motion: a 28.5 s intro with 5 scenes and 66 vis
 
 - Every noun, verb and list item the narration names gets its own entrance on its word: an icon, a chip, a card, a typed line, a counter.
 - Between spoken visuals, small beats keep it alive: a highlight, a check landing, a ring on the beat, an element moving to a new place.
-- `--check` prints the entrances per second and the longest stretch with nothing new. Under about 2 per second, or a stretch over 2 s, means the storyboard needs more beats there.
+- The hold at the end of each scene (principle 9) is the one exception. Nothing new enters there.
+- `--check` prints the entrances per second and the longest stretch with nothing new, without the holds. Under about 2 per second, or a stretch over 2 s, means the storyboard needs more beats there.
 
 ## Structure of a 60 to 90 s intro
 
@@ -48,7 +50,8 @@ An explainer swaps the chapters for steps, and a 30 s promo keeps the hook, the 
 
 - Entrances 0.35 to 0.6 s with overshoot (`pop`). Exits 0.25 to 0.35 s (`out`). Stagger 0.05 to 0.12 s.
 - Readable text stays at least 1.5 s. Typing speed is 25 to 45 characters per second.
-- Scenes last 4 to 7 s. Something new every 0.3 to 1 s, never more than 1.5 s without it.
+- Scenes last 4 to 7 s. Something new every 0.3 to 1 s, never more than 1.5 s without it, except in the hold at the end of a scene.
+- A completed scene stays on screen for at least 1.5 s before its exit starts. Its last entrance starts at least 1.5 s before the scene's last word ends.
 - Flashes: at most three per video, strength 0.4 or less. Never strobe.
 
 ## Pattern catalog

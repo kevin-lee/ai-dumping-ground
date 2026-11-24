@@ -1,6 +1,6 @@
 # VIDEO MODE
 
-Build the video from the narration audio: prepare it (its pauses stay as recorded unless the user wants them trimmed), time every word, add beat-matched music, design the motion graphics on the bundled engine, check them, and render. When the user chooses "HTML only", the MP4 is not rendered.
+Build the video from the narration audio: prepare it (its pauses stay as recorded unless the user wants them trimmed), time every word, lengthen the pause before each scene, add beat-matched music, design the motion graphics on the bundled engine, check them, and render. When the user chooses "HTML only", the MP4 is not rendered.
 
 Final output (in `output/`):
 
@@ -46,6 +46,24 @@ $S/offline.sh uv run --script $S/make_timings.py sources/build/narration.wav sou
 - It prints how much of the script matched what Whisper heard. Below 80 % usually means the wrong script or a bad recording. Investigate before continuing.
 - Read `sources/build/timings.txt`. It lists every sentence with start and end times and is the basis for the storyboard.
 - Without a script, Whisper's own words are used. Review them for misspelled names and fix those through a `display.json`. If the video folder has no name yet, choose it now from the content (see "Project name" and "Slug" in SKILL.md).
+
+## 3b. Hold each completed scene
+
+Viewers must see each scene complete before the transition starts. So choose the scene changes now, from `timings.txt`, and make the narration pause before each one:
+
+- A scene change is a turn in the narration, about every 4 to 7 s. It must start on the first word after a pause: the start of a sentence, or a clause after a long comma.
+- Make the pause before the first word of each scene after the first at least 1.2 s long:
+
+```sh
+uv run --script $S/add_holds.py sources/build/narration.wav sources/build/timings.json \
+    --at <start of scene 2>,<start of scene 3>,... --offset 2.0 [--gap 1.2] [--dry-run]
+```
+
+- Give the start times as `timings.txt` prints them. `--offset` must equal the one in step 3.
+- It adds silence in the middle of each pause that is shorter than `--gap`, shifts `timings.json` by the same amounts and writes `timings.txt` again. Whisper does not run again. It refuses a word that follows no pause, because the silence would cut into the speech.
+- Do this step whether the pauses are kept or trimmed. Report how many holds it added and how much longer the narration is.
+- The storyboard (step 6) starts its scenes on these words. Adding a scene change later needs only this step again, because a pause that is already long enough stays as it is. To move or remove a scene change, run steps 2 and 3 again, then this step.
+- Skip this step only when the user asks for no holds. `--gap` sets another length when the user asks for a longer or shorter hold.
 
 ## 4. Music
 
@@ -95,8 +113,9 @@ Read `references/motion-design.md`, then write `sources/build/storyboard.md`. Gi
 - the narration it covers
 - the visual idea and the main elements, with the words they enter on
 - the transition in, and the chapter label if any
+- the last entrance and its word, starting at least 1.5 s before the scene's last word ends, so the completed scene stays on screen for at least 1.5 s before its exit
 
-Aim for a scene change every 4 to 7 s at the turns in the narration, and something new within each scene every 0.3 to 1 s: every noun, verb and list item gets its own entrance on its word. The intro the user approved had 66 visual moments in 28.5 s (see "Density" in `motion-design.md`). The storyboard keeps the scenes coherent. Write it before any scene code.
+Start the scenes on the scene changes from step 3b. Within each scene, show something new every 0.3 to 1 s: every noun, verb and list item gets its own entrance on its word. The exception is the end of each scene: the last words play over the completed picture, with only quiet motion (see "Let each scene land" in `motion-design.md`). When a scene's last idea needs a new visual on its last words, move that visual into the next scene, or add a scene change before it. The intro the user approved had 66 visual moments in 28.5 s (see "Density" in `motion-design.md`). The storyboard keeps the scenes coherent. Write it before any scene code.
 
 On-screen text must be as true as the narration. Take commands, URLs, file names, numbers and names from the script, the user's sources or the project itself. When a detail is unknown (an install command, a URL), show what is known ("Homebrew") or a plainly generic placeholder, and list every invented illustration (example file names, sample data) in the final report, so the user can check them.
 
@@ -139,7 +158,9 @@ uv run --script $S/render_video.py output/<slug>.html --check
 uv run --script $S/render_video.py output/<slug>.html --stills auto --out-dir sources/build/stills --debug
 ```
 
-`--check` runs every frame at 0.25 s steps in a few seconds. Fix every ERROR. Also fix the `captions`, `edge` and `overflow` notes unless an element is meant to sit there (it ignores brief contact while things fly in or out). Its `motion` line gives the elements entering per second and the longest stretch with nothing new. The intro the user approved measured 3.5 per second and 1.25 s. Under about 2 per second, or a stretch over 2 s, means adding beats to the storyboard there.
+`--check` runs every frame at 0.25 s steps in a few seconds. Fix every ERROR. Also fix the `captions`, `edge` and `overflow` notes unless an element is meant to sit there (it ignores brief contact while things fly in or out). Its `motion` line gives the elements entering per second and the longest stretch with nothing new. The intro the user approved measured 3.5 per second and 1.25 s. Under about 2 per second, or a stretch over 2 s, means adding beats to the storyboard there. That stretch does not count the hold at the end of each scene.
+
+Its `hold` line counts the scenes that stay complete (nothing new) for at least 1.5 s before their exit starts, and a `note` names each scene that does not. Fix each one: bring the scene's last entrance earlier, or move it into the next scene. When the narration has no room, add the scene change to step 3b. The check finds an element when it is half visible, part way into its entrance, so the reported times are estimates.
 
 `--check` also lists every `secret`: text that looks like a key, password or token, on screen, in the captions or anywhere in the page source, comments in `scenes.js` included. It never prints a secret in full. A secret makes it exit with 1: replace it with a placeholder. Only the user can decide that a match is not a secret.
 
@@ -186,7 +207,7 @@ ffmpeg -v error -y -ss 12 -i output/<slug>.mp4 -frames:v 1 sources/build/stills/
 ## 12. Report
 
 - The output files with absolute paths, length and file sizes, and the MP4's resolution and frame rate. For "HTML only", say that the MP4 was not made, and that the user can ask for it later in VIDEO MODE.
-- Whether the narration's pauses were kept or trimmed.
+- Whether the narration's pauses were kept or trimmed, and how many scene holds were added and how long they are in all.
 - The music: title, artist, license, and the optional credit line, plus the generated beat's setting (light, strong or off). Point to `sources/music/MUSIC.md` and add its Content ID advice.
 - A short scene list from the storyboard.
 - What the user should check, and how revisions work. Revisions stay in VIDEO MODE:

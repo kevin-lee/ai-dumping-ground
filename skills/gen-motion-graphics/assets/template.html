@@ -506,7 +506,7 @@ function boot() {
   LAYERS.forEach(l => l.init && l.init());
   window.renderAt = renderAt;
   window.VIDEO = VIDEO;
-  window.SCENE_LIST = SCENES.map(s => ({ id: s.id, from: s.from, to: s.to }));
+  window.SCENE_LIST = SCENES.map(s => ({ id: s.id, from: s.from, to: s.to, exit: s.exit }));
   window.CUT_LIST = [...CUTS].sort((a, b) => a - b);
   const events = [...SFX];
   if (VIDEO.sfx?.auto !== false) {

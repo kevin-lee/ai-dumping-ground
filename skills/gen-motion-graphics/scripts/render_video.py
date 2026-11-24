@@ -11,7 +11,9 @@ own H.264 segment; the segments are joined without re-encoding and the audio is 
 Check (seconds, no screenshots): runs renderAt over the whole timeline and reports script errors,
 text that overflows its box, and visible elements that collide with the captions or the frame edge.
 It also measures the motion: how many elements enter per second, and the longest stretch in which
-nothing new appears (no element entering, no text changing, no cut, ring or flash). And it lists text that
+nothing new appears (no element entering, no text changing, no cut, ring or flash), not counting the hold
+before each scene's exit. It reports each scene that is complete (nothing new) for less than 1.5 s before
+its exit starts, so viewers cannot see the finished picture. And it lists text that
 looks like a key, password or token, on screen, in the captions or anywhere in the page source, and every
 line that starts with "." and a letter at column 0 or after tabs (Slack can show such a page as a binary
 file, issue #56). Either one makes it exit with 1.
@@ -45,6 +47,8 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 W, H = 1920, 1080
+EXIT = 0.28   # the engine's scene exit ("zoom" or "fade") takes the last 0.28 s of a scene
+HOLD = 1.5    # the shortest time a completed scene should stay on screen before its exit
 
 LINT_JS = r"""
 (t) => {
@@ -90,6 +94,7 @@ SEEN_JS = r"""
     return parts.reverse().join('/'); };
   const out = [];
   for (const el of root.querySelectorAll('*')) {
+    if (el.classList.contains('car')) continue;   // a blinking caret is not something new
     let o = 1;
     for (let e = el; e && e !== stage && o > 0; e = e.parentElement) {
       const cs = getComputedStyle(e);
@@ -248,11 +253,28 @@ def check(html: Path, step: float) -> None:
             n += 1
         browser.close()
     print(f"checked {n} frames over {dur:.2f}s, {len(scenes)} scenes")
+    # Hold: the completed scene stays on screen before its exit starts. The last scene has no exit.
+    holds = []   # (scene id, exit start, last new thing before it)
+    for sc in scenes:
+        if sc["to"] >= dur:
+            continue
+        exit_at = sc["to"] - (0 if sc.get("exit") == "none" else EXIT)
+        last = max((x for x, new in fresh if new and sc["from"] <= x < exit_at), default=sc["from"])
+        holds.append((sc["id"], exit_at, last))
+    short = [(i, e, l) for i, e, l in holds if e - l < HOLD]
+    if holds:
+        print(f"hold: {len(holds) - len(short)} of {len(holds)} scenes stay complete for at least {HOLD:g}s before "
+              f"their exit; the shortest is {min(e - l for _, e, l in holds):.2f}s")
+    for i, e, l in short:
+        print(f"  note: scene {i} is complete for only {e - l:.2f}s: the last new thing appears at {l:.2f}s and the exit "
+              f"starts at {e:.2f}s. Bring its last entrance earlier, or add a hold before the next scene (add_holds.py)")
     # Motion: the longest stretch without anything new, from the start to the closing fade-out.
+    # A hold before a scene's exit is meant to be still, so it does not count.
     end = dur - fade_out
     points = [0.0] + [x for x, new in fresh if new and x < end] + [end]
-    if len(points) >= 3:
-        quiet, at = max((b - a, a) for a, b in zip(points, points[1:]))
+    gaps = [(b - a, a) for a, b in zip(points, points[1:]) if not any(a < e <= b for _, e, _ in holds)]
+    if len(points) >= 3 and gaps:
+        quiet, at = max(gaps)
         print(f"motion: {entrances} elements enter ({entrances / dur:.1f} per second); the longest stretch with nothing new "
               f"is {quiet:.2f}s, from {at:.2f}s")
         if quiet > 2.0:
