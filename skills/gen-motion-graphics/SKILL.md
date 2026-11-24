@@ -154,7 +154,7 @@ The narration can hold confidential information on purpose, to explain it. The u
 
 **AUDIO MODE:** Kokoro for English (and Kokoro's other languages). For Korean, ask the user to choose Qwen3-TTS (the default) or VoxCPM2. Check pronunciations first, ask for a voice (or make samples) and one or more speeds, then write one WAV per speed. Details in `references/audio-mode.md`.
 
-**VIDEO MODE:** ask whether to trim the pauses (by default they stay as recorded), about the look, music and sound effects, and then whether to make only the HTML (the default) or the HTML and the MP4 (with the MP4's format) (unless already given). Then prepare the narration, time every word, and find and license-check a CC0 lo-fi track, laying a generated beat on top that is locked to it (the default), or compose an original beat in code. Mix and master to -14 LUFS, write the scenes on the bundled engine with light sound effects, check and review stills, build the HTML, and render the MP4 unless the user chose "HTML only". Captions are always on: the HTML has a CC toggle with each word highlighted as it is spoken, and the MP4 (when it is made) has them burned in unless the user says otherwise. Details in `references/video-mode.md`.
+**VIDEO MODE:** ask whether to trim the pauses (by default they stay as recorded), about the look, music and sound effects, and then whether to make only the HTML (the default) or the HTML and the MP4 (with the MP4's format) (unless already given). Then prepare the narration, time every word, choose the scene changes and lengthen the pause before each one, so each completed scene stays on screen before the transition, and find and license-check a CC0 lo-fi track, laying a generated beat on top that is locked to it (the default), or compose an original beat in code. Mix and master to -14 LUFS, write the scenes on the bundled engine with light sound effects, check and review stills, build the HTML, and render the MP4 unless the user chose "HTML only". Captions are always on: the HTML has a CC toggle with each word highlighted as it is spoken, and the MP4 (when it is made) has them burned in unless the user says otherwise. Details in `references/video-mode.md`.
 
 ## Scripts
 
@@ -166,10 +166,11 @@ The narration can hold confidential information on purpose, to explain it. The u
 | `tts_voxcpm.py` | VoxCPM2 speech for Korean, with a designed or cloned voice, samples, `--setup`. Uses the helpers in `tts_qwen.py` |
 | `trim_silence.py` | Cuts the silence before the first word and after the last, shortens the pauses only with `--trim-pauses` (any input format), writes a time map |
 | `make_timings.py` | Local Whisper word timings aligned to the script, `timings.txt` sheet |
+| `add_holds.py` | Makes the pause before each scene's first word at least 1.2 s long, in the narration and the word timings, so each completed scene stays on screen before the transition |
 | `fetch_music.py` | Downloads a track from its FMA or OpenGameArt page, checks the license, writes `MUSIC.md` with proof |
 | `compose_music.py` | Composes an original lo-fi beat in code, timed to the narration, with its `music.json` |
 | `analyze_music.py` | Tempo, a beat grid precise to about a millisecond, the drop, per-bar drum levels, swing |
 | `mix_audio.py` | Beat-aligned music edit, a generated beat locked to a found track, ducking, synthesized sound effects, ending, mastering, `mix.json` |
 | `fetch_font.py` | Downloads and subsets a Google Fonts family for embedding |
 | `build_html.py` | Assembles the standalone page from `assets/template.html` and the scenes, and puts a space before each line that starts with `.`, so Slack shows the page as HTML |
-| `render_video.py` | `--check` lint, secret scan and Slack line check, `--stills` for review, `--export-sfx` sound-effect list, parallel MP4 render |
+| `render_video.py` | `--check` lint, scene hold check, secret scan and Slack line check, `--stills` for review, `--export-sfx` sound-effect list, parallel MP4 render |

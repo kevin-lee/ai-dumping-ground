@@ -12,7 +12,7 @@ Write `sources/script/narration.txt`: the exact words a TTS voice will speak ove
 
 ## 2. Length budget
 
-The finished video is about 2 s of music lead-in, then the narration, then an outro of 4 s plus up to one bar, ending on a bar line of the music. VIDEO MODE keeps the narration's pauses unless the user asks to trim them. So for a target of T seconds, plan about **T − 7 seconds of narration**, pauses included (for T ≥ 30).
+The finished video is about 2 s of music lead-in, then the narration, then an outro of 4 s plus up to one bar, ending on a bar line of the music. VIDEO MODE keeps the narration's pauses unless the user asks to trim them. It also makes the pause before each new scene at least 1.2 s long, so viewers can see each completed scene before the transition. These holds add about 0.5 s per scene, about 10 % of the narration. So for a target of T seconds, plan about **0.9 × (T − 7) seconds of narration**, pauses included (for T ≥ 30).
 
 English words per second of narration with the pauses kept, measured with Kokoro `af_heart` on a technical script (216 words with many names and spelled acronyms) and a plain one (71 words). Speeds work like playback speeds, so 1.18x is 1.18 times shorter:
 
@@ -22,9 +22,9 @@ English words per second of narration with the pauses kept, measured with Kokoro
 | 1.18x | 3.1 | 3.5 |
 | 1.30x | 3.4 | 3.9 |
 
-Words ≈ (T − 7) × rate. Plan for 1.0x unless the user mentions a faster pace. Examples at 1.0x for a technical script: 30 s needs about 60 words, 60 s about 140 words, 90 s about 215 words. `af_bella` reads about 3 % slower than `af_heart`. Trimming the pauses in VIDEO MODE makes English narration about 8 % shorter, if the user chooses it there.
+Words ≈ 0.9 × (T − 7) × rate. Plan for 1.0x unless the user mentions a faster pace. Examples at 1.0x for a technical script: 30 s needs about 55 words, 60 s about 125 words, 90 s about 195 words. `af_bella` reads about 3 % slower than `af_heart`. Trimming the pauses in VIDEO MODE makes English narration about 8 % shorter, if the user chooses it there.
 
-Korean (Qwen3-TTS 1.7B, `Sohee` in the default cheerful style, measured): about 5.3 Hangul syllables per second with the pauses kept, so plan (T − 7) × 5.3 Hangul characters, not counting spaces, punctuation and Latin letters. Each English word inside the Korean text adds roughly 0.4 s. Trimming the pauses makes it about 10 % shorter. The 0.6B model pauses much longer: the same Korean text ran 39 s with it against 28 s with the 1.7B model. VoxCPM2 speaks about 10 % slower than Qwen3-TTS 1.7B (the same text ran 28.7 s with a designed voice and 29.9 s with a clone, against 26.5 s), so plan about 4.8 Hangul characters per second for it. The engine is chosen only in AUDIO MODE, so size for Qwen3-TTS unless the user already said VoxCPM2.
+Korean (Qwen3-TTS 1.7B, `Sohee` in the default cheerful style, measured): about 5.3 Hangul syllables per second with the pauses kept, so plan 0.9 × (T − 7) × 5.3 Hangul characters, not counting spaces, punctuation and Latin letters. Each English word inside the Korean text adds roughly 0.4 s. Trimming the pauses makes it about 10 % shorter. The 0.6B model pauses much longer: the same Korean text ran 39 s with it against 28 s with the 1.7B model. VoxCPM2 speaks about 10 % slower than Qwen3-TTS 1.7B (the same text ran 28.7 s with a designed voice and 29.9 s with a clone, against 26.5 s), so plan about 4.8 Hangul characters per second for it. The engine is chosen only in AUDIO MODE, so size for Qwen3-TTS unless the user already said VoxCPM2.
 
 Stay within about 5 % of the budget. The user can adjust the speed in AUDIO MODE, so being slightly long is better than padding.
 
@@ -65,7 +65,7 @@ Each `spoken` value must match the narration word for word (case and punctuation
 
 ## 5. Example
 
-A 30-second intro for a fictional tool (71 words at 3.0 words per second is about 24 s of narration with the pauses kept, plus the lead-in and outro):
+A 30 to 35-second intro for a fictional tool (71 words at 3.0 words per second is about 24 s of narration with the pauses kept, plus the scene holds, the lead-in and the outro):
 
 ```
 Every team has a folder of shell scripts that nobody else can find.

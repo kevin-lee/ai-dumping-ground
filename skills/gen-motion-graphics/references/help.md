@@ -43,6 +43,7 @@ Speaks the script on this machine, offline.
 Builds the video from the narration audio.
 
 - **Pauses:** kept as recorded. It asks whether to trim them for a faster pace.
+- **Scene holds:** each completed scene stays on screen for at least 1.5 s before the transition. The narration pauses for at least 1.2 s before each new scene to make room.
 - **Music:** lo-fi on the beat. By default a CC0 track it finds, with drums it generates and locks to that track. Or an original beat it composes in code.
 - **Sound effects:** light, on cuts, reveals and typing.
 - **Motion graphics:** designed for every sentence, with something new on screen every second or so.

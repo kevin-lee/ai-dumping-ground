@@ -57,6 +57,7 @@ Timing habits that read well:
 - An element appears on its word, or 0.05 to 0.15 s before it.
 - A scene starts just before the first word of its idea. `cutAt(cue("..."))` gives the time: a beat at most 0.4 s before the word, else a half beat, else 0.2 s before it. Plain `snapBeat` can land in the middle of the previous sentence.
 - A scene ends at the next scene's start. The engine blur-zooms it out over its last 0.28 s.
+- Viewers must see each completed scene. Start the last entrance of a scene at least 1.5 s before the scene's last word ends, so it has settled about 1 s before. Together with the hold that `add_holds.py` adds before the next scene, the completed scene then stays on screen for at least 1.5 s before its exit starts. `render_video.py --check` reports a scene with less.
 
 ## Music
 
